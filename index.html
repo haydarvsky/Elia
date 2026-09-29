@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="عالم إيليا">
+<meta name="theme-color" content="#5d9c33">
+<title>عالم إيليا للحروف</title>
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ شاشة البداية ============ -->
+<section id="title" class="screen bg-sky on">
+  <div class="sun"></div>
+  <div class="cloud" style="top:12%;width:180px;animation-duration:70s;animation-delay:-20s"></div>
+  <div class="cloud" style="top:26%;width:120px;animation-duration:90s;animation-delay:-60s"></div>
+  <div class="cloud" style="top:6%;width:240px;animation-duration:110s;animation-delay:-5s"></div>
+
+  <div class="hud" style="width:100%">
+    <span class="chip" id="t-days"></span>
+    <span class="chip" id="t-gems"></span>
+    <span class="spacer"></span>
+    <div class="xpbar" id="t-xp"><i></i><b>1</b></div>
+  </div>
+
+  <div class="logo">
+    <h1 class="mc-title">عالَمُ إيليا</h1>
+    <h2 class="mc-title">مُغامَرَةُ الْحُروفِ!</h2>
+  </div>
+
+  <div class="menu">
+    <button class="btn big green" id="b-play">▶ اِلْعَبْ</button>
+    <button class="btn" id="b-map">خَريطَةُ الْحُروفِ</button>
+  </div>
+
+  <div id="daily" class="sign">
+    <h3><span id="d-ic"></span> مَعْلومَةُ الْيَوْمِ</h3>
+    <div class="fact" id="d-fact"></div>
+    <div class="post"></div>
+  </div>
+
+  <img class="hero pix" id="t-hero" src="assets/elia/hello.webp" alt="إيليا">
+  <div class="ground"></div>
+  <div class="credit"><img src="assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
+</section>
+
+<!-- ============ الخريطة ============ -->
+<section id="map" class="screen bg-sky">
+  <div class="hud" style="background:rgba(0,0,0,.35);border-bottom:4px solid #000">
+    <button class="btn icon" id="m-home" aria-label="الرئيسية"></button>
+    <span class="mc-title" style="font-size:38px">خَريطَةُ الْحُروفِ</span>
+    <span class="spacer"></span>
+    <span class="chip" id="m-gems"></span>
+    <div class="xpbar" id="m-xp"><i></i><b>1</b></div>
+  </div>
+  <div class="scroller" id="m-scroll"></div>
+</section>
+
+<!-- ============ شاشة الحرف ============ -->
+<section id="level" class="screen">
+  <div class="hud">
+    <button class="btn icon" id="l-back" aria-label="الخريطة"></button>
+    <span class="mc-title lettername" id="l-name"></span>
+    <span class="spacer"></span>
+    <span class="hearts" id="l-hearts"></span>
+    <span class="chip" id="l-gems"></span>
+  </div>
+  <div class="stations" id="l-stations"></div>
+  <div class="stage" id="stage"></div>
+</section>
+
+<!-- ============ الاحتفال ============ -->
+<div id="celebrate">
+  <div class="bubble mc-text" id="c-say"></div>
+  <img class="who pix" id="c-img" alt="">
+</div>
+
+<div class="modal" id="modal"><div class="panel" id="modal-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

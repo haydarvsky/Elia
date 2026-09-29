@@ -1,0 +1,5 @@
+_build/
+*.pdf
+*.jpeg
+.claude/
+.DS_Store
