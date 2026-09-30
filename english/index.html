@@ -7,73 +7,86 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="إيليا وفينوم">
-<meta name="theme-color" content="#2f6f8f">
-<title>إيليا وفينوم — مغامرة الإنجليزي</title>
+<meta name="apple-mobile-web-app-title" content="Venom × Elia">
+<meta name="theme-color" content="#1b1b1b">
+<title>Venom × Elia — ABC Strike</title>
 <link rel="icon" href="../assets/icon.png">
 <link rel="apple-touch-icon" href="../assets/icon.png">
-<link rel="stylesheet" href="css/style.css?v=10">
+<link rel="stylesheet" href="css/style.css?v=25">
 </head>
 <body>
 
-<!-- الشاشة الأولى -->
+<!-- الغلاف -->
 <section id="home" class="screen on">
-  <div class="bg" style="background-image:url(img/bg_cover.webp)"></div>
-  <a class="back" href="../" aria-label="رجوع">‹ <span>الْأَلْعاب</span></a>
+  <div class="cover" style="background-image:url(img/c_cover.webp)"></div>
+  <div class="halftone"></div>
+  <a class="back chip" href="../">‹ <span>الْأَلْعاب</span></a>
   <div class="home-box">
-    <h1 class="logo"><span class="en">Elia <b>&amp;</b> Venom</span><span class="ar">مُغامَرَةُ الْإِنْجِليزِيِّ</span></h1>
-    <div class="heroes">
-      <img id="h-elia" src="img/elia_hello.webp" alt="إيليا">
-      <img id="h-venom" src="img/venom_hi.webp?v=2" alt="فينوم">
-    </div>
+    <h1 class="logo"><span>VENOM</span><b>×</b><span>ELIA</span><small>ABC STRIKE!</small></h1>
     <div class="home-stats" id="home-stats"></div>
-    <button class="btn big go" id="play">▶ <span>Let's go!</span></button>
+    <div class="home-btns">
+      <button class="cbtn big" id="play">▶ PLAY!</button>
+      <button class="cbtn" id="h-cards">🃏 <span>بِطاقاتُ الْأَبْطالِ</span></button>
+    </div>
   </div>
 </section>
 
-<!-- الخريطة -->
-<section id="map" class="screen">
-  <div class="bg" id="map-bg"></div>
-  <header class="bar">
-    <button class="btn icon" id="map-home" aria-label="الرئيسية">⌂</button>
-    <div class="tabs" id="tabs"></div>
-    <div class="gems" id="map-gems"></div>
+<!-- اختيار العالم والمهمة -->
+<section id="worlds" class="screen">
+  <div class="dots-bg"></div>
+  <header class="topbar">
+    <button class="cbtn icon" id="w-home">⌂</button>
+    <h2 class="ctitle">CHOOSE YOUR MISSION</h2>
+    <div class="stat-row" id="w-stats"></div>
   </header>
-  <div class="path-wrap" id="path-wrap"><div class="path" id="path"></div></div>
+  <div class="world-tabs" id="world-tabs"></div>
+  <div class="missions" id="missions"></div>
 </section>
 
-<!-- المستوى -->
-<section id="level" class="screen">
-  <div class="bg" id="lv-bg"></div>
-  <header class="bar">
-    <button class="btn icon" id="lv-back" aria-label="خروج">✕</button>
-    <div class="progress"><i id="lv-prog"></i></div>
-    <div class="combo" id="combo"></div>
-    <div class="hearts" id="lv-hearts"></div>
-  </header>
-  <div class="stage" id="stage"></div>
-  <div class="buddy" id="buddy">
-    <div class="bubble" id="bubble"></div>
-    <img id="buddy-img" src="img/venom_hi.webp?v=2" alt="">
+<!-- اللعب -->
+<section id="game" class="screen">
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <button class="cbtn icon sm" id="g-exit">✕</button>
+    <button class="target" id="target"></button>
+    <div class="hud-r">
+      <div class="score" id="score">0</div>
+      <div class="lives" id="lives"></div>
+    </div>
+    <div class="pbar"><i id="pbar"></i></div>
+  </div>
+  <div class="combo" id="combo"></div>
+  <div class="banner" id="banner"></div>
+  <div class="trace-ov" id="trace-ov">
+    <div class="trace-card">
+      <h3>SUPER ATTACK! <small>اُكْتُبِ الْحَرْفَ بِالْقَلَمِ ✏️</small></h3>
+      <div class="trace-box" id="trace-box"><canvas></canvas><canvas></canvas></div>
+      <div class="row"><button class="cbtn" id="trace-clear">↺</button><button class="cbtn go" id="trace-ok">✓ GO!</button></div>
+    </div>
   </div>
 </section>
 
-<!-- ألبوم الملصقات -->
-<section id="album" class="screen">
-  <div class="bg" style="background-image:url(img/bg_house.webp)"></div>
-  <header class="bar">
-    <button class="btn icon" id="album-back" aria-label="رجوع">‹</button>
-    <h2 class="album-title">📒 أَلْبومُ الْمُلْصَقاتِ <span class="chip" id="album-count"></span></h2>
-  </header>
-  <div class="album-wrap"><p class="album-hint">كُلُّ مَرْحَلَةٍ تُعْطيكَ مُلْصَقاتٍ، وَبِثَلاثِ نُجومٍ تَصيرُ ذَهَبِيَّةً ✨ — اِضْغَطْ عَلى الْمُلْصَقِ لِتَسْمَعَهُ</p><div id="album-pages"></div></div>
+<!-- النتيجة -->
+<section id="result" class="screen">
+  <div class="dots-bg"></div>
+  <div class="res-card" id="res-card"></div>
 </section>
 
-<!-- الاحتفال بصوت إيليا -->
+<!-- البطاقات -->
+<section id="cards" class="screen">
+  <div class="dots-bg"></div>
+  <header class="topbar">
+    <button class="cbtn icon" id="c-back">‹</button>
+    <h2 class="ctitle">HERO CARDS <span class="chip" id="c-count"></span></h2>
+  </header>
+  <div class="cards-wrap" id="cards-wrap"></div>
+</section>
+
 <div id="celebrate"><div class="c-in"><img id="c-img" alt=""><div id="c-say"></div></div></div>
 <div id="toast"></div>
-<div id="modal" class="modal"><div class="card" id="modal-card"></div></div>
+<div id="modal"><div class="res-card sm" id="modal-card"></div></div>
 
-<script src="js/data.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/data.js?v=25"></script>
+<script src="js/app.js?v=25"></script>
 </body>
 </html>

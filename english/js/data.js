@@ -2,10 +2,19 @@
    كل مستوى = درس من الكتاب. الأنواع:
    letter: حرف + كلماته   vocab: مفردات بصور   numbers: أعداد   colors: ألوان   spell: تهجئة   prep: in/on/under   boss: معركة نهاية العالم */
 window.WORLDS = [
-  { id: 1, title: 'All About Me', ar: 'كُلُّ شَيْءٍ عَنّي', bg: 'meadow', color: '#6fb24a' },
-  { id: 2, title: 'My Family', ar: 'عائِلَتي', bg: 'cottage', color: '#e8904a' },
-  { id: 3, title: 'My House', ar: 'بَيْتي', bg: 'house', color: '#4aa3c9' },
-  { id: 4, title: 'My School', ar: 'مَدْرَسَتي', bg: 'school', color: '#9a6ad0' },
+  { id: 1, title: 'All About Me', ar: 'كُلُّ شَيْءٍ عَنّي', bg: 'park', color: '#ffd23f', ink: '#1b1b1b' },
+  { id: 2, title: 'My Family', ar: 'عائِلَتي', bg: 'street', color: '#ff7a3d', ink: '#1b1b1b' },
+  { id: 3, title: 'My House', ar: 'بَيْتي', bg: 'night', color: '#6c5ce7', ink: '#fff' },
+  { id: 4, title: 'My School', ar: 'مَدْرَسَتي', bg: 'school', color: '#00c2ff', ink: '#1b1b1b' },
+];
+/* مراحل كل عالم: لعبة + نوع المهام */
+window.STAGES = [
+  { g: 'run', name: 'Hero Run', ar: 'اِنْطَلِقْ!', icon: '🏃', tasks: ['L', 'P'] },
+  { g: 'pop', name: 'Bubble Pop', ar: 'فَقِّعِ الْفُقاعاتِ', icon: '🫧', tasks: ['L', 'S'] },
+  { g: 'catch', name: 'Catch It', ar: 'اِلْتَقِطْها', icon: '🧺', tasks: ['P', 'N', 'C'] },
+  { g: 'slash', name: 'Word Slash', ar: 'اِقْطَعِ الْحُروفَ', icon: '✂️', tasks: ['W'] },
+  { g: 'whack', name: 'Whack-a-Goo', ar: 'اِضْرِبِ الْوَحْشَ', icon: '🔨', tasks: ['R', 'P', 'L'] },
+  { g: 'boss', name: 'Boss Battle', ar: 'مَعْرَكَةُ الزَّعيمِ', icon: '👑', tasks: ['L', 'P', 'S'] },
 ];
 
 /* w = [الكلمة, الصورة]. الكلمات بلا صورة واضحة تُكتب بصورة فارغة '' فتظهر في التعلّم فقط */
@@ -97,3 +106,12 @@ window.TLINES = ['The cat is in the box.', 'The cat is on the box.', 'The cat is
   'What colour is the apple?', 'What colour is the sun?', 'What colour is the frog?', 'What colour is the orange?',
   'It is red.', 'It is yellow.', 'It is green.', 'It is orange.'];
 window.OBJCOLOR = [['apple', '🍎', 'red'], ['sun', '☀️', 'yellow'], ['frog', '🐸', 'green'], ['orange', '🍊', 'orange']];
+
+/* جمل فينوم الجديدة للعبة الأكشن */
+Object.assign(window.VLINES, {
+  grab: 'Grab the...', grabStart: 'Grab things that start with...', pop: 'Pop the...', popStart: 'Pop things that start with...',
+  catch: 'Catch the...', catchStart: 'Catch things that start with...', whack: 'Whack the...', whackStart: 'Whack things that start with...',
+  findWord: 'Find the word!', spell: 'Spell it!', ready: 'Ready? Three! Two! One! Go!', newTarget: 'New target!', ouch: 'Ouch!',
+  watchOut: 'Watch out!', boss: "Boss battle! Let's get him!", finish: 'Super attack! Trace the letter!', mission: 'Mission complete!',
+  timeUp: "Time's up!", record: 'New high score!', card: 'New hero cards!', lost: "Oh no! Let's try again!",
+});
