@@ -205,7 +205,7 @@ const AU = {
   story: L => `assets/audio/L${pad(L.id)}/story.mp3`,
   word: (L, w) => { const i = L.words.indexOf(w); return i < 0 ? null : `assets/audio/L${pad(L.id)}/w${pad(i)}.mp3`; },
   ui: k => `assets/audio/ui/${k}.mp3`,
-  elia: k => `assets/audio/elia/${k}.mp3?v=3`,
+  elia: k => `assets/audio/elia/${k}.mp3?v=4`,
 };
 function sayWord(L, w) { const s = AU.word(L, w); if (s) return play(s); return Promise.resolve(true); }
 
@@ -265,7 +265,7 @@ const CELEB = {
 };
 let celebBag = [];
 function nextCelebration() {
-  if (!celebBag.length) celebBag = shuffle(['siuuu', 'siuuu', 'smart', 'smart', 'genius', 'genius']);  // بصوت إيليا الحقيقي
+  if (!celebBag.length) celebBag = shuffle(['siuuu', 'siuuu', 'smart', 'smart', 'genius', 'genius', 'hero', 'easy']);  // بصوت إيليا الحقيقي
   return celebBag.pop();
 }
 function burst(n = 26, colors = ['#29d162', '#4ae3e0', '#ffd83d', '#fff']) {
@@ -788,7 +788,7 @@ $('#b-reset').onclick = () => { SFX.click(); askReset(); };
 })();
 
 /* ============ بدء ============ */
-$('#t-hero').onclick = () => { celebrate(pick(['siuuu', 'smart', 'genius'])); };
+$('#t-hero').onclick = () => { celebrate(pick(['siuuu', 'smart', 'genius', 'hero', 'easy'])); };
 let welcomed = false;
 $('#title').addEventListener('pointerdown', e => { if (welcomed || e.target.closest('button,#t-hero,.credit,#daily')) return; welcomed = true; play(AU.ui('welcome')); });
 renderTitle(); renderHud();
