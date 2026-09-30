@@ -7,85 +7,136 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="عالم إيليا">
+<meta name="apple-mobile-web-app-title" content="ألعاب إيليا">
 <meta name="theme-color" content="#5d9c33">
-<title>عالم إيليا للحروف</title>
+<title>ألعاب إيليا</title>
 <link rel="icon" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
-<link rel="stylesheet" href="css/style.css">
+<style>
+@font-face{font-family:"Sakkal Saad";src:url(assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2");font-weight:800;font-display:block}
+@font-face{font-family:"Sakkal Poster";src:url(assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2");font-weight:900;font-display:block}
+:root{--shadow:#3f3f3f;--tex-grass:none;--tex-dirt:none;--tex-stone:none;--tex-gold:none;--tex-diamond:none;--tex-plank:none;--tex-obsidian:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#5aa8ff;color:#fff;font-family:"Sakkal Saad",system-ui,sans-serif;font-weight:800;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+body{background:linear-gradient(#5aa8ff 0%,#9fd3ff 55%,#cdeaff 100%) fixed;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.pix{image-rendering:pixelated}
+.sky{position:fixed;inset:0;pointer-events:none;z-index:0}
+.sun{position:absolute;top:36px;left:54px;width:84px;height:84px;background:#fff6a8;box-shadow:0 0 0 10px #ffe45c,0 0 60px 20px rgba(255,240,120,.7)}
+.cloud{position:absolute;height:40px;background:#fff;box-shadow:0 8px 0 #e8f4ff;animation:drift linear infinite}
+.cloud::before{content:"";position:absolute;left:25%;top:-24px;width:45%;height:24px;background:#fff}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
+.mc-title{font-family:"Sakkal Poster","Sakkal Saad";font-weight:900;text-shadow:4px 4px 0 var(--shadow),-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,6px 6px 0 #000}
+main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:28px 16px 190px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header .t h1{margin:0;font-size:clamp(58px,10vw,118px);line-height:1.05}
+header .t p{margin:6px 0 0;font-size:clamp(26px,3.6vw,40px);color:#ffd83d;text-shadow:3px 3px 0 #6b4a00,-2px -2px 0 #000,2px 2px 0 #000;animation:wob 2.6s ease-in-out infinite}
+@keyframes wob{50%{transform:scale(1.05) rotate(-2deg)}}
+header img{height:min(34vh,300px);filter:drop-shadow(8px 10px 0 rgba(0,0,0,.25));animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 8px;font-size:26px;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 3px 3px 0 rgba(255,255,255,.15)}
+.chip svg{width:28px;height:28px}
+h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:34px;color:#2b1a08;background:var(--tex-plank),#a0763e;background-size:64px;border:4px solid #3b2a14;box-shadow:inset 4px 4px 0 rgba(255,255,255,.25),inset -4px -4px 0 rgba(0,0,0,.3)}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.game{position:relative;display:flex;flex-direction:column;background:#c6c6c6;color:#1d1d1d;border:4px solid #000;
+  box-shadow:inset 5px 5px 0 #fff,inset -5px -5px 0 #555,0 10px 0 rgba(0,0,0,.3);transition:transform .12s}
+.game:active{transform:translateY(5px)}
+.game .face{position:relative;margin:12px 12px 0;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+  font-family:"Sakkal Poster","Sakkal Saad";font-size:82px;color:#fff;text-shadow:5px 5px 0 rgba(0,0,0,.5);direction:rtl;
+  border:4px solid #000;box-shadow:inset 6px 6px 0 rgba(255,255,255,.3),inset -6px -8px 0 rgba(0,0,0,.35);background-size:96px;image-rendering:pixelated;overflow:hidden}
+.game .face.ltr{direction:ltr;font-family:"Arial Black",system-ui,sans-serif;letter-spacing:4px}
+.game .face img{position:absolute;bottom:-6px;left:0;height:92%;filter:drop-shadow(4px 4px 0 rgba(0,0,0,.3))}
+.game .face{justify-content:flex-start;padding:0 18px}
+.game .face .ico{position:relative;z-index:1;font-size:.8em;line-height:1;max-width:58%;text-align:center}
+.game .face.ltr .ico{font-size:.55em}
+.game .body{padding:12px 16px 18px}
+.game h3{margin:0;font-size:36px}
+.game p{margin:2px 0 10px;font-size:22px;color:#444;line-height:1.4}
+.game .go{display:flex;align-items:center;justify-content:center;min-height:58px;font-size:28px;color:#fff;text-shadow:3px 3px 0 var(--shadow);
+  background:var(--tex-grass),#4f8f2a;background-size:64px;border:4px solid #000;box-shadow:inset 4px 4px 0 rgba(255,255,255,.35),inset -4px -6px 0 rgba(0,0,0,.35)}
+.game .bar{height:18px;background:#1a1a1a;border:3px solid #000;margin:0 0 10px}
+.game .bar i{display:block;height:100%;background:linear-gradient(#b7ff5a,#5fd11a)}
+.game.soon{filter:saturate(.35)}
+.game.soon .go{background:var(--tex-stone),#777;background-size:64px}
+.game.soon .face::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.35) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23222' d='M5 2h6v1H5zM4 3h1v4H4zM11 3h1v4h-1zM3 7h10v7H3z'/%3E%3Cpath fill='%23ffd83d' d='M4 8h8v5H4z'/%3E%3Cpath fill='%23222' d='M7 9h2v3H7z'/%3E%3C/svg%3E") center/34% no-repeat}
+.ground{position:fixed;left:0;right:0;bottom:0;height:120px;z-index:1;background:var(--tex-grass) top/64px repeat-x,var(--tex-dirt) 0 64px/64px repeat;image-rendering:pixelated;border-top:4px solid #000}
+.credit{position:fixed;bottom:12px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;font-size:18px;text-shadow:2px 2px 0 #000}
+.credit img{height:40px}
+@media (max-width:700px){header{justify-content:center;text-align:center}header img{height:26vh}}
+</style>
 </head>
 <body>
-
-<!-- ============ شاشة البداية ============ -->
-<section id="title" class="screen bg-sky on">
+<div class="sky">
   <div class="sun"></div>
-  <div class="cloud" style="top:12%;width:180px;animation-duration:70s;animation-delay:-20s"></div>
-  <div class="cloud" style="top:26%;width:120px;animation-duration:90s;animation-delay:-60s"></div>
-  <div class="cloud" style="top:6%;width:240px;animation-duration:110s;animation-delay:-5s"></div>
-
-  <div class="hud" style="width:100%">
-    <span class="chip" id="t-days"></span>
-    <span class="chip" id="t-gems"></span>
-    <span class="spacer"></span>
-    <div class="xpbar" id="t-xp"><i></i><b>1</b></div>
-  </div>
-
-  <div class="logo">
-    <h1 class="mc-title">عالَمُ إيليا</h1>
-    <h2 class="mc-title">مُغامَرَةُ الْحُروفِ!</h2>
-  </div>
-
-  <div class="menu">
-    <button class="btn big green" id="b-play">▶ اِلْعَبْ</button>
-    <button class="btn" id="b-map">خَريطَةُ الْحُروفِ</button>
-  </div>
-
-  <div id="daily" class="sign">
-    <h3><span id="d-ic"></span> مَعْلومَةُ الْيَوْمِ</h3>
-    <div class="fact" id="d-fact"></div>
-    <div class="post"></div>
-  </div>
-
-  <img class="hero pix" id="t-hero" src="assets/elia/hello.webp" alt="إيليا">
-  <div class="ground"></div>
-  <div class="credit"><img src="assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
-</section>
-
-<!-- ============ الخريطة ============ -->
-<section id="map" class="screen bg-sky">
-  <div class="hud" style="background:rgba(0,0,0,.35);border-bottom:4px solid #000">
-    <button class="btn icon" id="m-home" aria-label="الرئيسية"></button>
-    <span class="mc-title" style="font-size:38px">خَريطَةُ الْحُروفِ</span>
-    <span class="spacer"></span>
-    <span class="chip" id="m-gems"></span>
-    <div class="xpbar" id="m-xp"><i></i><b>1</b></div>
-  </div>
-  <div class="scroller" id="m-scroll"></div>
-</section>
-
-<!-- ============ شاشة الحرف ============ -->
-<section id="level" class="screen">
-  <div class="hud">
-    <button class="btn icon" id="l-back" aria-label="الخريطة"></button>
-    <span class="mc-title lettername" id="l-name"></span>
-    <span class="spacer"></span>
-    <span class="hearts" id="l-hearts"></span>
-    <span class="chip" id="l-gems"></span>
-  </div>
-  <div class="stations" id="l-stations"></div>
-  <div class="stage" id="stage"></div>
-</section>
-
-<!-- ============ الاحتفال ============ -->
-<div id="celebrate">
-  <div class="bubble mc-text" id="c-say"></div>
-  <img class="who pix" id="c-img" alt="">
+  <div class="cloud" style="top:10%;width:200px;animation-duration:80s;animation-delay:-30s"></div>
+  <div class="cloud" style="top:24%;width:130px;animation-duration:100s;animation-delay:-70s"></div>
+  <div class="cloud" style="top:5%;width:250px;animation-duration:120s;animation-delay:-8s"></div>
 </div>
 
-<div class="modal" id="modal"><div class="panel" id="modal-body"></div></div>
-<div class="toast" id="toast"></div>
+<main>
+  <header>
+    <div class="t">
+      <h1 class="mc-title">أَلْعابُ إيليا</h1>
+      <p class="mc-title">اخْتَرْ عالَمَكَ وَابْدَأِ الْمُغامَرَةَ!</p>
+      <div class="stats" id="stats"></div>
+    </div>
+    <img class="pix" src="assets/elia/hello.webp" alt="إيليا">
+  </header>
 
-<script src="js/data.js"></script>
-<script src="js/app.js"></script>
+  <h2 class="sign">🎮 الْعَوالِمُ</h2>
+  <div class="games" id="games"></div>
+</main>
+
+<div class="ground"></div>
+<div class="credit"><img src="assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
+
+<script>
+/* لإضافة لعبة جديدة: أضف عنصراً هنا، وضع مجلدها بجانب huruf/ */
+const GAMES = [
+  { id: 'huruf', title: 'لُعْبَةُ الْحُروفِ', desc: 'شَكْلُ الْحَرْفِ وَصَوْتُهُ وَمَواضِعُهُ وَكَلِماتُهُ — مِنْ كِتابِ لُغَتي.', face: 'أ ب ت', tex: 'gold', img: 'siuuu', href: 'huruf/', progressKey: 'elia-letters-v1', total: 28 },
+  { id: 'english', title: 'لُعْبَةُ الْإِنْجِليزِيِّ', desc: 'الْحُروفُ وَالْكَلِماتُ الْإِنْجِليزِيَّةُ.', face: 'ABC', ltr: true, tex: 'diamond', img: 'smart', soon: true },
+  { id: 'math', title: 'لُعْبَةُ الرِّياضِيّاتِ', desc: 'الْأَعْدادُ وَالْجَمْعُ وَالطَّرْحُ.', face: '١+٢', tex: 'grass', img: 'think', soon: true },
+  { id: 'more', title: 'أَلْعابٌ قادِمَةٌ', desc: 'عَوالِمُ جَديدَةٌ في الطَّريقِ…', face: '؟', tex: 'obsidian', img: 'tryagain', soon: true },
+];
+
+(function tex() {
+  const R = document.documentElement.style;
+  const make = (fn, seed) => { const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'); let s = seed;
+    const r = () => (s = s * 16807 % 2147483647, (s - 1) / 2147483646);
+    for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { x.fillStyle = fn(i, j, r); x.fillRect(i, j, 1, 1); } return 'url(' + c.toDataURL() + ')'; };
+  const p = a => r => a[r() * a.length | 0];
+  const blk = (base, lite, dark) => (i, j, r) => (i === 0 || j === 0) ? lite : (i === 15 || j === 15) ? dark : p(base)(r);
+  R.setProperty('--tex-grass', make((i, j, r) => p(['#5d9c33', '#6aad3a', '#4f8a2b', '#79bd45', '#5d9c33'])(r), 11));
+  R.setProperty('--tex-dirt', make((i, j, r) => p(['#8b5a2b', '#79502a', '#9a6a3a', '#6b4423'])(r), 5));
+  R.setProperty('--tex-stone', make((i, j, r) => p(['#7f7f7f', '#747474', '#8c8c8c', '#6a6a6a'])(r), 3));
+  R.setProperty('--tex-plank', make((i, j, r) => (j % 4 === 3) ? '#6b4a25' : p(['#a0763e', '#9a7038', '#ab8045'])(r), 9));
+  R.setProperty('--tex-gold', make(blk(['#f9d63b', '#f5c518', '#ffe36e', '#e8b90f'], '#fff3a8', '#b8860b'), 29));
+  R.setProperty('--tex-diamond', make(blk(['#4ae3e0', '#35c9c5', '#76f0ec', '#2bb3b0'], '#c9fffd', '#1b8a87'), 31));
+  R.setProperty('--tex-obsidian', make((i, j, r) => p(['#1b1030', '#2a1846', '#140b24', '#3b2360'])(r), 37));
+})();
+
+const gem = '<svg viewBox="0 0 8 7" shape-rendering="crispEdges"><path fill="#000" d="M2 0h4v1H2zM1 1h1v1H1zM6 1h1v1H6zM0 2h1v2H0zM7 2h1v2H7zM1 4h1v1H1zM6 4h1v1H6zM2 5h1v1H2zM5 5h1v1H5zM3 6h2v1H3z"/><path fill="#4ae3e0" d="M2 1h4v1H2zM1 2h6v2H1zM2 4h4v1H2zM3 5h2v1H3z"/><path fill="#e9ffff" d="M2 1h2v1H2zM1 2h1v1H1z"/></svg>';
+const star = '<svg viewBox="0 0 7 7" shape-rendering="crispEdges"><path fill="#000" d="M3 0h1v1H3zM2 1h1v1H2zM4 1h1v1H4zM0 2h2v1H0zM5 2h2v1H5zM0 3h1v1H0zM6 3h1v1H6zM1 4h1v2H1zM5 4h1v2H5zM0 6h2v1H0zM5 6h2v1H5zM3 5h1v1H3z"/><path fill="#ffd83d" d="M3 1h1v1H3zM2 2h3v1H2zM1 3h5v1H1zM2 4h3v1H2zM2 5h1v1H2zM4 5h1v1H4z"/></svg>';
+const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const load = k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } };
+
+let gems = 0, stars = 0;
+const box = document.getElementById('games');
+GAMES.forEach(g => {
+  const st = g.progressKey ? load(g.progressKey) : null;
+  let done = 0;
+  if (st) { done = Object.keys(st.done || {}).length; gems += st.gems || 0; stars += Object.values(st.done || {}).reduce((a, b) => a + b, 0); }
+  const el = document.createElement(g.soon ? 'div' : 'a'); el.className = 'game' + (g.soon ? ' soon' : '');
+  if (!g.soon) el.href = g.href;
+  el.innerHTML = `<div class="face${g.ltr ? ' ltr' : ''}" style="background-image:var(--tex-${g.tex})"><img class="pix" src="assets/elia/${g.img}.webp" alt=""><span class="ico">${g.face}</span></div>
+    <div class="body"><h3>${g.title}</h3><p>${g.desc}</p>
+    ${g.total ? `<div class="bar"><i style="width:${done / g.total * 100}%"></i></div><p style="margin-top:-6px">${AR(done)} مِنْ ${AR(g.total)} ✔</p>` : ''}
+    <div class="go">${g.soon ? 'قَريباً 🔒' : (done ? 'تابِعْ ▶' : 'اِلْعَبْ ▶')}</div></div>`;
+  box.appendChild(el);
+});
+document.getElementById('stats').innerHTML = `<span class="chip">${gem}<span>${AR(gems)}</span></span><span class="chip">${star}<span>${AR(stars)}</span></span>`;
+</script>
 </body>
 </html>

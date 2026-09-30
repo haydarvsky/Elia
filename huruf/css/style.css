@@ -1,7 +1,7 @@
 /* عالم إيليا للحروف — أسلوب ماينكرافت */
-@font-face{font-family:"Sakkal Saad";src:url(../assets/fonts/SakkalSaad-Bold.woff2) format("woff2");font-weight:700;font-display:block}
-@font-face{font-family:"Sakkal Saad";src:url(../assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2");font-weight:800;font-display:block}
-@font-face{font-family:"Sakkal Poster";src:url(../assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2");font-weight:900;font-display:block}
+@font-face{font-family:"Sakkal Saad";src:url(../../assets/fonts/SakkalSaad-Bold.woff2) format("woff2");font-weight:700;font-display:block}
+@font-face{font-family:"Sakkal Saad";src:url(../../assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2");font-weight:800;font-display:block}
+@font-face{font-family:"Sakkal Poster";src:url(../../assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2");font-weight:900;font-display:block}
 
 :root{
   --sky1:#6bb4ff; --sky2:#b9e1ff;
@@ -278,3 +278,4 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .panel .gapword .gap{border-color:#e0342f;background:#fff6b3}
 .slots .gapword{font-size:80px}
 @media (orientation:portrait){#title .logo h1{font-size:14vw}#title .logo h2{font-size:6vw}#title .menu{margin-top:4vh}}
+#t-hub svg{width:40px;height:40px}

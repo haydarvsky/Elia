@@ -279,7 +279,7 @@ function burst(n = 26, colors = ['#29d162', '#4ae3e0', '#ffd83d', '#fff']) {
 function celebrate(kind) {
   kind = kind || nextCelebration();
   const c = CELEB[kind]; const box = $('#celebrate'), img = $('#c-img'), say = $('#c-say');
-  img.src = `assets/elia/${c.img}.webp`; img.className = 'who pix'; void img.offsetWidth; img.classList.add(c.anim);
+  img.src = `../assets/elia/${c.img}.webp`; img.className = 'who pix'; void img.offsetWidth; img.classList.add(c.anim);
   say.textContent = c.say; say.style.animation = 'none'; void say.offsetWidth; say.style.animation = '';
   box.classList.add('on');
   if (kind !== 'try') { SFX.good(); setTimeout(() => burst(kind === 'win' ? 60 : 30), kind === 'siuuu' || kind === 'hero' ? 1000 : 350); }
@@ -341,7 +341,7 @@ function renderMap() {
       const st = S.done[L.id] ? 'done' : L.id <= S.unlocked ? 'open' : 'locked';
       const b = el('button', 'lvl ' + st, `<span class="n">${AR(L.id)}</span>${st === 'locked' ? '' : glyph(L)}`);
       if (S.done[L.id]) { const s = el('div', 'stars'); for (let k = 0; k < 3; k++) s.innerHTML += `<span style="${k < S.done[L.id] ? '' : 'filter:grayscale(1) brightness(.5)'}">${IC.star}</span>`; b.appendChild(s); }
-      if (L.id === cur) { const y = el('img', 'you pix'); y.src = 'assets/elia/hello.webp'; b.appendChild(y); }
+      if (L.id === cur) { const y = el('img', 'you pix'); y.src = '../assets/elia/hello.webp'; b.appendChild(y); }
       b.onclick = () => {
         if (st === 'locked') { SFX.bad(); b.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], { duration: 300 }); toast('🔒 اِجْتَزْ تَحَدِّيَ الْحَرْفِ السّابِقِ أَوَّلاً'); return; }
         SFX.click(); openLevel(L.id);
@@ -352,6 +352,7 @@ function renderMap() {
   });
   requestAnimationFrame(() => { const y = sc.querySelector('.you'); if (y) y.parentElement.scrollIntoView({ block: 'center' }); });
 }
+$('#t-hub').innerHTML = IC.home;
 $('#m-home').innerHTML = IC.home; $('#m-home').onclick = () => { SFX.click(); renderTitle(); show('title'); };
 
 /* ---- مستوى الحرف ---- */
@@ -697,7 +698,7 @@ async function miniRounds(card, L, fns) {
 function stBoss(stage, L) {
   const c = sectionCard(`تَحَدّي ${L.gen} ⚔`, '٣ قُلوبٍ'); stage.appendChild(c);
   const intro = el('div', 'row', `<div style="font-size:30px;line-height:1.6;flex:1;min-width:260px">لَدَيْكَ <b style="color:#e0342f">٣ قُلوبٍ</b>. أَجِبْ عَنْ ٨ أَسْئِلَةٍ، وَكُلُّ خَطَأٍ يُنْقِصُ قَلْباً. اِجْمَعِ النُّجومَ الثَّلاثَ!</div>`);
-  const img = el('img', 'pix'); img.src = 'assets/elia/think.webp'; img.style.height = '220px'; intro.appendChild(img);
+  const img = el('img', 'pix'); img.src = '../assets/elia/think.webp'; img.style.height = '220px'; intro.appendChild(img);
   const go = el('button', 'btn big gold', '⚔ ابْدَأِ التَّحَدّي'); const r = el('div', 'row'); r.appendChild(go);
   c.append(intro, r);
   go.onclick = () => { SFX.click(); c.innerHTML = ''; c.appendChild(el('h2', '', `تَحَدّي ${L.gen} ⚔`)); runBoss(c, L); };
@@ -726,7 +727,7 @@ async function runBoss(card, L) {
 }
 function bossLose(card, L) {
   card.innerHTML = ''; play(AU.ui('lose'));
-  const m = el('div', 'row', `<img class="pix" src="assets/elia/tryagain.webp" style="height:240px"><div style="font-size:34px;line-height:1.6">انْتَهَتِ الْقُلوبُ!<br>لا بَأْسَ يا بَطَلُ، نُعيدُ الْمُحاوَلَةَ 💪</div>`);
+  const m = el('div', 'row', `<img class="pix" src="../assets/elia/tryagain.webp" style="height:240px"><div style="font-size:34px;line-height:1.6">انْتَهَتِ الْقُلوبُ!<br>لا بَأْسَ يا بَطَلُ، نُعيدُ الْمُحاوَلَةَ 💪</div>`);
   const b = el('button', 'btn big green', `<span style="width:34px;height:34px;display:inline-block">${IC.redo}</span> أَعِدِ التَّحَدّي`);
   b.onclick = () => { SFX.click(); openStation(4); };
   const r = el('div', 'row'); r.appendChild(b); card.append(m, r);
@@ -741,7 +742,7 @@ async function bossWin(L, hearts) {
   const body = $('#modal-body');
   body.innerHTML = `<h2 class="mc-title">فُزْتَ بِتَحَدّي ${L.gen}!</h2>
     <div class="row" style="gap:6px">${[0, 1, 2].map(k => `<span style="width:64px;height:64px;display:inline-block;${k < stars ? '' : 'filter:grayscale(1) brightness(.5)'}">${IC.star}</span>`).join('')}</div>
-    <img class="pix" src="assets/elia/trophy.webp" alt="">
+    <img class="pix" src="../assets/elia/trophy.webp" alt="">
     <p style="margin:6px 0">${next ? `فُتِحَ ${next.name}: <b style="font-size:1.6em">${glyph(next)}</b>` : 'أَنْهَيْتَ كُلَّ الْحُروفِ! أَنْتَ بَطَلُ الْحُروفِ 🏆'}</p>`;
   const row = el('div', 'row');
   const bm = el('button', 'btn', 'الْخَريطَةُ'); bm.onclick = () => { SFX.click(); $('#modal').classList.remove('on'); renderMap(); show('map'); };
