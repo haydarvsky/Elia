@@ -205,7 +205,7 @@ const AU = {
   story: L => `assets/audio/L${pad(L.id)}/story.mp3`,
   word: (L, w) => { const i = L.words.indexOf(w); return i < 0 ? null : `assets/audio/L${pad(L.id)}/w${pad(i)}.mp3`; },
   ui: k => `assets/audio/ui/${k}.mp3`,
-  elia: k => `assets/audio/elia/${k}.mp3?v=4`,
+  elia: k => `assets/audio/elia/${k}.mp3?v=5`,
 };
 function sayWord(L, w) { const s = AU.word(L, w); if (s) return play(s); return Promise.resolve(true); }
 
@@ -260,7 +260,7 @@ const CELEB = {
   easy: { img: 'smart', say: 'سَهْلَةٌ!', au: 'easy', anim: 'smart' },
   hero: { img: 'siuuu', say: 'أَنا بَطَلٌ!', au: 'hero', anim: 'siuuu' },
   genius: { img: 'smart', say: 'أَنا عَبْقَرِيٌّ!', au: 'genius', anim: 'smart' },
-  try: { img: 'tryagain', say: 'حاوِلْ مَرَّةً ثانِيَةً!', ui: 'try', anim: 'pop' },
+  try: { img: 'tryagain', say: 'بَحاوِلْ مَرَّةً ثانْيَةً!', au: 'tryagain', anim: 'pop' },
   win: { img: 'trophy', say: 'فُزْتُ!', au: 'won', anim: 'pop' },
 };
 let celebBag = [];
