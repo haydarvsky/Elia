@@ -752,6 +752,24 @@ async function bossWin(L, hearts) {
   renderStations();
 }
 
+/* ============ البدء من جديد ============ */
+function resetGame() {
+  S = { unlocked: 1, done: {}, st: {}, xp: 0, gems: 0, last: today(), streak: 1 }; save();
+  $('#modal').classList.remove('on'); renderTitle(); renderHud(); show('title');
+  toast('↺ بَدَأْنا مِنْ جَديدٍ — مِنْ حَرْفِ الْأَلِفِ!');
+}
+function askReset() {
+  const body = $('#modal-body'); const done = Object.keys(S.done).length;
+  body.innerHTML = `<h2 class="mc-title">اِبْدَأْ مِنْ جَديدٍ؟</h2>
+    <img class="pix" src="../assets/elia/think.webp" alt="" style="height:min(30vh,260px)">
+    <p style="margin:6px 0">سَيُمْسَحُ كُلُّ التَّقَدُّمِ: ${AR(done)} حُروفٍ، ${AR(S.gems)} 💎، وَنِقاطُ الْخِبْرَةِ،<br>وَنَعودُ إِلى حَرْفِ الْأَلِفِ.</p>`;
+  const row = el('div', 'row');
+  const no = el('button', 'btn green', 'لا، أُكْمِلُ'); no.onclick = () => { SFX.click(); $('#modal').classList.remove('on'); };
+  const yes = el('button', 'btn', 'نَعَمْ، مِنَ الْبِدايَةِ'); yes.onclick = () => { SFX.brk(); resetGame(); };
+  row.append(no, yes); body.appendChild(row); $('#modal').classList.add('on');
+}
+$('#b-reset').onclick = () => { SFX.click(); askReset(); };
+
 /* ============ إعدادات الأب (ضغطة طويلة على الشعار) ============ */
 (function parentMenu() {
   const cr = document.querySelector('.credit'); let t;
@@ -760,7 +778,7 @@ async function bossWin(L, hearts) {
     body.innerHTML = `<h2>إِعْداداتُ الْأَبِ</h2><p style="font-size:24px">التَّقَدُّمُ مَحْفوظٌ في هٰذا الْجِهازِ.</p>`;
     const row = el('div', 'row');
     const a = el('button', 'btn gold', 'افْتَحْ كُلَّ الْحُروفِ'); a.onclick = () => { S.unlocked = LET.length; save(); $('#modal').classList.remove('on'); toast('فُتِحَتْ كُلُّ الْحُروفِ'); renderTitle(); };
-    const z = el('button', 'btn', 'تَصْفيرُ التَّقَدُّمِ'); z.onclick = () => { if (confirm('تَصْفيرُ كُلِّ التَّقَدُّمِ؟')) { S = { unlocked: 1, done: {}, st: {}, xp: 0, gems: 0, last: today(), streak: 1 }; save(); $('#modal').classList.remove('on'); renderTitle(); renderHud(); } };
+    const z = el('button', 'btn', 'تَصْفيرُ التَّقَدُّمِ'); z.onclick = () => { SFX.click(); askReset(); };
     const x = el('button', 'btn green', 'إِغْلاقٌ'); x.onclick = () => $('#modal').classList.remove('on');
     row.append(a, z, x); body.appendChild(row); $('#modal').classList.add('on');
   };
