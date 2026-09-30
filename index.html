@@ -51,6 +51,7 @@ h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:
 .game .face{justify-content:flex-start;padding:0 18px}
 .game .face .ico{position:relative;z-index:1;font-size:.8em;line-height:1;max-width:58%;text-align:center}
 .game .face.ltr .ico{font-size:.55em}
+.game .face.ltr{justify-content:flex-end}
 .game .body{padding:12px 16px 18px}
 .game h3{margin:0;font-size:36px}
 .game p{margin:2px 0 10px;font-size:22px;color:#444;line-height:1.4}
@@ -96,7 +97,7 @@ h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:
 /* لإضافة لعبة جديدة: أضف عنصراً هنا، وضع مجلدها بجانب huruf/ */
 const GAMES = [
   { id: 'huruf', title: 'لُعْبَةُ الْحُروفِ', desc: 'شَكْلُ الْحَرْفِ وَصَوْتُهُ وَمَواضِعُهُ وَكَلِماتُهُ — مِنْ كِتابِ لُغَتي.', face: 'أ ب ت', tex: 'gold', img: 'siuuu', href: 'huruf/', progressKey: 'elia-letters-v1', total: 28 },
-  { id: 'english', title: 'لُعْبَةُ الْإِنْجِليزِيِّ', desc: 'الْحُروفُ وَالْكَلِماتُ الْإِنْجِليزِيَّةُ.', face: 'ABC', ltr: true, tex: 'diamond', img: 'smart', soon: true },
+  { id: 'english', title: 'إيليا وَفينوم', desc: 'مُغامَرَةُ الْإِنْجِليزِيِّ: الْحُروفُ وَالْكَلِماتُ وَالْأَعْدادُ — مِنْ كِتابِ Skyline.', face: 'ABC', ltr: true, tex: 'diamond', img: 'smart', cover: 'english/img/team_win.webp', href: 'english/', progressKey: 'elia-english-v1', total: 45 },
   { id: 'math', title: 'لُعْبَةُ الرِّياضِيّاتِ', desc: 'الْأَعْدادُ وَالْجَمْعُ وَالطَّرْحُ.', face: '١+٢', tex: 'grass', img: 'think', soon: true },
   { id: 'more', title: 'أَلْعابٌ قادِمَةٌ', desc: 'عَوالِمُ جَديدَةٌ في الطَّريقِ…', face: '؟', tex: 'obsidian', img: 'tryagain', soon: true },
 ];
@@ -130,7 +131,7 @@ GAMES.forEach(g => {
   if (st) { done = Object.keys(st.done || {}).length; gems += st.gems || 0; stars += Object.values(st.done || {}).reduce((a, b) => a + b, 0); }
   const el = document.createElement(g.soon ? 'div' : 'a'); el.className = 'game' + (g.soon ? ' soon' : '');
   if (!g.soon) el.href = g.href;
-  el.innerHTML = `<div class="face${g.ltr ? ' ltr' : ''}" style="background-image:var(--tex-${g.tex})"><img class="pix" src="assets/elia/${g.img}.webp" alt=""><span class="ico">${g.face}</span></div>
+  el.innerHTML = `<div class="face${g.ltr ? ' ltr' : ''}" style="background-image:var(--tex-${g.tex})"><img class="${g.cover ? '' : 'pix'}" src="${g.cover || `assets/elia/${g.img}.webp`}" alt=""><span class="ico">${g.face}</span></div>
     <div class="body"><h3>${g.title}</h3><p>${g.desc}</p>
     ${g.total ? `<div class="bar"><i style="width:${done / g.total * 100}%"></i></div><p style="margin-top:-6px">${AR(done)} مِنْ ${AR(g.total)} ✔</p>` : ''}
     <div class="go">${g.soon ? 'قَريباً 🔒' : (done ? 'تابِعْ ▶' : 'اِلْعَبْ ▶')}</div></div>`;
