@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="سبايدر × إيليا">
+<meta name="theme-color" content="#c8102e">
+<title>سبايدر × إيليا — أبطال الأرقام</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="apple-touch-icon" href="../assets/icon.png">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+<!-- الغلاف -->
+<section id="home" class="screen on">
+  <div class="cover"></div>
+  <div class="halftone"></div>
+  <a class="back chip" href="../">‹ الْأَلْعابُ</a>
+  <div class="home-box">
+    <h1 class="logo"><span class="s">سبايدر</span><b>×</b><span class="e">إيليا</span><small>أَبْطالُ الْأَرْقامِ!</small></h1>
+    <div class="home-stats" id="home-stats"></div>
+  </div>
+  <img class="home-hero" src="img/hero.webp?v=1" alt="">
+  <div class="home-spidey"><span class="spidey-slot"></span><div class="bubble">هَلا إيليا! يَلّا نَحُلُّ أَلْغازَ الرِّياضِيّاتِ!</div></div>
+  <div class="home-btns">
+    <button class="cbtn big" id="play">▶ اِلْعَبْ!</button>
+    <button class="cbtn" id="h-cards">🃏 بِطاقاتُ الْأَرْقامِ</button>
+  </div>
+</section>
+
+<!-- اختيار العالم والمهمة -->
+<section id="worlds" class="screen">
+  <div class="dots-bg"></div>
+  <header class="topbar">
+    <button class="cbtn icon" id="w-home">⌂</button>
+    <h2 class="ctitle">اِخْتَرْ مُهِمَّتَكَ</h2>
+    <div class="stat-row" id="w-stats"></div>
+  </header>
+  <div class="world-tabs" id="world-tabs"></div>
+  <p class="w-sub" id="w-sub"></p>
+  <div class="missions" id="missions"></div>
+</section>
+
+<!-- اللعب -->
+<section id="game" class="screen">
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <button class="cbtn icon sm" id="g-exit">✕</button>
+    <button class="target" id="target"><span class="spidey-slot"></span><span id="q"></span><span class="spk">🔊</span></button>
+    <div class="hud-r">
+      <div class="score" id="score">٠</div>
+      <div class="lives" id="lives"></div>
+    </div>
+    <div class="pbar"><i id="pbar"></i></div>
+  </div>
+  <div class="combo" id="combo"></div>
+  <div class="banner" id="banner"></div>
+  <div class="trace-ov" id="trace-ov">
+    <div class="trace-card">
+      <h3>ضَرْبَةُ الشَّبَكَةِ الْخارِقَةُ! <small>اُكْتُبِ الرَّقْمَ <b id="trace-n"></b> بِالْقَلَمِ ✏️</small></h3>
+      <div class="trace-box" id="trace-box"><canvas></canvas><canvas></canvas></div>
+      <div class="row"><button class="cbtn" id="trace-clear">↺</button><button class="cbtn go" id="trace-ok">✓ اِنْطَلِقْ!</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- النتيجة -->
+<section id="result" class="screen">
+  <div class="dots-bg"></div>
+  <div class="res-card" id="res-card"></div>
+</section>
+
+<!-- البطاقات -->
+<section id="cards" class="screen">
+  <div class="dots-bg"></div>
+  <header class="topbar">
+    <button class="cbtn icon" id="c-back">›</button>
+    <h2 class="ctitle">بِطاقاتُ الْأَرْقامِ <span class="chip" id="c-count"></span></h2>
+  </header>
+  <div class="cards-wrap" id="cards-wrap"></div>
+</section>
+
+<div id="celebrate"><div class="c-in"><img id="c-img" alt=""><div id="c-say"></div></div></div>
+<div id="toast"></div>
+<div id="modal"><div class="res-card sm" id="modal-card"></div></div>
+
+<script src="js/data.js?v=1"></script>
+<script src="js/app.js?v=1"></script>
+</body>
+</html>
