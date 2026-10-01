@@ -1139,9 +1139,9 @@ function gameWrite(w, s) {
       const c = scoreHit(G, P.cx, P.cy - P.h * .3, G.q.val); if (!c) goodSay(G, G.q);
       setTimeout(() => { if (GAME !== G || G.over) return; if (G.rounds >= G.goal) endGame(G, true); else ask(false); }, 1700);
     } else {
-      G.fails++; G.shk = .45; G.boxes.forEach(b => { b.strokes = []; }); miss(G, P.cx, P.cy - P.h * .3, false);
-      if (G.fails >= 3 && !G.guide) { G.guide = true; G.hearts = Math.max(1, G.hearts - 1); say2('اُكْتُبْ فَوْقَ الرَّقْمِ الْمُنَقَّطِ ✏️', 2400); }
-      else say2('اُكْتُبْ بِخَطٍّ أَوْضَحَ ✏️');
+      G.fails++; G.shk = .45; G.boxes.forEach(b => { b.strokes = []; }); G.combo = 0; G.shake = 1.2; SFX.bad(); fxWord(G, pick(['أوبس!', 'لا!', 'أوه!']), P.cx, P.cy - P.h * .3, '#ff5a5a');
+      if (G.fails >= 3 && !G.guide) { G.guide = true; G.hearts = Math.max(1, G.hearts - 1); say('writeGuide'); say2('اُكْتُبْ فَوْقَ الرَّقْمِ الْمُنَقَّطِ ✏️', 2400); }
+      else { say('writeAgain'); say2('اُكْتُبْ بِخَطٍّ أَوْضَحَ ✏️'); }
     }
   }
   G.onDown = (x, y, e) => {
@@ -1185,7 +1185,7 @@ function gameWrite(w, s) {
     if (G.phase === 'play' && G.t >= 3) { drawBtn(g, B.clr, '↺ اِمْسَحْ'); drawBtn(g, B.ok, '✓ تَمَّ', '#2ee66b'); }
     if (G.hint) { g.save(); g.globalAlpha = Math.min(1, G.hint.life * 3); g.font = `800 ${Math.max(22, 4.4 * U)}px ${AR_FONT}`; g.lineWidth = 7; g.lineJoin = 'round'; g.strokeStyle = INK; g.fillStyle = '#ffd23f'; cText(g, G.hint.t, P.cx, Math.max(TOP + 3.4 * U, P.y - 3.2 * U), true); g.restore(); }
   };
-  G.start = () => { ask(true); startMsg(G, () => G.q.speak()); };
+  G.start = () => { ask(true); startMsg(G, () => chain(S_('write'), () => G.q.speak())); };
   G.speak = () => G.q && G.q.speak();
   return G;
 }

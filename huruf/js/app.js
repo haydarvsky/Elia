@@ -728,7 +728,7 @@ Q.dots = (host, L) => {
     ok.onclick = check; clr.onclick = () => { if (locked) return; SFX.click(); put = []; draw(); };
     if (TEST) box._solve = good => { put = good ? real.slice() : [[5, 5]]; check(); };
     document.fonts.ready.then(() => requestAnimationFrame(setup));
-    seq([AU.name(Tg)]);
+    seq([AU.ui('dots'), AU.name(Tg)]);
   });
 };
 
@@ -780,7 +780,7 @@ Q.connect = (host, L) => {
   const seen = new Set(), pairs = [];
   shuffle(['start', 'middle', 'end', 'alone'].filter(k => L.forms[k].form && L.forms[k].words.length)).forEach(k => { const f = L.forms[k].form; if (seen.has(f)) return; seen.add(f); const w = pick(L.forms[k].words); pairs.push({ a: hlWord(w, L), b: f, w }); });
   if (pairs.length < 2) return Q.posQ(host, L);
-  seq([AU.ui('where')]);
+  seq([AU.ui('connect')]);
   return connectQ(host, { prompt: 'وَصِّلْ بِالْقَلَمِ كُلَّ كَلِمَةٍ بِشَكْلِ الْحَرْفِ فيها', pairs: pairs.slice(0, 3), onPick: p => sayWord(L, p.w) });
 };
 
@@ -815,7 +815,7 @@ function stShape(stage, L) {
     }
     stationComplete(0);
   });
-  setTimeout(() => play(AU.name(L)), 250);
+  setTimeout(() => seq([AU.name(L), SK[glyph(L)] && AU.ui('write')].filter(Boolean)), 250);
 }
 function traceGame(host, L) {
   return new Promise(res => {
@@ -1071,6 +1071,7 @@ async function runBoss(card, L) {
     await sleep(250); SFX.bad(); noise(.2, .3); again(hero, 'hurt'); again(arena, 'flash'); float('آخ!', hero, 'bad'); await sleep(360);
   }
   MUSIC && MUSIC.start('battle');
+  await play(AU.ui('battle')); if (!alive()) return;
   for (let i = 0; i < plan.length && hp > 0 && hearts > 0; i++) {
     host.innerHTML = '';
     if (plan[i].L !== L) host.appendChild(el('div', 'q', `<span style="font-size:24px;background:#555;padding:0 12px 4px;border:3px solid #000">🔁 مُراجَعَةٌ: ${plan[i].L.name}</span>`));
@@ -1095,7 +1096,7 @@ async function runBoss(card, L) {
   /* الضربة القاضية: اكتب الحرف */
   mob.classList.add('stun'); arena.querySelector('.a-crit').style.display = 'none'; host.innerHTML = '';
   host.appendChild(el('div', 'q', `<span class="fin">⚔ الضَّرْبَةُ الْقاضِيَةُ!</span><br>اُكْتُبْ ${L.name} لِتَهْزِمَ الْوَحْشَ`));
-  play(AU.ui('trace'));
+  play(AU.ui('finish'));
   await writeLetter(host, L);
   if (!alive()) return;
   mob.classList.remove('stun'); await heroHit(true, true);
