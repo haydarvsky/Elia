@@ -22,7 +22,8 @@ const AR_FONT = '"Sakkal Saad",system-ui,sans-serif';
 const KEY = 'elia-spider-v1';
 let S = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })();
 S = Object.assign({ done: {}, best: {}, gems: 0, cards: {}, world: 1 }, S);
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const CLOUD = window.EliaSave;                    // المزامنة السحابية (assets/save.js)
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} CLOUD && CLOUD.push(); };
 const NM = MIS[1].length;
 const sk = (w, s) => w + '-' + s;
 const starsOf = (w, s) => S.done[sk(w, s)] || 0;
@@ -116,17 +117,25 @@ function celebrate(kind) {
 /* ================= رسم البطاقات ================= */
 const RING = ['#ffd23f', '#26c6da', '#ff8a3d', '#2ee66b', '#ff5fa2', '#8f6bff'];
 function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+/* يرسم النصّ ومركزُ حبره الحقيقي عند (cx, cy) — مقاييس الخط العربي لا تتوسّط وحدها */
+function cText(x, t, cx, cy, stroke) {
+  const al = x.textAlign, bl = x.textBaseline; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  const m = x.measureText(t), px = cx + (m.actualBoundingBoxLeft - m.actualBoundingBoxRight) / 2, py = cy + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+  if (stroke) x.strokeText(t, px, py); x.fillText(t, px, py); x.textAlign = al; x.textBaseline = bl;
+}
 function tokensRTL(x, toks, cx, cy, size) {   // يرسم رموزاً من اليمين إلى اليسار (٣ + ٢ = …)
-  x.font = `800 ${size}px ${AR_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.direction = 'ltr';
+  x.font = `800 ${size}px ${AR_FONT}`; x.direction = 'ltr';
   const gap = size * .18, ws = toks.map(t => x.measureText(t).width); let tot = ws.reduce((a, b) => a + b, 0) + gap * (toks.length - 1);
   let px = cx + tot / 2;
-  toks.forEach((t, i) => { px -= ws[i] / 2; x.fillText(t, px, cy); px -= ws[i] / 2 + gap; });
+  toks.forEach((t, i) => { px -= ws[i] / 2; cText(x, t, px, cy); px -= ws[i] / 2 + gap; });
   return tot;
 }
 function fitText(x, t, cx, cy, maxW, size, font = AR_FONT) {
   let f = size; x.font = `800 ${f}px ${font}`; const w = x.measureText(t).width; if (w > maxW) { f *= maxW / w; x.font = `800 ${f}px ${font}`; }
-  x.fillText(t, cx, cy);
+  cText(x, t, cx, cy);
 }
+const backOut = k => 1 + 2.70158 * (k - 1) ** 3 + 1.70158 * (k - 1) ** 2;
+const popSc = (G, c) => c.born == null ? 1 : backOut(clamp((G.t - c.born) * 4, 0, 1));   // ظهور البطاقة بنطّة
 function emojiGrid(x, e, n, cx, cy, s) {
   if (!n) return;
   const cols = n <= 3 ? n : n === 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : 4, rows = Math.ceil(n / cols), cell = Math.min(2 * s / cols, 2 * s / rows);
@@ -170,7 +179,7 @@ function drawClock(x, cx, cy, R, h, o = {}) {
   x.beginPath(); x.arc(cx, cy, R, 0, 7); x.fill(); x.stroke();
   x.strokeStyle = '#2e9d4d'; x.lineWidth = R * .07; x.beginPath(); x.arc(cx, cy, R * .9, 0, 7); x.stroke();
   x.fillStyle = INK; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `800 ${R * (o.small ? .26 : .2)}px ${AR_FONT}`;
-  for (let i = 1; i <= 12; i++) { const a = i / 12 * 6.283 - 1.5708; x.fillText(AD(i), cx + Math.cos(a) * R * .72, cy + Math.sin(a) * R * .72 + R * .03); }
+  for (let i = 1; i <= 12; i++) { const a = i / 12 * 6.283 - 1.5708; cText(x, AD(i), cx + Math.cos(a) * R * .72, cy + Math.sin(a) * R * .72); }
   if (!o.small) for (let i = 0; i < 60; i++) { const a = i / 60 * 6.283; x.lineWidth = i % 5 ? 1 : 3; x.beginPath(); x.moveTo(cx + Math.cos(a) * R * .84, cy + Math.sin(a) * R * .84); x.lineTo(cx + Math.cos(a) * R * .8, cy + Math.sin(a) * R * .8); x.stroke(); }
   const ha = o.angle != null ? o.angle : (h % 12) / 12 * 6.283 - 1.5708;
   x.lineCap = 'round';
@@ -198,18 +207,18 @@ function drawVert(x, a, op, b, cx, cy, s) {   // الجمع/الطرح بالش�
 function drawContent(x, o, cx, cy, r) {
   x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = INK; x.direction = 'ltr';
   switch (o.k) {
-    case 'num': x.font = `800 ${o.v > 9 ? r * 1.45 : r * 1.9}px ${AR_FONT}`; x.fillText(AD(o.v), cx, cy + r * .22); break;
-    case 'txt': fitText(x, o.v, cx, cy + r * .1, r * 1.7, r * .62); break;
-    case 'time': fitText(x, AD(o.v) + ':٠٠', cx, cy + r * .16, r * 1.8, r * 1.05); break;
+    case 'num': x.font = `800 ${o.v > 9 ? r * 1.45 : r * 1.9}px ${AR_FONT}`; cText(x, AD(o.v), cx, cy); break;
+    case 'txt': fitText(x, o.v, cx, cy, r * 1.7, r * .62); break;
+    case 'time': fitText(x, AD(o.v) + ':٠٠', cx, cy, r * 1.8, r * 1.05); break;
     case 'grp': emojiGrid(x, o.e, o.n, cx, cy, r * .8); break;
     case 'emo': x.font = `${r * 1.15}px ${EMOJI_FONT}`; x.fillText(o.e, cx, cy + r * .08); break;
     case 'shape': drawShape(x, o.v, o.c, cx, cy, r * .72); break;
     case 'pos': drawPos(x, o.v, cx, cy, r * .88); break;
     case 'clock': drawClock(x, cx, cy, r * .86, o.v, { small: true }); break;
-    case 'sign': x.font = `900 ${r * 1.3}px "Arial Black",Impact,sans-serif`; x.fillStyle = BLUE; x.fillText(o.v, cx, cy + r * .06); break;
+    case 'sign': x.font = `900 ${r * 1.3}px "Arial Black",Impact,sans-serif`; x.fillStyle = BLUE; cText(x, o.v, cx, cy); break;
     case 'tens': drawTens(x, o.v, cx, cy, r); break;
     case 'frame': drawFrame(x, o.v, cx, cy, r * .88); break;
-    case 'expr': x.fillStyle = INK; { const t = [AD(o.a), o.op, AD(o.b)]; x.font = `800 ${r}px ${AR_FONT}`; const w = t.reduce((s, q) => s + x.measureText(q).width, 0) * 1.3; tokensRTL(x, t, cx, cy + r * .14, r * Math.min(1, r * 1.8 / w)); } break;
+    case 'expr': x.fillStyle = INK; { const t = [AD(o.a), o.op, AD(o.b)]; x.font = `800 ${r}px ${AR_FONT}`; const w = t.reduce((s, q) => s + x.measureText(q).width, 0) * 1.3; tokensRTL(x, t, cx, cy, r * Math.min(1, r * 1.8 / w)); } break;
     case 'vert': drawVert(x, o.a, o.op, o.b, cx, cy, r); break;
   }
 }
@@ -370,8 +379,10 @@ function fillMini(root) {   // يرسم الأشكال الصغيرة داخل �
 
 /* ================= المحرّك ================= */
 const cv = $('#cv'), ctx = cv.getContext('2d');
-let W = 0, H = 0, U = 1;
-function resize() { const dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; U = Math.min(W, H) / 100; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); cardCache.clear(); if (GAME && GAME.resize) GAME.resize(); }
+let W = 0, H = 0, U = 1, TOP = 0;   // TOP = أسفل الشريط العلوي: ما يُرسم على الكانفس يبدأ من تحته
+const hudEl = $('#game .hud');
+const measureTop = () => { TOP = Math.min(H * .42, hudEl.getBoundingClientRect().bottom + 6); };
+function resize() { const dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; U = Math.min(W, H) / 100; measureTop(); cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); cardCache.clear(); if (GAME && GAME.resize) GAME.resize(); }
 addEventListener('resize', () => { if ($('#game').classList.contains('on')) resize(); });
 let GAME = null, raf = 0, lastT = 0;
 function loop(t) {
@@ -381,16 +392,19 @@ function loop(t) {
   if (!GAME.paused) GAME.update(dt);
   ctx.save(); ctx.direction = 'ltr'; if (GAME.shake > 0) ctx.translate(rand(-1, 1) * GAME.shake * U, rand(-1, 1) * GAME.shake * U);
   GAME.draw(ctx); drawFx(ctx, GAME, GAME.paused ? 0 : dt); ctx.restore();
+  if (GAME.hurtT > 0) { const k = Math.min(1, GAME.hurtT); const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .7); v.addColorStop(0, 'rgba(255,40,40,0)'); v.addColorStop(1, `rgba(255,40,40,${.5 * k})`); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
 }
 function fxWord(G, text, x, y, color = '#ffd23f', size = 8) { G.fx.push({ t: 'w', text, x, y, color, size, life: .9, rot: rand(-.25, .25) }); }
-function fxBurst(G, x, y, n = 16, cols = ['#ffd23f', RED, BLUE, '#fff', '#2ee66b']) { for (let i = 0; i < n; i++) { const a = rand(0, 6.3), v = rand(20, 60) * U; G.fx.push({ t: 'p', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: pick(cols), life: rand(.4, .8), s: rand(1, 2.4) * U }); } }
+function fxBurst(G, x, y, n = 16, cols = ['#ffd23f', RED, BLUE, '#fff', '#2ee66b']) { for (let i = 0; i < n; i++) { const a = rand(0, 6.3), v = rand(20, 60) * U; G.fx.push({ t: 'p', star: i % 3 === 0, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: pick(cols), life: rand(.45, .9), s: rand(1, 2.4) * U, rot: rand(0, 6), vr: rand(-8, 8) }); } }
+function starPath(g, r) { g.beginPath(); for (let i = 0; i < 10; i++) { const a = i * .6283 - 1.5708, q = i % 2 ? r * .45 : r; i ? g.lineTo(Math.cos(a) * q, Math.sin(a) * q) : g.moveTo(Math.cos(a) * q, Math.sin(a) * q); } g.closePath(); }
 function fxRing(G, x, y, c = '#fff') { G.fx.push({ t: 'r', x, y, c, life: .4, r0: 4 * U }); }
 function fxWeb(G, x1, y1, x2, y2) { G.fx.push({ t: 'l', x1, y1, x2, y2, life: .45 }); }
 function drawFx(g, G, dt) {
-  G.shake = Math.max(0, G.shake - dt * 8);
+  G.shake = Math.max(0, G.shake - dt * 8); G.pop = Math.max(0, (G.pop || 0) - dt * 4);
   G.fx = G.fx.filter(f => (f.life -= dt) > 0);
   for (const f of G.fx) {
-    if (f.t === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 90 * U * dt; g.fillStyle = f.c; g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.rect(f.x - f.s / 2, f.y - f.s / 2, f.s, f.s); g.fill(); g.stroke(); }
+    if (f.t === 'p') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 90 * U * dt; f.rot += f.vr * dt; const k = Math.min(1, f.life * 4);
+      g.save(); g.translate(f.x, f.y); g.rotate(f.rot); g.scale(k, k); g.fillStyle = f.c; g.strokeStyle = INK; g.lineWidth = 2; if (f.star) starPath(g, f.s * 1.1); else { g.beginPath(); g.rect(-f.s / 2, -f.s / 2, f.s, f.s); } g.fill(); g.stroke(); g.restore(); }
     else if (f.t === 'r') { const k = 1 - f.life / .4; g.strokeStyle = f.c; g.lineWidth = 6 * (1 - k) + 1; g.beginPath(); g.arc(f.x, f.y, f.r0 + k * 14 * U, 0, 7); g.stroke(); }
     else if (f.t === 'l') { webLine(g, f.x1, f.y1, f.x2, f.y2, Math.min(1, (.45 - f.life) * 9)); }
     else if (f.t === 'w') {
@@ -429,7 +443,41 @@ const spriteW = (img, h) => ready(img) ? h * img.naturalWidth / img.naturalHeigh
 function drawBtn(g, b, label, color = '#ffd23f') {
   g.save(); g.fillStyle = INK; rr(g, b.x - b.w / 2 + 5, b.y - b.h / 2 + 5, b.w, b.h, 14); g.fill();
   g.fillStyle = b.down ? '#fff' : color; rr(g, b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 14); g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke();
-  g.fillStyle = INK; g.textAlign = 'center'; g.textBaseline = 'middle'; fitText(g, label, b.x, b.y + b.h * (label.length === 1 ? 0 : .06), b.w * .86, b.h * (label.length === 1 ? 1 : .6), label.length === 1 ? '"Arial Black",sans-serif' : AR_FONT); g.restore();
+  g.fillStyle = INK; g.textAlign = 'center'; g.textBaseline = 'middle'; fitText(g, label, b.x, b.y, b.w * .86, b.h * (label.length === 1 ? 1 : .6), label.length === 1 ? '"Arial Black",sans-serif' : AR_FONT); g.restore();
+}
+function drawTrain(g, x, y, tw, t) {   // قطار مرسوم بالكود: (x, y) = منتصف القاطرة على سطح السكة
+  const lw = Math.max(3, tw * .035), wr = tw * .13, rot = x / wr;
+  const wheel = (cx, r) => {
+    g.fillStyle = INK; g.beginPath(); g.arc(cx, y - r, r, 0, 7); g.fill();
+    g.fillStyle = '#e9e9e9'; g.beginPath(); g.arc(cx, y - r, r * .62, 0, 7); g.fill();
+    g.strokeStyle = INK; g.lineWidth = Math.max(2, r * .18); g.beginPath();
+    for (let k = 0; k < 2; k++) { const a = rot + k * 1.5708, dx = Math.cos(a) * r * .6, dy = Math.sin(a) * r * .6; g.moveTo(cx - dx, y - r - dy); g.lineTo(cx + dx, y - r + dy); }
+    g.stroke(); g.fillStyle = RED; g.beginPath(); g.arc(cx, y - r, r * .22, 0, 7); g.fill();
+  };
+  g.save(); g.lineJoin = 'round';
+  [[BLUE, 1], ['#ffd23f', 2]].forEach(([c, i]) => {                       // العربات
+    const cx = x - i * tw * 1.05, bob = Math.sin(t * 9 + i) * tw * .008;
+    g.strokeStyle = INK; g.lineWidth = lw * 1.4; g.beginPath(); g.moveTo(cx + tw * .45, y - tw * .2); g.lineTo(cx + tw * .6, y - tw * .2); g.stroke();
+    g.lineWidth = lw; g.fillStyle = c; rr(g, cx - tw * .45, y - tw * .66 + bob, tw * .9, tw * .52, tw * .08); g.fill(); g.stroke();
+    g.fillStyle = '#dff4ff'; for (const k of [-.32, -.06, .2]) { rr(g, cx + k * tw, y - tw * .57 + bob, tw * .18, tw * .2, tw * .04); g.fill(); g.stroke(); }
+    g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(cx - tw * .45 + lw / 2, y - tw * .28 + bob, tw * .9 - lw, tw * .07);
+    wheel(cx - tw * .25, wr * .85); wheel(cx + tw * .25, wr * .85);
+  });
+  const bob = Math.sin(t * 9) * tw * .01;                                  // القاطرة
+  g.strokeStyle = INK; g.lineWidth = lw;
+  g.fillStyle = '#8a1c22'; g.beginPath(); g.moveTo(x + tw * .32, y - tw * .2 + bob); g.lineTo(x + tw * .54, y - tw * .02); g.lineTo(x + tw * .3, y - tw * .02); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = INK; rr(g, x + tw * .1, y - tw * .88 + bob, tw * .16, tw * .34, tw * .03); g.fill(); rr(g, x + tw * .06, y - tw * .92 + bob, tw * .24, tw * .08, tw * .03); g.fill();
+  g.fillStyle = RED; rr(g, x - tw * .12, y - tw * .58 + bob, tw * .46, tw * .42, tw * .1); g.fill(); g.stroke();
+  g.fillStyle = '#c8102e'; rr(g, x - tw * .48, y - tw * .86 + bob, tw * .4, tw * .7, tw * .06); g.fill(); g.stroke();
+  g.fillStyle = INK; rr(g, x - tw * .54, y - tw * .93 + bob, tw * .52, tw * .1, tw * .04); g.fill();
+  g.fillStyle = '#9ad7ff'; rr(g, x - tw * .41, y - tw * .75 + bob, tw * .25, tw * .24, tw * .04); g.fill(); g.stroke();
+  g.fillStyle = '#ffd23f'; g.fillRect(x - tw * .1, y - tw * .34 + bob, tw * .42, tw * .05);
+  g.beginPath(); g.arc(x + tw * .3, y - tw * .47 + bob, tw * .07, 0, 7); g.fill(); g.stroke();
+  wheel(x - tw * .28, wr); wheel(x + tw * .14, wr);
+  const ry = y - wr, ox = Math.cos(rot) * wr * .5, oy = Math.sin(rot) * wr * .5;   // ذراع العجلات
+  g.lineCap = 'round'; g.strokeStyle = INK; g.lineWidth = Math.max(5, tw * .06); g.beginPath(); g.moveTo(x - tw * .28 + ox, ry + oy); g.lineTo(x + tw * .14 + ox, ry + oy); g.stroke();
+  g.strokeStyle = '#d6d6d6'; g.lineWidth = Math.max(2, tw * .03); g.stroke();
+  g.restore();
 }
 const inBtn = (b, x, y) => b && Math.abs(x - b.x) < b.w / 2 && Math.abs(y - b.y) < b.h / 2;
 
@@ -440,7 +488,7 @@ function baseGame(w, s) {
   return { w, s, st, diff, kind: st.g, score: 0, combo: 0, bestCombo: 0, hits: 0, rounds: 0, hearts: 3, fx: [], shake: 0, t: 0, over: false, paused: false, got: new Set(), hurtT: 0, q: null, bg: IMG['bg_' + WORLDS[w - 1].bg] };
 }
 function hud(G) {
-  $('#score').textContent = AD(G.score);
+  const sc = $('#score'), st = AD(G.score); if (sc.textContent !== st) { sc.textContent = st; if (G.score) { sc.classList.remove('bump'); void sc.offsetWidth; sc.classList.add('bump'); } }
   const lv = $('#lives');
   if (G.timeLeft != null) { const s = Math.max(0, Math.ceil(G.timeLeft)); lv.innerHTML = `<span class="time${s <= 10 ? ' low' : ''}">⏱ ${AD(s)}</span>`; }
   else lv.innerHTML = [0, 1, 2].map(i => `<span class="${i < G.hearts ? '' : 'off'}">❤️</span>`).join('');
@@ -449,7 +497,7 @@ function hud(G) {
 }
 function setTarget(html) {
   const tg = $('#q'); tg.innerHTML = html; fillMini(tg);
-  const b = $('#target'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+  const b = $('#target'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); measureTop();
 }
 function pickType(G) { const ts = G.st.tasks; let t = pick(ts); if (G.q && ts.length > 1 && t === G.q.type) t = pick(ts); return t; }
 function nextQ(G, first) {
@@ -458,7 +506,7 @@ function nextQ(G, first) {
   return G.q;
 }
 function scoreHit(G, x, y, val) {
-  G.combo++; G.bestCombo = Math.max(G.bestCombo, G.combo); G.hits++;
+  G.combo++; G.bestCombo = Math.max(G.bestCombo, G.combo); G.hits++; G.pop = 1;
   const pts = 10 * Math.min(5, 1 + Math.floor(G.combo / 3)); G.score += pts;
   if (val != null && val >= 0 && val <= 12) G.got.add(val);
   SFX.pow(); fxBurst(G, x, y); fxRing(G, x, y); fxWord(G, pick(['واو!', 'بوم!', 'صَحّ!', 'شَبَكَة!', 'بَطَل!']), x, y - 7 * U);
@@ -493,7 +541,7 @@ function gameSwing(w, s) {
   G.resize = () => { G.home.x = Math.max(W * .14, heroH() * .3); G.home.y = H * .36; if (!G.hero) G.hero = { x: G.home.x, y: G.home.y }; layout(); };
   const cardR = () => clamp(Math.min(W, H) * .1, 42, 88);
   function layout() {
-    if (!G.q) return; const r = cardR(), xs = [.52, .7, .88].map(f => W * f), ys = shuffle([H * .4, H * .55, H * .7]);
+    if (!G.q) return; const r = cardR(), xs = [.52, .7, .88].map(f => W * f), y0 = Math.max(H * .4, TOP + r * 2.85), y1 = Math.max(y0 + r, H * .74), ys = shuffle([y0, (y0 + y1) / 2, y1]);
     G.cards.forEach((c, i) => { c.tx = xs[i]; c.ty = ys[i]; c.r = r; });
   }
   function ask(first) {
@@ -576,7 +624,8 @@ function huntRule(G) {
   }
   return r;
 }
-const LANES = [{ y: .31, dir: 1 }, { y: .52, dir: -1 }, { y: .73, dir: 1 }];
+const LANES = [{ dir: 1 }, { dir: -1 }, { dir: 1 }];
+const laneY = (li, r) => { const a = Math.max(H * .31, TOP + r * 2.15), b = Math.max(a + r * 3, H * .76); return a + (b - a) * li / 2; };
 function gameHunt(w, s) {
   const G = baseGame(w, s);
   G.timeLeft = 60; G.goal = 12 + w * 2; G.items = []; G.spawnT = .3; G.progress = () => G.hits / G.goal; G.ruleHits = 0; G.since = 0;
@@ -601,7 +650,7 @@ function gameHunt(w, s) {
       const r = clamp(6.4 * U, 40, 70), free = LANES.map((L, li) => ({ L, li })).filter(({ L, li }) => !G.items.some(o => !o.dead && o.lane === li && (L.dir > 0 ? o.x < r * 3.2 : o.x > W - r * 3.2)));
       if (free.length) {
         const { L, li } = pick(free), it = G.rule.gen(want); it.r = r; it.dir = L.dir; it.lane = li;
-        it.x = L.dir > 0 ? -r * 1.5 : W + r * 1.5; it.y0 = H * L.y; it.y = it.y0; it.vx = (13 + li * 2.5) * U * (1 + G.diff * .8) * L.dir; it.ph = rand(0, 6); it.img = IMG[pick(DRONES)]; it.ring = pick(RING);
+        it.x = L.dir > 0 ? -r * 1.5 : W + r * 1.5; it.y0 = laneY(li, r); it.y = it.y0; it.vx = (13 + li * 2.5) * U * (1 + G.diff * .8) * L.dir; it.ph = rand(0, 6); it.img = IMG[pick(DRONES)]; it.ring = pick(RING);
         G.items.push(it);
       }
       G.spawnT = rand(.7, 1.1) - G.diff * .25;
@@ -617,7 +666,7 @@ function gameHunt(w, s) {
       if (!it.dead) drawSprite(g, it.img, it.x + sx, it.y - it.r * .82, it.r * 1.15, { flip: it.dir > 0, rot: Math.sin(it.ph) * .1 });
       drawCard(g, it.o, it.x + sx, it.y + it.r * .2, it.r, { ring: it.ring, shape: 'ball', rot: it.rot || 0, web: it.dead ? 1 : 0 });
     }
-    drawSprite(g, IMG.hero, W * .08, H + heroH() * .06, heroH() * .8);
+    drawSprite(g, IMG.hero, W * .08, H + heroH() * .06, heroH() * .8, { sx: 1 + (G.pop || 0) * .08, sy: 1 + (G.pop || 0) * .08 });
   };
   G.start = () => { newRule(true); startMsg(G, () => G.rule.speak()); };
   G.speak = () => G.rule && G.rule.speak();
@@ -628,7 +677,7 @@ function gameHunt(w, s) {
 function gameLasso(w, s) {
   const G = baseGame(w, s);
   G.goal = 6; G.progress = () => G.rounds / G.goal; G.items = []; G.path = []; G.phase = 'draw'; G.cards = null; G.flash = null;
-  const area = () => ({ x0: W * .06, x1: W * .94, y0: Math.max(H * .26, 120), y1: H * .94 });
+  const area = () => ({ x0: W * .06, x1: W * .94, y0: Math.max(H * .26, TOP + 12), y1: H * .94 });
   function round(first) {
     const t = pickType(G), q = { type: t }, A = area(); let list = [];
     const E = pick(EMO.filter(e => e !== '🕷️'));
@@ -675,7 +724,7 @@ function gameLasso(w, s) {
   }
   function askLeft() {
     const q = G.q, r = clamp(Math.min(W, H) * .09, 40, 76), m = numOpts(q.a - q.b, 0, 10);
-    G.cards = m.opts.map((o, i) => ({ o, ok: i === m.ans, x: W * (.3 + i * .2), y: H * .8, r, ring: RING[i] }));
+    G.cards = m.opts.map((o, i) => ({ o, ok: i === m.ans, x: W * (.3 + i * .2), y: H * .8, r, ring: RING[i], born: G.t + i * .08 }));
     G.phase = 'ask'; G.path = []; setTarget(`${eqH(q.a, '−', q.b)}<span class="note">كَمْ بَقِيَ؟</span>`); say('left');
   }
   function answerLeft(c) {
@@ -708,7 +757,7 @@ function gameLasso(w, s) {
       for (const [c, lw] of [['rgba(0,0,0,.45)', 11], [col, 5]]) { g.strokeStyle = c; g.lineWidth = lw; g.beginPath(); g.moveTo(P[0][0], P[0][1]); P.forEach(p => g.lineTo(p[0], p[1])); if (G.flash) g.closePath(); g.stroke(); }
     }
     if (G.flash) { g.save(); g.font = `800 ${14 * U}px ${AR_FONT}`; g.lineWidth = 8; g.strokeStyle = INK; g.fillStyle = G.flash.ok ? '#ffd23f' : '#fff'; g.strokeText(AD(G.flash.n), G.flash.x, G.flash.y); g.fillText(AD(G.flash.n), G.flash.x, G.flash.y); g.restore(); }
-    if (G.cards) for (const c of G.cards) drawCard(g, c.o, c.x, c.y, c.r, { ring: c.ring, dim: c.dead, sc: c.win ? 1.15 : 1 });
+    if (G.cards) for (const c of G.cards) { const k = popSc(G, c); if (k > .02) drawCard(g, c.o, c.x, c.y, c.r, { ring: c.ring, dim: c.dead, sc: k * (c.win ? 1.15 : 1) }); }
   };
   G.start = () => { round(true); startMsg(G, () => G.q.speak()); };
   G.speak = () => G.phase === 'ask' ? say('left') : G.q && G.q.speak();
@@ -766,8 +815,13 @@ function gameTrain(w, s) {
     if (slot && t.moved >= 12 && Math.hypot(slot.x - t.x, slot.y - t.y) > slot.r * 2.2) slot = null;
     if (!slot || !place(t, slot)) { t.x = t.hx; t.y = t.hy; }
   };
+  G.puffs = []; let puffT = 0;
   G.update = dt => {
-    G.t += dt; G.hurtT = Math.max(0, G.hurtT - dt); hud(G); if (G.t < 3.2) return;
+    G.t += dt; G.hurtT = Math.max(0, G.hurtT - dt); hud(G);
+    for (const p of G.puffs) { p.life -= dt * .8; p.y -= 34 * U * dt * p.life; p.x -= 6 * U * dt; p.r += 9 * U * dt; }
+    G.puffs = G.puffs.filter(p => p.life > 0);
+    if (G.t < 3.2) return;
+    if (G.phase === 'run' && (puffT -= dt) <= 0) { puffT = .22; const tw = TW(); G.puffs.push({ x: G.train.x + tw * .18, y: trackY() - tw * 1.4, r: tw * .07, life: 1 }); }
     const tr = G.train, head = tr.x + TW() * .9;
     if (G.phase === 'run') {
       const gap = G.slots.find(s => s.gap && !s.filled);
@@ -791,18 +845,16 @@ function gameTrain(w, s) {
     for (const s of G.slots) {
       if (!s.gap || s.filled) drawCard(g, s.o, s.x, s.y, s.r, { ring: s.saved ? '#ff5a5a' : '#ffd23f' });
       else { g.save(); g.setLineDash([8, 8]); g.strokeStyle = '#fff'; g.lineWidth = 4; rr(g, s.x - s.r, s.y - s.r, s.r * 2, s.r * 2, s.r * .28); g.stroke(); g.restore();
-        g.fillStyle = '#fff'; g.font = `800 ${s.r}px ${AR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('؟', s.x, s.y + s.r * .1); }
+        g.fillStyle = '#fff'; g.font = `800 ${s.r}px ${AR_FONT}`; cText(g, '؟', s.x, s.y); }
       if (s.saved) drawWebOver(g, s.x, s.y, s.r * 1.3, s.saved);
     }
-    // سكة فوق البطاقات
-    g.strokeStyle = '#555'; g.lineWidth = 5; g.beginPath(); g.moveTo(0, y - tw * .5); g.lineTo(W, y - tw * .5); g.stroke();
-    // القطار
-    const tx = G.train.x, ty = y - tw * .5, cars = [['#e8313a', '🚂'], ['#1f6fe5', ''], ['#ffd23f', '']];
-    cars.forEach(([c], i) => { const x = tx - i * tw * 1.05; g.fillStyle = c; g.strokeStyle = INK; g.lineWidth = 4; rr(g, x - tw * .45, ty - tw * .62, tw * .9, tw * .55, 8); g.fill(); g.stroke();
-      [-.25, .25].forEach(k => { g.fillStyle = INK; g.beginPath(); g.arc(x + k * tw, ty - tw * .06, tw * .12, 0, 7); g.fill(); });
-      if (i === 0) { g.fillStyle = INK; g.fillRect(x + tw * .18, ty - tw * .9, tw * .14, tw * .3); g.fillStyle = '#9ad7ff'; g.fillRect(x - tw * .3, ty - tw * .52, tw * .28, tw * .2); }
-      else { g.fillStyle = '#fff'; g.fillRect(x - tw * .3, ty - tw * .52, tw * .6, tw * .16); } });
-    if (G.t % .6 < .3 && G.phase === 'run') { g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.arc(tx + tw * .25, ty - tw * 1.05 - (G.t * 30 % 12), tw * .12, 0, 7); g.fill(); }
+    // السكة فوق البطاقات
+    const ty = y - tw * .5;
+    g.strokeStyle = INK; g.lineWidth = 8; g.beginPath(); g.moveTo(0, ty); g.lineTo(W, ty); g.stroke();
+    g.strokeStyle = '#b9c0c9'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, ty - 1.5); g.lineTo(W, ty - 1.5); g.stroke();
+    // الدخان ثم القطار
+    for (const p of G.puffs) { g.fillStyle = `rgba(255,255,255,${.75 * p.life})`; g.strokeStyle = `rgba(20,20,20,${.5 * p.life})`; g.lineWidth = 2.5; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); g.stroke(); }
+    drawTrain(g, G.train.x, ty, tw, G.t);
     // القطع
     for (const t of G.tiles) { if (t.used) continue; if (t !== G.drag) drawCard(g, t.o, t.x, t.y, t.r, { ring: '#26c6da' }); }
     if (G.drag) drawCard(g, G.drag.o, G.drag.x, G.drag.y, G.drag.r * 1.12, { ring: '#26c6da', rot: -.06 });
@@ -828,7 +880,7 @@ function gameBalance(w, s) {
   G.resize = () => { const bw = Math.min(W * .28, 240), bh = clamp(H * .11, 56, 90);
     B.minus = { x: W / 2 - bw * .9, y: H * .88, w: bh * 1.3, h: bh }; B.plus = { x: W / 2 - bw * .9 + bh * 1.5, y: H * .88, w: bh * 1.3, h: bh }; B.weigh = { x: W / 2 + bw * .55, y: H * .88, w: bw, h: bh }; };
   G.resize();
-  const beam = () => ({ cx: W / 2, cy: H * .36, L: Math.min(W * .34, H * .62) });
+  const beam = () => ({ cx: W / 2, cy: Math.max(H * .36, TOP + 9 * U), L: Math.min(W * .34, H * .62) });
   G.onDown = (x, y) => {
     if (G.t < 3 || G.phase !== 'play') return; const q = G.q;
     if (inBtn(B.plus, x, y)) { if (q.fix + q.add < 12) { q.add++; SFX.pop(); } B.plus.down = .15; }
@@ -872,7 +924,7 @@ function gameBalance(w, s) {
       g.font = `800 ${cs * 1.3}px ${AR_FONT}`; g.textAlign = 'center'; g.fillStyle = '#fff'; g.strokeStyle = INK; g.lineWidth = 6;
       const toks = left ? (q.type === 'eqGroup' ? null : [AD(q.L)]) : (q.fix ? [AD(q.fix), '+', AD(q.add)] : [AD(q.add)]);
       if (toks) { const ly = dropY + cs * 1.5; g.font = `800 ${cs * 1.2}px ${AR_FONT}`; const tw = toks.reduce((a, t) => a + g.measureText(t).width, 0) + cs * .6 * toks.length;
-        g.fillStyle = '#fff'; rr(g, px - tw / 2 - 8, ly - cs * .75, tw + 16, cs * 1.4, 12); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); g.fillStyle = INK; tokensRTL(g, toks, px, ly, cs * 1.2); }
+        g.fillStyle = '#fff'; rr(g, px - tw / 2 - 8, ly - cs * .75, tw + 16, cs * 1.4, 12); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); g.fillStyle = INK; tokensRTL(g, toks, px, ly - cs * .05, cs * 1.2); }
     });
     if (G.phase === 'play') { g.font = `${cs * 1.1}px ${EMOJI_FONT}`; g.textAlign = 'center'; g.fillText('🔒', b.cx, b.cy - 28); }
     drawBtn(g, B.minus, '−'); drawBtn(g, B.plus, '+', '#2ee66b'); drawBtn(g, B.weigh, '⚖️ زِنْ', '#ffd23f');
@@ -886,15 +938,15 @@ function gameBalance(w, s) {
 function gameClock(w, s) {
   const G = baseGame(w, s);
   G.goal = 7; G.progress = () => G.rounds / G.goal; G.handA = -1.5708; G.drag = false; G.cards = null; G.phase = 'play';
-  const C = () => { const R = Math.min(H * .33, W * .24); return { cx: W * .3, cy: H * .58, R }; };
+  const C = () => { const R = Math.min((H - TOP) * .4, W * .24); return { cx: W * .3, cy: TOP + (H - TOP) * .52, R }; };
   const B = {};
-  G.resize = () => { const c = C(); B.ok = { x: W * .72, y: H * .8, w: clamp(W * .2, 150, 260), h: clamp(H * .12, 56, 90) }; if (G.cards) G.cards.forEach((k, i) => { k.x = W * .72; k.y = H * (.36 + i * .2); k.r = clamp(H * .075, 36, 64); }); };
+  G.resize = () => { const c = C(); B.ok = { x: W * .72, y: H * .8, w: clamp(W * .2, 150, 260), h: clamp(H * .12, 56, 90) }; if (G.cards) G.cards.forEach((k, i) => { k.x = W * .72; k.y = TOP + (H - TOP) * (.2 + i * .28); k.r = clamp(H * .075, 36, 64); }); };
   function round(first) {
     const t = pickType(G); G.cards = null;
     if (t === 'setClock') {
       const h = ri(1, 12); G.q = { type: t, h, val: h, hud: `<span class="lbl">اِضْبِطِ السّاعَةَ</span><span class="big-n">${AD(h)}:٠٠</span>`, speak: () => chain(S_('setClock'), S_('h' + h)) };
       let start = ri(1, 12); if (start === h) start = h % 12 + 1; G.handA = start / 12 * 6.283 - 1.5708; G.showH = null;
-    } else { G.q = makeQ(t, G); G.q.hud = G.q.hud.replace(/<svg class="clk"[\s\S]*<\/svg>/, '<span class="note big">اُنْظُرْ إِلى السّاعَةِ الْكَبيرَةِ 👈</span>'); G.showH = G.q.h; G.handA = (G.q.h % 12) / 12 * 6.283 - 1.5708; G.cards = G.q.opts.map((o, i) => ({ o, ok: i === G.q.ans, ring: RING[i] })); }
+    } else { G.q = makeQ(t, G); G.q.hud = G.q.hud.replace(/<svg class="clk"[\s\S]*<\/svg>/, '<span class="note big">اُنْظُرْ إِلى السّاعَةِ الْكَبيرَةِ 👈</span>'); G.showH = G.q.h; G.handA = (G.q.h % 12) / 12 * 6.283 - 1.5708; G.cards = G.q.opts.map((o, i) => ({ o, ok: i === G.q.ans, ring: RING[i], born: G.t + i * .08 })); }
     G.phase = 'play'; setTarget(G.q.hud); G.resize();
     if (!first) setTimeout(() => GAME === G && !G.over && G.q.speak(), 400);
   }
@@ -927,7 +979,7 @@ function gameClock(w, s) {
       g.font = `800 ${c.R * .22}px ${AR_FONT}`; g.textAlign = 'center'; g.fillStyle = '#fff'; g.strokeStyle = INK; g.lineWidth = 6; const tt = AD(hourOf(G.handA)) + ':٠٠';
       g.strokeText(tt, W * .72, H * .5); g.fillText(tt, W * .72, H * .5);
     }
-    if (G.cards) for (const k of G.cards) drawCard(g, k.o, k.x, k.y, k.r, { ring: k.ring, dim: k.dead, sc: k.win ? 1.15 : 1 });
+    if (G.cards) for (const k of G.cards) { const p = popSc(G, k); if (p > .02) drawCard(g, k.o, k.x, k.y, k.r, { ring: k.ring, dim: k.dead, sc: p * (k.win ? 1.15 : 1) }); }
   };
   G.start = () => { round(true); startMsg(G, () => G.q.speak()); };
   G.speak = () => G.q && G.q.speak();
@@ -938,7 +990,7 @@ function gameClock(w, s) {
 function gameHop(w, s) {
   const G = baseGame(w, s);
   G.max = w === 2 ? 12 : 10; G.goal = 7; G.progress = () => G.rounds / G.goal; G.pos = 0; G.hop = null; G.phase = 'play'; G.mark = null;
-  const roofs = () => { const n = G.max + 1, m = W * .05, step = (W - m * 2) / (n - 1); return Array.from({ length: n }, (_, i) => ({ i, x: m + i * step, y: H * (.62 + ((i * 37) % 5) * .035), w: step * .86 })); };
+  const roofs = () => { const n = G.max + 1, m = Math.max(W * .055, 46), step = (W - m * 2) / (n - 1); return Array.from({ length: n }, (_, i) => ({ i, x: m + i * step, y: H * (.62 + ((i * 37) % 5) * .035), w: step * .86 })); };
   function round(first) {
     const t = pickType(G), q = { type: t }; let a, b;
     if (t === 'after') { a = ri(0, G.max - 1); b = 1; q.hud = `<span class="note big">ما الْعَدَدُ الَّذي بَعْدَ <b>${AD(a)}</b>؟</span>`; q.speak = () => chain(S_('after'), N_(a)); }
@@ -979,7 +1031,7 @@ function gameHop(w, s) {
       g.beginPath(); g.rect(r.x - r.w / 2, r.y, r.w, H - r.y + 5); g.fill(); g.stroke();
       g.fillStyle = 'rgba(255,240,150,.9)'; for (let yy = r.y + fs * .7; yy < H; yy += fs * .7) for (const f of [-.25, .25]) g.fillRect(r.x + f * r.w - fs * .1, yy, fs * .2, fs * .28);
       g.fillStyle = '#fff'; rr(g, r.x - fs * .42, r.y + fs * .08, fs * .84, fs * .7, 8); g.fill(); g.stroke();
-      g.fillStyle = INK; g.font = `800 ${fs * .6}px ${AR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(AD(r.i), r.x, r.y + fs * .47);
+      g.fillStyle = INK; g.font = `800 ${fs * .6}px ${AR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; cText(g, AD(r.i), r.x, r.y + fs * .43);
       if (G.chosen === r.i && G.phase !== 'play') { g.strokeStyle = '#ffd23f'; g.lineWidth = 6; g.strokeRect(r.x - r.w / 2 - 3, r.y - 3, r.w + 6, fs); }
     }
     // البطل يقفز
@@ -1001,17 +1053,18 @@ function gameBoss(w, s) {
   const cardR = () => clamp(Math.min(W, H) * .09, 40, 80);
   function ask() {
     const q = nextQ(G, false); const r = cardR();
-    G.cards = q.opts.map((o, i) => ({ o, ok: i === q.ans, x: W * (.34 + i * .17), y: H * .74, r, ring: RING[i + 2], dead: false, pop: 0 }));
+    G.cards = q.opts.map((o, i) => ({ o, ok: i === q.ans, x: W * (.34 + i * .17), y: H * .74, r, ring: RING[i + 2], dead: false, born: G.t + i * .08 }));
     G.qLeft = qTime(); G.phase = 'play';
   }
   G.resize = () => { const r = cardR(); G.cards.forEach((c, i) => { c.x = W * (.34 + i * .17); c.y = H * .74; c.r = r; }); };
-  const bossPos = () => ({ x: W * .8, y: H * .5 + Math.sin(G.boss.t * 1.2) * H * .06 });
+  const barY = () => Math.max(H * .2, TOP + 7 * U), bossH = () => Math.min(H * .5, W * .36, (H - barY()) * .66);
+  const bossPos = () => ({ x: W * .8, y: Math.max(H * .5, barY() + bossH() * .5 + H * .09) + Math.sin(G.boss.t * 1.2) * H * .05 });
   G.onDown = (x, y) => {
     if (G.phase !== 'play') return;
     for (const c of G.cards) {
       if (c.dead || Math.hypot(x - c.x, y - c.y) > c.r * 1.15) continue;
       if (c.ok) {
-        G.phase = 'wait'; const bp = bossPos(), f = fingerOf(W * .12, H * .98, heroH()); SFX.web(); fxWeb(G, f.x, f.y, bp.x, bp.y); c.win = true;
+        G.phase = 'wait'; const bp = bossPos(), f = fingerOf(W * .12, H * .98, heroH() * 1.15); SFX.web(); fxWeb(G, f.x, f.y, bp.x, bp.y); c.win = true;
         setTimeout(() => { if (GAME !== G) return; G.boss.flash = 1; G.shake = 1.5; const k = scoreHit(G, bp.x, bp.y, G.q.val); if (!k) goodSay(G, G.q); G.boss.power++;
           if (G.boss.power >= 3) setTimeout(() => GAME === G && superAttack(G), 900); else setTimeout(() => GAME === G && !G.over && ask(), 1300); }, 250);
       } else { c.dead = true; zap(G); }
@@ -1025,17 +1078,17 @@ function gameBoss(w, s) {
     if (G.phase === 'play') { G.qLeft -= dt; if (G.qLeft <= 0) { G.phase = 'wait'; zap(G); setTimeout(() => GAME === G && !G.over && ask(), 1400); } }
   };
   G.draw = g => {
-    drawBg(g, G.bg, null, .3); const B = G.boss, bp = bossPos(), bs = Math.min(H * .5, W * .36);
+    drawBg(g, G.bg, null, .3); const B = G.boss, bp = bossPos(), bs = bossH();
     drawSprite(g, IMG.boss, bp.x, bp.y + bs / 2, bs, { flash: B.flash, sx: 1 + Math.sin(B.t * 3) * .03 });
-    const bx = W * .62, by = Math.max(H * .2, 130), bw = W * .3;
+    const bx = W * .62, by = barY(), bw = W * .3;
     g.fillStyle = INK; g.fillRect(bx - 4, by - 4, bw + 8, 22); g.fillStyle = '#444'; g.fillRect(bx, by, bw, 14); g.fillStyle = '#b44dff'; g.fillRect(bx, by, bw * B.hp / 3, 14);
     g.font = `800 ${4.2 * U}px ${AR_FONT}`; g.textAlign = 'right'; g.fillStyle = '#fff'; g.strokeStyle = INK; g.lineWidth = 5; g.strokeText('الرّوبوتُ الْمُشاغِبُ', bx + bw, by - 12); g.fillText('الرّوبوتُ الْمُشاغِبُ', bx + bw, by - 12);
-    drawSprite(g, IMG.hero, W * .12, H * .98, heroH(), { alpha: G.hurtT > 0 && Math.floor(G.t * 16) % 2 ? .35 : 1 });
+    drawSprite(g, IMG.hero, W * .12, H * .98, heroH() * 1.15, { alpha: G.hurtT > 0 && Math.floor(G.t * 16) % 2 ? .35 : 1, sx: 1 + (G.pop || 0) * .08, sy: 1 + (G.pop || 0) * .08 });
     // طاقة الشبكة
-    const px = W * .06, py = H * .2; g.textAlign = 'left'; g.font = `800 ${3.6 * U}px ${AR_FONT}`; g.strokeText('طاقَةُ الشَّبَكَةِ', px, py - 8); g.fillStyle = '#ffd23f'; g.fillText('طاقَةُ الشَّبَكَةِ', px, py - 8);
+    const px = W * .06, py = by; g.textAlign = 'left'; g.font = `800 ${3.6 * U}px ${AR_FONT}`; g.strokeText('طاقَةُ الشَّبَكَةِ', px, py - 8); g.fillStyle = '#ffd23f'; g.fillText('طاقَةُ الشَّبَكَةِ', px, py - 8);
     for (let i = 0; i < 3; i++) { g.fillStyle = INK; g.fillRect(px + i * 9 * U - 3, py - 3, 8 * U + 6, 3 * U + 6); g.fillStyle = i < B.power ? '#fff' : '#555'; g.fillRect(px + i * 9 * U, py, 8 * U, 3 * U); }
     if (G.phase === 'play') { const k = clamp(G.qLeft / qTime(), 0, 1), tw = W * .5; g.fillStyle = INK; g.fillRect(W * .25 - 3, H * .88 - 3, tw + 6, 16); g.fillStyle = k < .3 ? '#ff5a5a' : '#2ee66b'; g.fillRect(W * .25, H * .88, tw * k, 10); }
-    for (const c of G.cards) drawCard(g, c.o, c.x, c.y, c.r, { ring: c.ring, shape: 'ball', dim: c.dead, sc: c.win ? 1.12 : 1 });
+    for (const c of G.cards) { const k = popSc(G, c); if (k > .02) drawCard(g, c.o, c.x, c.y, c.r, { ring: c.ring, shape: 'ball', dim: c.dead, sc: k * (c.win ? 1.12 : 1) }); }
   };
   G.start = () => { banner(`مَعْرَكَةُ الزَّعيمِ!<small>${G.st.hint}</small>`, 2800); say('boss').then(() => { if (GAME === G && !G.over) ask(); }); };
   G.speak = () => G.q && G.q.speak();
@@ -1052,7 +1105,7 @@ async function superAttack(G) {
     G.score += 100; say('hit' + ri(1, 4));
     if (G.boss.hp <= 0) return endGame(G, true);
   }
-  setTimeout(() => { if (GAME === G && !G.over) { G.phase = 'wait'; const nx = () => { const q = nextQ(G, false); const r = clamp(Math.min(W, H) * .09, 40, 80); G.cards = q.opts.map((o, i) => ({ o, ok: i === q.ans, x: W * (.34 + i * .17), y: H * .74, r, ring: RING[i + 2] })); G.qLeft = 14 - G.diff * 5; G.phase = 'play'; }; nx(); } }, 1100);
+  setTimeout(() => { if (GAME === G && !G.over) { G.phase = 'wait'; const nx = () => { const q = nextQ(G, false); const r = clamp(Math.min(W, H) * .09, 40, 80); G.cards = q.opts.map((o, i) => ({ o, ok: i === q.ans, x: W * (.34 + i * .17), y: H * .74, r, ring: RING[i + 2], born: G.t + i * .08 })); G.qLeft = 14 - G.diff * 5; G.phase = 'play'; }; nx(); } }, 1100);
 }
 
 /* ================= الكتابة بالقلم (الضربة الخارقة) ================= */
@@ -1186,6 +1239,7 @@ function openWorlds(w) {
     m.style.backgroundImage = `url(img/bg_${Wd.bg}.webp?v=1)`;
     m.innerHTML = `<span class="num">${AD(s + 1)}</span><span class="ico">${st.boss ? '<img src="img/boss.webp?v=1">' : st.g === 'swing' ? '<img src="img/hero.webp?v=1">' : ICONS[st.g]}</span>${best ? `<span class="best">🏆 ${AD(best)}</span>` : ''}
       <div class="cap"><b>${st.name}</b><span class="pg">📖 ص ${st.p}</span><span class="stars">${[1, 2, 3].map(k => `<i class="${k <= stars ? 'on' : ''}">★</i>`).join('')}</span></div>`;
+    m.style.setProperty('--i', s);
     m.onclick = () => { SFX.click(); if (!open) return toast('🔒 أَنْهِ الْمُهِمَّةَ الَّتي قَبْلَها'); startStage(w, s); };
     box.appendChild(m);
   });
@@ -1205,6 +1259,12 @@ function openCards(from) {
 $('#c-back').onclick = () => { SFX.click(); cardsBack === 'home' ? openHome() : openWorlds(curW); };
 
 openHome();
+/* تقدّم أحدث جاء من السحابة */
+CLOUD && CLOUD.on(KEY, st => {
+  if (!st) return; S = Object.assign({ done: {}, best: {}, gems: 0, cards: {}, world: 1 }, st);
+  if ($('#home').classList.contains('on')) $('#home-stats').innerHTML = stats();
+  else if ($('#worlds').classList.contains('on')) openWorlds(curW);
+});
 if (TEST && /open=(\w+)/.test(location.search)) { const k = location.search.match(/open=(\w+)/)[1]; if (k === 'worlds') openWorlds(+(location.search.match(/w=(\d)/) || [0, 1])[1]); if (k === 'cards') { S.cards = { 0: 1, 3: 2, 5: 1, 7: 1 }; openCards('home'); } if (k === 'result') showResult({ w: 1, s: 0, score: 230, bestCombo: 6, st: MIS[1][0] }, true, 3, true, [{ n: 3, gold: true }, { n: 5, gold: false }]); }
 if (TEST) window.__game = { get G() { return GAME; }, startStage, S, save, openWorlds, makeQ, traceDigit, W: () => [W, H],
   tick(sec) { for (let i = 0; i < sec * 20 && GAME; i++) { if (!GAME.paused) GAME.update(.05); drawFx(ctx, GAME, .05); } if (GAME) { ctx.save(); GAME.draw(ctx); drawFx(ctx, GAME, 0); ctx.restore(); } return GAME && GAME.t; },

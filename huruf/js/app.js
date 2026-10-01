@@ -23,7 +23,8 @@ const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.ge
 let S = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } })() || {
   unlocked: 1, done: {}, st: {}, xp: 0, gems: 0, last: '', streak: 0
 };
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const CLOUD = window.EliaSave;                    // المزامنة السحابية (assets/save.js)
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} CLOUD && CLOUD.push(); };
 (function dayTick() {
   const t = today();
   if (S.last !== t) {
@@ -57,7 +58,43 @@ const pal = (arr, w) => r => { let v = r(), acc = 0; for (let k = 0; k < arr.len
   const block = (base, lite, dark, seed) => tex((i, j, r) => (i === 0 || j === 0) ? lite : (i === 15 || j === 15) ? dark : pal(base)(r), seed);
   R.setProperty('--tex-gold', block(['#f9d63b', '#f5c518', '#ffe36e', '#e8b90f'], '#fff3a8', '#b8860b', 29));
   R.setProperty('--tex-diamond', block(['#4ae3e0', '#35c9c5', '#76f0ec', '#2bb3b0'], '#c9fffd', '#1b8a87', 31));
+  R.setProperty('--tex-hills', (() => {            // تلال وأشجار بكسلية خلف شاشة البداية
+    const w = 160, h = 40, c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'), r = rng(41);
+    const layer = (base, amp, per, col, top) => { for (let i = 0; i < w; i++) {
+      const y = base + Math.sin(i / w * 6.2832 * per) * amp + Math.sin(i / w * 6.2832 * (per * 2 + 1) + 1) * amp * .4, ys = Math.floor(y / 2) * 2;
+      x.fillStyle = col; x.fillRect(i, ys, 1, h - ys); x.fillStyle = top; x.fillRect(i, ys, 1, 1); } };
+    layer(16, 7, 2, '#8fcfae', '#b4e3c9'); layer(27, 5, 3, '#62ad70', '#86cc90');
+    for (let k = 0; k < 9; k++) { const tx = 2 + (r() * (w - 4) | 0), ty = 27 + (r() * 7 | 0); x.fillStyle = '#5e3b1c'; x.fillRect(tx, ty, 1, 3); x.fillStyle = '#2f7d32'; x.fillRect(tx - 1, ty - 3, 3, 3); x.fillStyle = '#46a34a'; x.fillRect(tx, ty - 4, 1, 1); }
+    return 'url(' + c.toDataURL() + ')';
+  })());
 })();
+
+/* ============ توسيط الحبر ============
+   مقاييس الخط لا تضع الحرف العربي في وسط مربّعه (الهمزة والحركات والنقط تزيحه)،
+   فنقيس حبره الحقيقي ونزيحه حتى يتوسّط. group = خطّ قاعدة واحد لكل المجموعة. */
+const mctx = document.createElement('canvas').getContext('2d');
+function centerInk(els, group) {
+  els = [...els].filter(e => e && e.textContent.trim()); if (!els.length) return;
+  const run = () => {
+    const ms = els.map(e => { const cs = getComputedStyle(e); mctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; return mctx.measureText(e.textContent); });
+    const up = Math.max(...ms.map(m => m.actualBoundingBoxAscent)), dn = Math.max(...ms.map(m => m.actualBoundingBoxDescent));
+    els.forEach((e, i) => {
+      const m = ms[i], a = group ? up : m.actualBoundingBoxAscent, d = group ? dn : m.actualBoundingBoxDescent;
+      const dy = ((m.fontBoundingBoxDescent - m.fontBoundingBoxAscent) - (d - a)) / 2;
+      if (isFinite(dy)) e.style.transform = `translateY(${dy.toFixed(1)}px)`;
+    });
+  };
+  document.fonts && document.fonts.ready ? document.fonts.ready.then(run) : run();
+}
+const ink = html => `<span class="ink">${html}</span>`;
+/* دخول العناصر بالتتابع */
+function enter(els, step = 45) {
+  [...els].forEach((e, i) => {
+    e.style.setProperty('--i', i); e.style.setProperty('--step', step + 'ms'); e.classList.add('enter');
+    const end = ev => { if (ev.target !== e || ev.animationName !== 'enter') return; e.classList.remove('enter'); e.removeEventListener('animationend', end); };
+    e.addEventListener('animationend', end);
+  });
+}
 
 /* ============ أيقونات بكسل ============ */
 function pix(map, colors, w) {
@@ -240,15 +277,25 @@ document.addEventListener('pointerdown', () => ac(), { once: true });
 const lvlOf = xp => Math.floor(xp / 100) + 1;
 function renderHud() {
   const setXp = id => { const b = $(id); if (!b) return; b.querySelector('i').style.width = (S.xp % 100) + '%'; b.querySelector('b').textContent = AR(lvlOf(S.xp)); };
-  setXp('#t-xp'); setXp('#m-xp');
+  setXp('#t-xp'); setXp('#m-xp'); setXp('#l-xp');
   const gems = `${IC.gem}<span>${AR(S.gems)}</span>`;
   ['#t-gems', '#m-gems', '#l-gems'].forEach(i => $(i).innerHTML = gems);
   $('#t-days').innerHTML = `${IC.fire}<span>الْيَوْمُ ${AR(S.streak)}</span>`;
 }
 function addXp(n, gems = 0) {
   const before = lvlOf(S.xp); S.xp += n; S.gems += gems; save(); renderHud(); SFX.xp();
+  const on = document.querySelector('.screen.on'); if (on) { flyOrbs(on.querySelector('.xpbar'), Math.min(8, 2 + n / 8 | 0)); if (gems) flyOrbs(on.querySelector('.chip[id$=gems]'), Math.min(6, gems), 'gem'); }
   toast(`+${AR(n)} نِقاطُ خِبْرَةٍ` + (gems ? ` · <span class="ad">+${AR(gems)} 💎</span>` : ''));
   if (lvlOf(S.xp) > before) setTimeout(() => { SFX.lvl(); toast(`<span class="ad">⬆ الْمُسْتَوى ${AR(lvlOf(S.xp))}!</span>`); }, 900);
+}
+function flyOrbs(t, n = 5, cls = '') {            // كرات تطير إلى شريط الخبرة / الجواهر
+  if (!t || !t.offsetParent) return; const r = t.getBoundingClientRect(), tx = r.left + r.width / 2, ty = r.top + r.height / 2, sx = innerWidth / 2, sy = innerHeight * .55;
+  for (let i = 0; i < n; i++) {
+    const o = el('i', 'orb ' + cls); document.body.appendChild(o);
+    const mx = sx + (Math.random() - .5) * 320, my = sy + (Math.random() - .5) * 220;
+    o.animate([{ transform: `translate(${sx}px,${sy}px) scale(.3)`, opacity: 0 }, { transform: `translate(${mx}px,${my}px) scale(1.25)`, opacity: 1, offset: .35 }, { transform: `translate(${tx}px,${ty}px) scale(.6)`, opacity: 1 }],
+      { duration: 620 + i * 70, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => { o.remove(); t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump'); if (i % 2 === 0) tone(1300 + i * 90, .05, 'sine', .05); };
+  }
 }
 let toastT;
 function toast(h) { const t = $('#toast'); t.innerHTML = h; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600); }
@@ -268,21 +315,21 @@ function nextCelebration() {
   if (!celebBag.length) celebBag = shuffle(['siuuu', 'siuuu', 'smart', 'smart', 'genius', 'genius', 'hero', 'easy']);  // بصوت إيليا الحقيقي
   return celebBag.pop();
 }
-function burst(n = 26, colors = ['#29d162', '#4ae3e0', '#ffd83d', '#fff']) {
-  const cx = innerWidth / 2, cy = innerHeight * .55;
+function burst(n = 26, colors = ['#29d162', '#4ae3e0', '#ffd83d', '#fff'], cx = innerWidth / 2, cy = innerHeight * .55, k = 1) {
   for (let i = 0; i < n; i++) {
-    const b = el('i', 'burst'); const a = Math.random() * Math.PI * 2, d = 160 + Math.random() * 320;
-    b.style.left = cx + 'px'; b.style.top = cy + 'px'; b.style.background = pick(colors);
-    b.style.setProperty('--dx', Math.cos(a) * d + 'px'); b.style.setProperty('--dy', Math.sin(a) * d - 120 + 'px'); b.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    const b = el('i', 'burst'); const a = Math.random() * Math.PI * 2, d = (160 + Math.random() * 320) * k, sz = (k < 1 ? 12 : 16) + Math.random() * 10;
+    b.style.left = cx - sz / 2 + 'px'; b.style.top = cy - sz / 2 + 'px'; b.style.width = b.style.height = sz + 'px'; b.style.background = pick(colors);
+    b.style.setProperty('--dx', Math.cos(a) * d + 'px'); b.style.setProperty('--dy', Math.sin(a) * d - 120 * k + 'px'); b.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
     document.body.appendChild(b); setTimeout(() => b.remove(), 1200);
   }
 }
+const burstAt = (e, n = 12, colors, k = .4) => { const r = e.getBoundingClientRect(); burst(n, colors, r.left + r.width / 2, r.top + r.height / 2, k); };
 function celebrate(kind) {
   kind = kind || nextCelebration();
   const c = CELEB[kind]; const box = $('#celebrate'), img = $('#c-img'), say = $('#c-say');
   img.src = `../assets/elia/${c.img}.webp`; img.className = 'who pix'; void img.offsetWidth; img.classList.add(c.anim);
   say.textContent = c.say; say.style.animation = 'none'; void say.offsetWidth; say.style.animation = '';
-  box.classList.add('on');
+  box.classList.toggle('sad', kind === 'try'); box.classList.add('on');
   if (kind !== 'try') { SFX.good(); setTimeout(() => burst(kind === 'win' ? 60 : 30), kind === 'siuuu' || kind === 'hero' ? 1000 : 350); }
   else SFX.bad();
   return new Promise(res => {
@@ -340,7 +387,7 @@ function renderMap() {
     const sec = el('div', 'biome u' + B.u); sec.appendChild(el('h3', 'sign mc-text', B.t)); const path = el('div', 'path');
     LET.filter(L => L.unit === B.u).forEach(L => {
       const st = S.done[L.id] ? 'done' : L.id <= S.unlocked ? 'open' : 'locked';
-      const b = el('button', 'lvl ' + st, `<span class="n">${AR(L.id)}</span>${st === 'locked' ? '' : glyph(L)}`);
+      const b = el('button', 'lvl ' + st, `<span class="n">${AR(L.id)}</span>${st === 'locked' ? '' : ink(glyph(L))}`);
       if (S.done[L.id]) { const s = el('div', 'stars'); for (let k = 0; k < 3; k++) s.innerHTML += `<span style="${k < S.done[L.id] ? '' : 'filter:grayscale(1) brightness(.5)'}">${IC.star}</span>`; b.appendChild(s); }
       if (L.id === cur) { const y = el('img', 'you pix'); y.src = '../assets/elia/hello.webp'; b.appendChild(y); }
       b.onclick = () => {
@@ -351,6 +398,7 @@ function renderMap() {
     });
     sec.appendChild(path); sc.appendChild(sec);
   });
+  enter(sc.querySelectorAll('.lvl'), 22); sc.querySelectorAll('.lvl .ink').forEach(e => centerInk([e]));
   requestAnimationFrame(() => { const y = sc.querySelector('.you'); if (y) y.parentElement.scrollIntoView({ block: 'center' }); });
 }
 $('#t-hub').innerHTML = IC.home;
@@ -372,7 +420,7 @@ function openLevel(id) {
   $('#l-name').textContent = CUR.name;
   let first = [0, 1, 2, 3].find(i => !stDone(id, i)); if (first == null) first = 4;
   if (S.done[id]) first = 0;
-  renderHearts(3, true); show('level'); openStation(first);
+  renderHearts(3, true); show('level'); openStation(first); enter($('#l-stations').children, 60);
 }
 $('#l-back').innerHTML = IC.back; $('#l-back').onclick = () => { SFX.click(); stopVoice(); renderMap(); show('map'); };
 function renderStations() {
@@ -381,7 +429,6 @@ function renderStations() {
     const lock = i === 4 && !bossOpen(CUR.id);
     const b = el('button', 'st panel' + (i === CURST ? ' cur' : '') + (lock ? ' lock' : '') + ((i < 4 && stDone(CUR.id, i)) || (i === 4 && S.done[CUR.id]) ? ' ok' : ''),
       `<span class="ic slot">${IC[s.ic]}</span><span>${s.t}</span>`);
-    b.style.position = 'relative';
     b.onclick = () => { if (lock) { SFX.bad(); toast('أَكْمِلِ الْمَحَطّاتِ الْأَرْبَعَ لِيُفْتَحَ التَّحَدّي ⚔'); return; } SFX.click(); stopVoice(); openStation(i); };
     box.appendChild(b);
   });
@@ -458,16 +505,16 @@ function optionsQ(host, { prompt, bigHTML, opts, correct, txt, onShow, replay })
     if (replay) { const lb = el('button', 'btn listen-btn pulse', IC.speak); lb.onclick = () => { SFX.click(); replay(); }; g.appendChild(lb); }
     const box = el('div', 'opts'); let locked = false;
     opts.forEach(o => {
-      const b = el('button', 'opt' + (txt ? ' txt' : ''), o.html); if (TEST && o.v === correct) b.dataset.c = 1;
+      const b = el('button', 'opt' + (txt ? ' txt' : ''), ink(o.html)); if (TEST && o.v === correct) b.dataset.c = 1;
       b.onclick = () => {
         if (locked) return; locked = true; const ok = o.v === correct;
-        b.classList.add(ok ? 'good' : 'bad');
+        b.classList.add(ok ? 'good' : 'bad'); if (ok) burstAt(b, 14);
         if (!ok) box.querySelectorAll('.opt').forEach((x, i) => { if (opts[i].v === correct) setTimeout(() => x.classList.add('good'), 350); });
         setTimeout(() => res(ok), ok ? 350 : 900);
       };
       box.appendChild(b);
     });
-    g.appendChild(box); host.appendChild(g); if (onShow) onShow();
+    g.appendChild(box); host.appendChild(g); enter(box.children, 70); centerInk(box.querySelectorAll('.ink'), true); if (onShow) onShow();
   });
 }
 const Q = {
@@ -516,19 +563,19 @@ const Q = {
       const slots = el('div', 'slots'); letters.forEach(() => slots.appendChild(el('div', 's slot', ''))); g.appendChild(slots);
       const tiles = el('div', 'tiles'); let pos = 0, mist = 0;
       shuffle(letters.map((c, i) => ({ c, i }))).forEach(t => {
-        const b = el('button', 'opt', t.c); if (TEST) b.dataset.i = t.i;
+        const b = el('button', 'opt', ink(t.c)); if (TEST) b.dataset.i = t.i;
         b.onclick = () => {
           if (t.c === letters[pos]) {
-            SFX.hit(); slots.children[pos].textContent = t.c; b.classList.add('used'); pos++;
+            SFX.hit(); const sl = slots.children[pos]; sl.innerHTML = ink(t.c); centerInk(sl.children); sl.animate([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 220 }); burstAt(sl, 6, ['#ffd83d', '#fff'], .22); b.classList.add('used'); pos++;
             if (pos === letters.length) {
-              slots.innerHTML = `<div class="gapword">${hlWord(w, L)}</div>`; SFX.good();
+              slots.innerHTML = `<div class="gapword">${hlWord(w, L)}</div>`; SFX.good(); burstAt(slots, 18, undefined, .5);
               sayWord(L, w).then(() => res(mist <= 1));
             }
           } else { mist++; SFX.bad(); b.classList.add('bad'); setTimeout(() => b.classList.remove('bad'), 450); }
         };
         tiles.appendChild(b);
       });
-      g.appendChild(tiles); host.appendChild(g); seq([AU.ui('build'), AU.word(L, w)].filter(Boolean));
+      g.appendChild(tiles); host.appendChild(g); enter(tiles.children, 60); centerInk(tiles.querySelectorAll('.ink'), true); seq([AU.ui('build'), AU.word(L, w)].filter(Boolean));
     });
   },
 };
@@ -544,10 +591,11 @@ function stShape(stage, L) {
     (L.nonjoin ? `<p>🔗 لا يَتَّصِلُ بِالْحَرْفِ الَّذي بَعْدَهُ.</p>` : `<p>🔗 يَتَّصِلُ بِما قَبْلَهُ وَبِما بَعْدَهُ.</p>`);
   if (L.sisters.length) {
     const s = el('div', 'sisters', '<span>يُشْبِهُهُ في الشَّكْلِ:</span>');
-    s.appendChild(el('span', 'minib me', glyph(L))); L.sisters.forEach(x => s.appendChild(el('span', 'minib', x === 'هـ' ? 'ه' : x)));
+    s.appendChild(el('span', 'minib me', ink(glyph(L)))); L.sisters.forEach(x => s.appendChild(el('span', 'minib', ink(x === 'هـ' ? 'ه' : x))));
     facts.appendChild(s);
   }
   row.appendChild(facts); row.appendChild(speakBtn(() => play(AU.name(L)))); c.appendChild(row); stage.appendChild(c);
+  centerInk([fr.firstChild]); centerInk(c.querySelectorAll('.minib .ink'), true);
 
   const sc = sectionCard('قِصَّةُ الْحَرْفِ', 'مِنْ كِتابي');
   const r2 = el('div', 'row'); const st = el('div', 'story', hlWord(L.story, L)); st.style.flex = '1';
@@ -566,7 +614,7 @@ function traceGame(host, L) {
     const G = 100; let mask, painted, total = 0, doneFlag = false;
     const ctx = cv.getContext('2d');
     function drawGuide() {
-      const r = box.getBoundingClientRect(), dpr = devicePixelRatio || 1; cv.width = r.width * dpr; cv.height = r.height * dpr;
+      const r = { width: box.clientWidth, height: box.clientHeight }, dpr = devicePixelRatio || 1; cv.width = r.width * dpr; cv.height = r.height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
       const FS = .7, FAT = .075;
       const drawLetter = (c2, W, fill, dash) => {
@@ -625,7 +673,7 @@ function stSound(stage, L) {
     n.onclick = async () => { SFX.click(); n.classList.remove('playing'); void n.offsetWidth; n.classList.add('playing'); await seq([AU.ui(names[k][0]), AU.syl(L, k), w && AU.word(L, w)].filter(Boolean)); };
     notes.appendChild(n);
   });
-  c.appendChild(notes); stage.appendChild(c);
+  c.appendChild(notes); stage.appendChild(c); enter(notes.children, 90);
   const g = sectionCard('اسْمَعْ وَاخْتَرْ', 'تَحَدٍّ صَغيرٌ 🎵'); stage.appendChild(g);
   miniRounds(g, L, [Q.syl, Q.syl, Q.syl, Q.syl]).then(() => stationComplete(1));
 }
@@ -641,7 +689,7 @@ function stPos(stage, L) {
     const ws = el('div', 'ws'); f.words.forEach(w => { const b = el('button', 'wbtn', hlWord(w, L)); b.onclick = () => { SFX.click(); sayWord(L, w); }; ws.appendChild(b); });
     p.appendChild(ws); grid.appendChild(p);
   });
-  c.appendChild(grid); stage.appendChild(c);
+  c.appendChild(grid); stage.appendChild(c); enter(grid.children, 80);
   const g = sectionCard('أَيْنَ الْحَرْفُ؟', 'تَحَدٍّ صَغيرٌ 🧭'); stage.appendChild(g);
   miniRounds(g, L, [Q.formGap, Q.posQ, Q.formGap, Q.posQ]).then(() => stationComplete(2));
 }
@@ -651,7 +699,7 @@ function stWords(stage, L) {
   const c = sectionCard(`كَلِماتٌ فيها ${L.name}`, 'اضْغَطْ عَلى الْكَلِمَةِ');
   const grid = el('div', 'words');
   L.words.forEach(w => { const b = el('button', 'wcard', hlWord(w, L)); b.onclick = async () => { SFX.click(); b.classList.add('playing'); await sayWord(L, w); b.classList.remove('playing'); }; grid.appendChild(b); });
-  c.appendChild(grid); stage.appendChild(c);
+  c.appendChild(grid); stage.appendChild(c); enter(grid.children, 30);
   const g = sectionCard('اكْسِرِ الْمُكَعَّباتِ', 'تَحَدٍّ صَغيرٌ ⛏'); stage.appendChild(g);
   mineGame(g, L).then(() => stationComplete(3));
 }
@@ -663,21 +711,22 @@ function mineGame(host, L) {
     const cnt = el('div', 'progress'); goods.forEach(() => cnt.appendChild(el('i'))); wrap.appendChild(cnt);
     const grid = el('div', 'mine'); let found = 0;
     shuffle([...goods.map(w => ({ w, ok: 1 })), ...bads.map(w => ({ w, ok: 0 }))]).forEach(o => {
-      const b = el('button', 'ore', `<span>${o.w}</span>`); let hits = 0;
+      const b = el('button', 'ore', `<span>${o.w}</span><i class="crack"></i>`); let hits = 0;
       b.onclick = () => {
         if (b.dataset.done) return;
         if (!o.ok) { SFX.bad(); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); return; }
-        hits++; SFX.hit(); b.classList.add('hit');
-        b.style.filter = `brightness(${1 - hits * .15})`;
+        hits++; SFX.hit(); b.classList.add('hit'); b.classList.remove('tap'); void b.offsetWidth; b.classList.add('tap');
+        burstAt(b, 7, ['#7f7f7f', '#999', '#6a6a6a', '#555'], .28);
+        b.style.filter = `brightness(${1 - hits * .12})`;
         if (hits >= 2) {
-          b.dataset.done = 1; SFX.brk(); b.style.filter = ''; b.classList.add('found'); b.innerHTML = `<span>${hlWord(o.w, L)}</span>`;
+          b.dataset.done = 1; SFX.brk(); b.style.filter = ''; b.classList.add('found'); b.innerHTML = `<span>${hlWord(o.w, L)}</span>`; burstAt(b, 16, ['#4ae3e0', '#c9fffd', '#fff', '#ffd83d'], .5);
           cnt.children[found].classList.add('ok'); found++; sayWord(L, o.w);
           if (found === goods.length) setTimeout(res, 700);
         }
       };
       grid.appendChild(b);
     });
-    wrap.appendChild(grid); host.appendChild(wrap); play(AU.ui('find'));
+    wrap.appendChild(grid); host.appendChild(wrap); enter(grid.children, 50); play(AU.ui('find'));
   });
 }
 
@@ -755,7 +804,7 @@ async function bossWin(L, hearts) {
 
 /* ============ البدء من جديد ============ */
 function resetGame() {
-  S = { unlocked: 1, done: {}, st: {}, xp: 0, gems: 0, last: today(), streak: 1 }; save();
+  S = { unlocked: 1, done: {}, st: {}, xp: 0, gems: 0, last: today(), streak: 1, rst: Date.now() }; save();   // rst: حتى لا تُعيد السحابة التقدّم القديم
   $('#modal').classList.remove('on'); renderTitle(); renderHud(); show('title');
   toast('↺ بَدَأْنا مِنْ جَديدٍ — مِنْ حَرْفِ الْأَلِفِ!');
 }
@@ -776,7 +825,9 @@ $('#b-reset').onclick = () => { SFX.click(); askReset(); };
   const cr = document.querySelector('.credit'); let t;
   const open = () => {
     const body = $('#modal-body');
-    body.innerHTML = `<h2>إِعْداداتُ الْأَبِ</h2><p style="font-size:24px">التَّقَدُّمُ مَحْفوظٌ في هٰذا الْجِهازِ.</p>`;
+    const CL = { ok: '☁️ مَحْفوظٌ في السَّحابَةِ أَيْضاً ✔', sync: '☁️ جارٍ الْحِفْظُ…', off: '☁️ لا إِنْتَرْنِتَ — يُحْفَظُ في الْجِهازِ وَيُرْفَعُ لاحِقاً', err: '☁️ تَعَذَّرَ الْوُصولُ إِلى السَّحابَةِ — مَحْفوظٌ في الْجِهازِ', idle: '☁️ …' };
+    body.innerHTML = `<h2>إِعْداداتُ الْأَبِ</h2><p style="font-size:24px">التَّقَدُّمُ مَحْفوظٌ في هٰذا الْجِهازِ.<br><span id="p-cloud"></span></p>`;
+    if (CLOUD) { CLOUD.onState(s => { const e = $('#p-cloud'); if (e) e.textContent = CL[s] || ''; }); CLOUD.sync(); }
     const row = el('div', 'row');
     const a = el('button', 'btn gold', 'افْتَحْ كُلَّ الْحُروفِ'); a.onclick = () => { S.unlocked = LET.length; save(); $('#modal').classList.remove('on'); toast('فُتِحَتْ كُلُّ الْحُروفِ'); renderTitle(); };
     const z = el('button', 'btn', 'تَصْفيرُ التَّقَدُّمِ'); z.onclick = () => { SFX.click(); askReset(); };
@@ -792,4 +843,11 @@ $('#t-hero').onclick = () => { celebrate(pick(['siuuu', 'smart', 'genius', 'hero
 let welcomed = false;
 $('#title').addEventListener('pointerdown', e => { if (welcomed || e.target.closest('button,#t-hero,.credit,#daily')) return; welcomed = true; play(AU.ui('welcome')); });
 renderTitle(); renderHud();
+/* تقدّم أحدث جاء من السحابة (جهاز آخر، أو بعد مسح سفاري للتخزين) */
+CLOUD && CLOUD.on(KEY, st => {
+  if (!st) return; S = st; renderHud();
+  if ($('#title').classList.contains('on')) renderTitle();
+  else if ($('#map').classList.contains('on')) renderMap();
+  else if ($('#level').classList.contains('on') && CUR) renderStations();
+});
 })();

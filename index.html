@@ -15,39 +15,46 @@
 <style>
 @font-face{font-family:"Sakkal Saad";src:url(assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2");font-weight:800;font-display:block}
 @font-face{font-family:"Sakkal Poster";src:url(assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2");font-weight:900;font-display:block}
-:root{--shadow:#3f3f3f;--tex-grass:none;--tex-dirt:none;--tex-stone:none;--tex-gold:none;--tex-diamond:none;--tex-plank:none;--tex-obsidian:none}
+:root{--safe-t:calc(max(env(safe-area-inset-top,0px),14px) + 22px);--safe-b:env(safe-area-inset-bottom,0px);--shadow:#3f3f3f;--tex-grass:none;--tex-dirt:none;--tex-stone:none;--tex-gold:none;--tex-diamond:none;--tex-plank:none;--tex-obsidian:none}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;background:#5aa8ff;color:#fff;font-family:"Sakkal Saad",system-ui,sans-serif;font-weight:800;
+html,body{margin:0;min-height:100%;overscroll-behavior-y:none;-webkit-touch-callout:none;background:#5aa8ff;color:#fff;font-family:"Sakkal Saad",system-ui,sans-serif;font-weight:800;
   -webkit-user-select:none;user-select:none;touch-action:manipulation}
 body{background:linear-gradient(#5aa8ff 0%,#9fd3ff 55%,#cdeaff 100%) fixed;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 .pix{image-rendering:pixelated}
 .sky{position:fixed;inset:0;pointer-events:none;z-index:0}
-.sun{position:absolute;top:36px;left:54px;width:84px;height:84px;background:#fff6a8;box-shadow:0 0 0 10px #ffe45c,0 0 60px 20px rgba(255,240,120,.7)}
+.sun{position:absolute;top:calc(var(--safe-t) + 4px);left:54px;width:84px;height:84px;background:#fff6a8;box-shadow:0 0 0 10px #ffe45c,0 0 60px 20px rgba(255,240,120,.7)}
 .cloud{position:absolute;height:40px;background:#fff;box-shadow:0 8px 0 #e8f4ff;animation:drift linear infinite}
 .cloud::before{content:"";position:absolute;left:25%;top:-24px;width:45%;height:24px;background:#fff}
 @keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
 .mc-title{font-family:"Sakkal Poster","Sakkal Saad";font-weight:900;text-shadow:4px 4px 0 var(--shadow),-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,6px 6px 0 #000}
-main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:28px 16px 190px}
+main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:var(--safe-t) max(16px,env(safe-area-inset-right,0px)) calc(190px + var(--safe-b)) max(16px,env(safe-area-inset-left,0px))}
 header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-header .t h1{margin:0;font-size:clamp(58px,10vw,118px);line-height:1.05}
+header .t h1{margin:0;font-size:clamp(58px,10vw,118px);line-height:1.05;animation:drop .7s cubic-bezier(.2,1.4,.4,1) backwards}
+@keyframes drop{from{transform:translateY(-60vh) rotate(-8deg)}}
+@keyframes enter{from{opacity:0;transform:translateY(40px) scale(.8)}}
 header .t p{margin:6px 0 0;font-size:clamp(26px,3.6vw,40px);color:#ffd83d;text-shadow:3px 3px 0 #6b4a00,-2px -2px 0 #000,2px 2px 0 #000;animation:wob 2.6s ease-in-out infinite}
 @keyframes wob{50%{transform:scale(1.05) rotate(-2deg)}}
-header img{height:min(34vh,300px);filter:drop-shadow(8px 10px 0 rgba(0,0,0,.25));animation:bob 3s ease-in-out infinite}
+header img{height:min(34vh,300px);filter:drop-shadow(8px 10px 0 rgba(0,0,0,.25));animation:enter .5s .2s cubic-bezier(.2,1.5,.4,1) backwards,bob 3s .7s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-10px)}}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 8px;font-size:26px;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 3px 3px 0 rgba(255,255,255,.15)}
 .chip svg{width:28px;height:28px}
+#cloud{font-size:20px;cursor:pointer}
 h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:34px;color:#2b1a08;background:var(--tex-plank),#a0763e;background-size:64px;border:4px solid #3b2a14;box-shadow:inset 4px 4px 0 rgba(255,255,255,.25),inset -4px -4px 0 rgba(0,0,0,.3)}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
 .game{position:relative;display:flex;flex-direction:column;background:#c6c6c6;color:#1d1d1d;border:4px solid #000;
-  box-shadow:inset 5px 5px 0 #fff,inset -5px -5px 0 #555,0 10px 0 rgba(0,0,0,.3);transition:transform .12s}
+  box-shadow:inset 5px 5px 0 #fff,inset -5px -5px 0 #555,0 10px 0 rgba(0,0,0,.3);transition:transform .12s;
+  animation:enter .5s cubic-bezier(.2,1.4,.4,1) backwards;animation-delay:calc(.25s + var(--i,0)*90ms)}
 .game:active{transform:translateY(5px)}
 .game .face{position:relative;margin:12px 12px 0;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
   font-family:"Sakkal Poster","Sakkal Saad";font-size:82px;color:#fff;text-shadow:5px 5px 0 rgba(0,0,0,.5);direction:rtl;
   border:4px solid #000;box-shadow:inset 6px 6px 0 rgba(255,255,255,.3),inset -6px -8px 0 rgba(0,0,0,.35);background-size:96px;image-rendering:pixelated;overflow:hidden}
 .game .face.ltr{direction:ltr;font-family:"Arial Black",system-ui,sans-serif;letter-spacing:4px}
-.game .face img{position:absolute;bottom:-6px;left:0;height:92%;filter:drop-shadow(4px 4px 0 rgba(0,0,0,.3))}
+.game .face img{position:absolute;bottom:-6px;left:0;height:92%;filter:drop-shadow(4px 4px 0 rgba(0,0,0,.3));transition:transform .2s}
+.game:active .face img{transform:scale(1.08) rotate(-3deg)}
+.game:not(.soon) .go{animation:gopulse 1.8s ease-in-out infinite}
+@keyframes gopulse{50%{filter:brightness(1.18)}}
 .game .face{justify-content:flex-start;padding:0 18px}
 .game .face .ico{position:relative;z-index:1;font-size:.8em;line-height:1;max-width:58%;text-align:center}
 .game .face.ltr .ico{font-size:.55em}
@@ -63,7 +70,7 @@ h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:
 .game.soon .go{background:var(--tex-stone),#777;background-size:64px}
 .game.soon .face::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.35) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23222' d='M5 2h6v1H5zM4 3h1v4H4zM11 3h1v4h-1zM3 7h10v7H3z'/%3E%3Cpath fill='%23ffd83d' d='M4 8h8v5H4z'/%3E%3Cpath fill='%23222' d='M7 9h2v3H7z'/%3E%3C/svg%3E") center/34% no-repeat}
 .ground{position:fixed;left:0;right:0;bottom:0;height:120px;z-index:1;background:var(--tex-grass) top/64px repeat-x,var(--tex-dirt) 0 64px/64px repeat;image-rendering:pixelated;border-top:4px solid #000}
-.credit{position:fixed;bottom:12px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;font-size:18px;text-shadow:2px 2px 0 #000}
+.credit{position:fixed;bottom:calc(12px + var(--safe-b));left:max(14px,env(safe-area-inset-left,0px));z-index:3;display:flex;align-items:center;gap:8px;font-size:18px;text-shadow:2px 2px 0 #000}
 .credit img{height:40px}
 @media (max-width:700px){header{justify-content:center;text-align:center}header img{height:26vh}}
 </style>
@@ -93,6 +100,7 @@ h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:
 <div class="ground"></div>
 <div class="credit"><img src="assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
 
+<script src="assets/save.js?v=1"></script>
 <script>
 /* لإضافة لعبة جديدة: أضف عنصراً هنا، وضع مجلدها بجانب huruf/ */
 const GAMES = [
@@ -123,21 +131,33 @@ const star = '<svg viewBox="0 0 7 7" shape-rendering="crispEdges"><path fill="#0
 const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 const load = k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } };
 
-let gems = 0, stars = 0;
 const box = document.getElementById('games');
+const CL = { ok: 'مَحْفوظٌ ✔', sync: '…', off: 'بِلا إِنْتَرْنِت', err: 'في الْجِهازِ فَقَطْ', idle: '…' };
+function render() {
+let gems = 0, stars = 0; box.innerHTML = '';
 GAMES.forEach(g => {
   const st = g.progressKey ? load(g.progressKey) : null;
   let done = 0;
   if (st) { done = Object.keys(st.done || {}).length; gems += st.gems || 0; stars += Object.values(st.done || {}).reduce((a, b) => a + b, 0); }
   const el = document.createElement(g.soon ? 'div' : 'a'); el.className = 'game' + (g.soon ? ' soon' : '');
   if (!g.soon) el.href = g.href;
+  el.style.setProperty('--i', box.children.length);
   el.innerHTML = `<div class="face${g.ltr ? ' ltr' : ''}" style="background-image:var(--tex-${g.tex})"><img class="${g.cover ? '' : 'pix'}" src="${g.cover || `assets/elia/${g.img}.webp`}" alt=""><span class="ico">${g.face}</span></div>
     <div class="body"><h3>${g.title}</h3><p>${g.desc}</p>
     ${g.total ? `<div class="bar"><i style="width:${done / g.total * 100}%"></i></div><p style="margin-top:-6px">${AR(done)} مِنْ ${AR(g.total)} ✔</p>` : ''}
     <div class="go">${g.soon ? 'قَريباً 🔒' : (done ? 'تابِعْ ▶' : 'اِلْعَبْ ▶')}</div></div>`;
   box.appendChild(el);
 });
-document.getElementById('stats').innerHTML = `<span class="chip">${gem}<span>${AR(gems)}</span></span><span class="chip">${star}<span>${AR(stars)}</span></span>`;
+document.getElementById('stats').innerHTML = `<span class="chip">${gem}<span>${AR(gems)}</span></span><span class="chip">${star}<span>${AR(stars)}</span></span><span class="chip" id="cloud">☁️ <span></span></span>`;
+const c = document.getElementById('cloud'); c.onclick = () => window.EliaSave && EliaSave.sync(); c.querySelector('span').textContent = CL[window.EliaSave ? EliaSave.state : 'err'];
+}
+render();
+/* السحابة: أعد الرسم حين يصل تقدّم أحدث، وأظهر حالة الحفظ */
+if (window.EliaSave) {
+  GAMES.forEach(g => g.progressKey && EliaSave.on(g.progressKey, render));
+  EliaSave.onState(s => { const e = document.querySelector('#cloud span'); if (e) e.textContent = CL[s] || ''; });
+}
+addEventListener('pageshow', e => { if (e.persisted) render(); });   // العودة من لعبة بزرّ الرجوع
 </script>
 </body>
 </html>

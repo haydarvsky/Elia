@@ -12,7 +12,7 @@
 <title>عالم إيليا للحروف</title>
 <link rel="icon" href="../assets/icon.png">
 <link rel="apple-touch-icon" href="../assets/icon.png">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -22,6 +22,7 @@
   <div class="cloud" style="top:12%;width:180px;animation-duration:70s;animation-delay:-20s"></div>
   <div class="cloud" style="top:26%;width:120px;animation-duration:90s;animation-delay:-60s"></div>
   <div class="cloud" style="top:6%;width:240px;animation-duration:110s;animation-delay:-5s"></div>
+  <div class="hills"></div>
 
   <div class="hud" style="width:100%">
     <a class="btn icon" id="t-hub" href="../" aria-label="ألعاب إيليا"></a>
@@ -73,6 +74,7 @@
     <span class="spacer"></span>
     <span class="hearts" id="l-hearts"></span>
     <span class="chip" id="l-gems"></span>
+    <div class="xpbar" id="l-xp"><i></i><b>1</b></div>
   </div>
   <div class="stations" id="l-stations"></div>
   <div class="stage" id="stage"></div>
@@ -87,7 +89,8 @@
 <div class="modal" id="modal"><div class="panel" id="modal-body"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="js/data.js"></script>
-<script src="js/app.js"></script>
+<script src="../assets/save.js?v=1"></script>
+<script src="js/data.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
 </body>
 </html>
