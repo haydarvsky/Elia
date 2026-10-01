@@ -231,3 +231,6 @@ img{-webkit-user-drag:none}
   .home-btns{left:50%;transform:translateX(-50%);align-items:center}
   .cgrid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}.ncard .d{font-size:52px}
 }
+
+#w-music.off{opacity:.4}
+.mission.pen .cap{background:var(--cyan)}

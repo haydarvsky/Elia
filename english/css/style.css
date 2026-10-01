@@ -201,3 +201,5 @@ img{-webkit-user-drag:none}
 #cv,#game{direction:ltr}
 .mission .ico img{display:block;height:118px;filter:drop-shadow(4px 4px 0 var(--ink))}
 @media (max-width:760px){.mission .ico img{height:80px}}
+
+#w-music.off{opacity:.4}

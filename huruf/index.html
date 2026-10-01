@@ -12,7 +12,7 @@
 <title>عالم إيليا للحروف</title>
 <link rel="icon" href="../assets/icon.png">
 <link rel="apple-touch-icon" href="../assets/icon.png">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -26,6 +26,7 @@
 
   <div class="hud" style="width:100%">
     <a class="btn icon" id="t-hub" href="../" aria-label="ألعاب إيليا"></a>
+    <a class="btn icon" id="t-shop" href="../#shop" aria-label="المتجر"></a>
     <button class="btn plank" id="b-reset" style="min-height:64px;font-size:24px;padding:0 16px 6px">↺ مِنْ جَديدٍ</button>
     <span class="chip" id="t-days"></span>
     <span class="chip" id="t-gems"></span>
@@ -50,6 +51,7 @@
   </div>
 
   <img class="hero pix" id="t-hero" src="../assets/elia/hello.webp" alt="إيليا">
+  <span class="pet" id="t-pet"></span>
   <div class="ground"></div>
   <div class="credit"><img src="../assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
 </section>
@@ -72,9 +74,11 @@
     <button class="btn icon" id="l-back" aria-label="الخريطة"></button>
     <span class="mc-title lettername" id="l-name"></span>
     <span class="spacer"></span>
+    <span class="chip" id="l-combo" style="display:none"></span>
     <span class="hearts" id="l-hearts"></span>
     <span class="chip" id="l-gems"></span>
     <div class="xpbar" id="l-xp"><i></i><b>1</b></div>
+    <button class="btn icon musicbtn" aria-label="الموسيقى"></button>
   </div>
   <div class="stations" id="l-stations"></div>
   <div class="stage" id="stage"></div>
@@ -86,11 +90,15 @@
   <img class="who pix" id="c-img" alt="">
 </div>
 
+<div id="cheer"><img class="pix" src="../assets/elia/smart.webp" alt=""><b></b></div>
 <div class="modal" id="modal"><div class="panel" id="modal-body"></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="../assets/save.js?v=1"></script>
-<script src="js/data.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="../assets/music.js?v=1"></script>
+<script src="../assets/save.js?v=2"></script>
+<script src="../assets/shop.js?v=1"></script>
+<script src="js/data.js?v=7"></script>
+<script src="js/strokes.js?v=1"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

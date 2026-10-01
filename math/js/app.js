@@ -27,11 +27,13 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 const NM = MIS[1].length;
 const sk = (w, s) => w + '-' + s;
 const starsOf = (w, s) => S.done[sk(w, s)] || 0;
-const unlocked = (w, s) => TEST || (w === 1 && s === 0) || (s > 0 ? starsOf(w, s - 1) > 0 : starsOf(w - 1, NM - 1) > 0) || starsOf(w, s) > 0;
+const BOSS = MIS[1].findIndex(m => m.boss);   // العالم التالي يُفتح بهزيمة الزعيم (مهمة القلم بعده إضافية)
+const unlocked = (w, s) => TEST || (w === 1 && s === 0) || (s > 0 ? starsOf(w, s - 1) > 0 : starsOf(w - 1, BOSS) > 0) || starsOf(w, s) > 0;
 const totalStars = () => Object.values(S.done).reduce((a, b) => a + b, 0);
 
 /* ================= الصوت ================= */
-const voice = new Audio(); voice.preload = 'auto';
+const MUSIC = window.EliaMusic;                   // الموسيقى الخلفية (assets/music.js)
+const voice = new Audio(); voice.preload = 'auto'; MUSIC && MUSIC.watch(voice);
 let playTok = 0;
 function talking(on) { document.querySelectorAll('.spidey').forEach(e => e.classList.toggle('talk', on)); }
 function playFile(src) {
@@ -49,7 +51,7 @@ const say = async k => (await playFile(`audio/${k}.mp3`)) !== 'cut';
 const num = n => say('n' + n);
 async function chain(...fns) { for (const f of fns) { if (!(await f())) return false; await sleep(40); } return true; }
 const S_ = k => () => say(k), N_ = n => () => num(n);
-const clip = new Audio();
+const clip = new Audio(); MUSIC && MUSIC.watch(clip);
 function playClip(k) { return new Promise(res => { const d = () => { clip.onended = clip.onerror = null; res(); }; clip.onended = d; clip.onerror = d; clip.src = `../huruf/assets/audio/elia/${k}.mp3?v=5`; const p = clip.play(); if (p && p.catch) p.catch(d); setTimeout(d, 5000); }); }
 function stopVoice() { playTok++; talking(false); try { voice.pause(); } catch (e) {} }
 
@@ -1108,6 +1110,86 @@ async function superAttack(G) {
   setTimeout(() => { if (GAME === G && !G.over) { G.phase = 'wait'; const nx = () => { const q = nextQ(G, false); const r = clamp(Math.min(W, H) * .09, 40, 80); G.cards = q.opts.map((o, i) => ({ o, ok: i === q.ans, x: W * (.34 + i * .17), y: H * .74, r, ring: RING[i + 2], born: G.t + i * .08 })); G.qLeft = 14 - G.diff * 5; G.phase = 'play'; }; nx(); } }, 1100);
 }
 
+/* ---------- ٩) اكتب الجواب بالقلم (مهمة القلم بعد الزعيم) ---------- */
+function gameWrite(w, s) {
+  const G = baseGame(w, s), Ink = window.EliaInk, B = {};
+  G.goal = 6; G.progress = () => G.rounds / G.goal; G.phase = 'wait'; G.boxes = []; G.fails = 0; G.guide = false; G.okT = 0; G.shk = 0; G.hint = null;
+  let cur = null, penSeen = false, auto = 0;
+  const hero = () => ({ x: Math.max(W * .1, heroH() * .34), y: H * .99, h: heroH() * 1.1 });
+  function layout() {
+    const n = G.boxes.length || 1, bs = clamp(Math.min((H - TOP) * .46, W * .5 / n, 300), 110, 300), gap = bs * .08, tot = n * bs + (n - 1) * gap, cx = W * .58, cy = TOP + (H - TOP) * .43;
+    G.boxes.forEach((b, i) => { b.x = cx - tot / 2 + i * (bs + gap); b.y = cy - bs / 2; b.s = bs; b.strokes = []; });
+    G.pad = { x: cx - tot / 2 - bs * .13, y: cy - bs / 2 - bs * .13, w: tot + bs * .26, h: bs * 1.26, cx, cy };
+    const bh = clamp(H * .1, 54, 84), by = Math.min(H - bh * .7, G.pad.y + G.pad.h + bh * .85), bw = Math.min(bs * .95, W * .22);
+    B.clr = { x: cx - bw * .6, y: by, w: bw, h: bh }; B.ok = { x: cx + bw * .6, y: by, w: bw, h: bh };
+  }
+  G.resize = layout;
+  function ask(first) {
+    const q = nextQ(G, first); G.boxes = String(q.val).split('').map(d => ({ d: +d, strokes: [] }));
+    G.fails = 0; G.guide = false; G.okT = 0; layout(); G.phase = 'play';
+  }
+  const say2 = (t, ms = 1600) => { G.hint = { t, life: ms / 1000 }; };
+  function check() {
+    clearTimeout(auto); if (G.phase !== 'play') return;
+    if (G.boxes.some(b => !b.strokes.length)) return say2(G.boxes.length > 1 ? 'اُكْتُبْ رَقْماً في كُلِّ مُرَبَّعٍ ✏️' : 'اُكْتُبِ الْجَوابَ في الْمُرَبَّعِ ✏️');
+    const ok = !Ink || G.fails >= 5 || G.boxes.every(b => Ink.accepts(b.strokes, b.d, { box: b.s, loose: G.fails > 0 }));   // لا يَعلَق الطفل أبداً
+    const P = G.pad;
+    if (ok) {
+      G.phase = 'wait'; G.okT = 1.5; G.hint = null; G.rounds++; const h = hero(), f = fingerOf(h.x, h.y, h.h); SFX.web(); fxWeb(G, f.x, f.y, P.cx, P.cy);
+      const c = scoreHit(G, P.cx, P.cy - P.h * .3, G.q.val); if (!c) goodSay(G, G.q);
+      setTimeout(() => { if (GAME !== G || G.over) return; if (G.rounds >= G.goal) endGame(G, true); else ask(false); }, 1700);
+    } else {
+      G.fails++; G.shk = .45; G.boxes.forEach(b => { b.strokes = []; }); miss(G, P.cx, P.cy - P.h * .3, false);
+      if (G.fails >= 3 && !G.guide) { G.guide = true; G.hearts = Math.max(1, G.hearts - 1); say2('اُكْتُبْ فَوْقَ الرَّقْمِ الْمُنَقَّطِ ✏️', 2400); }
+      else say2('اُكْتُبْ بِخَطٍّ أَوْضَحَ ✏️');
+    }
+  }
+  G.onDown = (x, y, e) => {
+    if (G.t < 3 || G.phase !== 'play') return;
+    if (inBtn(B.ok, x, y)) { B.ok.down = .15; SFX.click(); return check(); }
+    if (inBtn(B.clr, x, y)) { B.clr.down = .15; SFX.click(); clearTimeout(auto); G.boxes.forEach(b => { b.strokes = []; }); return; }
+    if (e.pointerType === 'pen') penSeen = true; else if (penSeen && e.pointerType === 'touch') return;
+    const P = G.pad; if (x < P.x - 20 || x > P.x + P.w + 20 || y < P.y - 20 || y > P.y + P.h + 20) return;
+    clearTimeout(auto); cur = [[x, y]]; cur.wd = e.pointerType === 'pen' && e.pressure ? .7 + e.pressure : 1;
+  };
+  G.onMove = (x, y) => { if (!cur) return; const l = cur[cur.length - 1]; if (Math.hypot(x - l[0], y - l[1]) > 1.5) cur.push([x, y]); };
+  G.onUp = () => {
+    if (!cur) return; const st = cur; cur = null; if (G.phase !== 'play') return;
+    const cx = st.reduce((a, p) => a + p[0], 0) / st.length, cy = st.reduce((a, p) => a + p[1], 0) / st.length;
+    const b = G.boxes.slice().sort((p, q) => Math.hypot(p.x + p.s / 2 - cx, p.y + p.s / 2 - cy) - Math.hypot(q.x + q.s / 2 - cx, q.y + q.s / 2 - cy))[0];
+    b.strokes.push(st);
+    if (G.boxes.every(k => k.strokes.length)) auto = setTimeout(check, 1300);
+  };
+  G.update = dt => {
+    G.t += dt; G.hurtT = Math.max(0, G.hurtT - dt); G.okT = Math.max(0, G.okT - dt); G.shk = Math.max(0, G.shk - dt); hud(G);
+    if (G.hint && (G.hint.life -= dt) <= 0) G.hint = null;
+    for (const k of ['clr', 'ok']) if (B[k] && B[k].down) B[k].down = Math.max(0, B[k].down - dt);
+  };
+  const inkLine = (g, st, lw) => { g.lineWidth = lw * (st.wd || 1); g.beginPath(); g.moveTo(st[0][0], st[0][1]); if (st.length === 1) g.lineTo(st[0][0] + .1, st[0][1]); for (let i = 1; i < st.length; i++) g.lineTo(st[i][0], st[i][1]); g.stroke(); };
+  G.draw = g => {
+    drawBg(g, G.bg, null, .3); const h = hero(); drawSprite(g, IMG.hero, h.x, h.y, h.h, { sx: 1 + (G.pop || 0) * .08, sy: 1 + (G.pop || 0) * .08 });
+    if (!G.pad) return; const P = G.pad;
+    g.save(); if (G.shk > 0) g.translate(Math.sin(G.shk * 60) * 1.4 * U, 0);
+    g.fillStyle = INK; rr(g, P.x + 8, P.y + 8, P.w, P.h, 20); g.fill();                         // الورقة
+    g.fillStyle = '#fffdf4'; rr(g, P.x, P.y, P.w, P.h, 20); g.fill(); g.lineWidth = 5; g.strokeStyle = INK; g.stroke();
+    for (const b of G.boxes) {
+      g.fillStyle = '#fff'; rr(g, b.x, b.y, b.s, b.s, 16); g.fill(); g.setLineDash([12, 9]); g.lineWidth = 3.5; g.strokeStyle = BLUE; g.stroke(); g.setLineDash([]);
+      g.strokeStyle = 'rgba(31,111,229,.22)'; g.lineWidth = 2; g.beginPath(); g.moveTo(b.x + b.s * .1, b.y + b.s * .82); g.lineTo(b.x + b.s * .9, b.y + b.s * .82); g.stroke();
+      g.font = `800 ${b.s * 1.45}px ${AR_FONT}`;
+      if (G.okT > 0) { g.fillStyle = '#1fa84a'; g.lineWidth = 6; g.strokeStyle = INK; cText(g, AD(b.d), b.x + b.s / 2, b.y + b.s / 2, true); continue; }
+      if (G.guide) { g.fillStyle = 'rgba(20,20,20,.07)'; g.setLineDash([7, 8]); g.lineWidth = 3; g.strokeStyle = '#9a9a9a'; cText(g, AD(b.d), b.x + b.s / 2, b.y + b.s / 2, true); g.setLineDash([]); }
+      g.strokeStyle = '#1b3aa8'; g.lineCap = g.lineJoin = 'round'; for (const st of b.strokes) inkLine(g, st, b.s * .05);
+    }
+    if (cur) { g.strokeStyle = '#1b3aa8'; g.lineCap = g.lineJoin = 'round'; inkLine(g, cur, (G.boxes[0] ? G.boxes[0].s : 200) * .05); }
+    g.restore();
+    if (G.phase === 'play' && G.t >= 3) { drawBtn(g, B.clr, '↺ اِمْسَحْ'); drawBtn(g, B.ok, '✓ تَمَّ', '#2ee66b'); }
+    if (G.hint) { g.save(); g.globalAlpha = Math.min(1, G.hint.life * 3); g.font = `800 ${Math.max(22, 4.4 * U)}px ${AR_FONT}`; g.lineWidth = 7; g.lineJoin = 'round'; g.strokeStyle = INK; g.fillStyle = '#ffd23f'; cText(g, G.hint.t, P.cx, Math.max(TOP + 3.4 * U, P.y - 3.2 * U), true); g.restore(); }
+  };
+  G.start = () => { ask(true); startMsg(G, () => G.q.speak()); };
+  G.speak = () => G.q && G.q.speak();
+  return G;
+}
+
 /* ================= الكتابة بالقلم (الضربة الخارقة) ================= */
 function traceDigit(n, diff) {
   return new Promise(res => {
@@ -1145,12 +1227,12 @@ function traceDigit(n, diff) {
 }
 
 /* ================= تشغيل مهمة ================= */
-const MAKERS = { swing: gameSwing, hunt: gameHunt, lasso: gameLasso, train: gameTrain, balance: gameBalance, clock: gameClock, hop: gameHop, boss: gameBoss };
+const MAKERS = { swing: gameSwing, hunt: gameHunt, lasso: gameLasso, train: gameTrain, balance: gameBalance, clock: gameClock, hop: gameHop, boss: gameBoss, write: gameWrite };
 function startStage(w, s) {
   stopVoice(); S.world = w; save(); if (GAME) GAME.over = true; GAME = null;
   show('game'); $('#combo').className = 'combo'; $('#banner').className = 'banner'; $('#trace-ov').classList.remove('on');
   const begin = () => {
-    resize(); GAME = MAKERS[MIS[w][s].g](w, s); hud(GAME); GAME.start();
+    resize(); GAME = MAKERS[MIS[w][s].g](w, s); hud(GAME); GAME.start(); MUSIC && MUSIC.start(MIS[w][s].boss ? 'battle' : 'action');
     if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(loop); }
   };
   TEST ? begin() : requestAnimationFrame(begin);
@@ -1161,10 +1243,10 @@ cv.addEventListener('pointermove', e => { if (!GAME || GAME.paused || GAME.over)
 cv.addEventListener('pointerup', e => { GAME && GAME.onUp && GAME.onUp(...pos(e), e); });
 cv.addEventListener('pointercancel', e => { GAME && GAME.onUp && GAME.onUp(...pos(e), e); });
 $('#target').onclick = () => { if (!GAME) return; SFX.click(); GAME.speak && GAME.speak(); };
-$('#g-exit').onclick = async () => { const G = GAME; if (!G) return; SFX.click(); G.paused = true; if (await confirmBox('تَخْرُجُ مِنَ الْمُهِمَّةِ؟')) { G.over = true; if (GAME === G) GAME = null; stopVoice(); openWorlds(S.world); } else G.paused = false; };
+$('#g-exit').onclick = async () => { const G = GAME; if (!G) return; SFX.click(); G.paused = true; if (await confirmBox('تَخْرُجُ مِنَ الْمُهِمَّةِ؟')) { G.over = true; if (GAME === G) GAME = null; stopVoice(); MUSIC && MUSIC.stop(); openWorlds(S.world); } else G.paused = false; };
 
 async function endGame(G, win) {
-  if (G.over) return; G.over = true; stopVoice(); $('#combo').classList.remove('on');
+  if (G.over) return; G.over = true; stopVoice(); MUSIC && MUSIC.stop(); $('#combo').classList.remove('on');
   let stars = 0;
   if (win) { if (G.timeLeft != null) { const r = G.hits / G.goal; stars = r >= 1 ? 3 : r >= .65 ? 2 : 1; } else stars = Math.max(1, G.hearts); }
   const timeUp = G.timeLeft != null && G.timeLeft <= 0;
@@ -1208,12 +1290,13 @@ function showResult(G, win, stars, record, newCards) {
 }
 
 /* ================= الشاشات ================= */
-const ICONS = { swing: '🕸️', hunt: '🎯', lasso: '✏️', train: '🚂', balance: '⚖️', clock: '🕒', hop: '🏢', boss: '🤖' };
+const ICONS = { swing: '🕸️', hunt: '🎯', lasso: '✏️', train: '🚂', balance: '⚖️', clock: '🕒', hop: '🏢', boss: '🤖', write: '📝' };
 function stats() { return `<span class="chip">⭐ ${AD(totalStars())}/${AD(WORLDS.length * NM * 3)}</span><span class="chip">🃏 ${AD(Object.keys(S.cards).length)}/١٣</span><span class="chip">💎 ${AD(S.gems)}</span>`; }
 function openHome() { stopVoice(); $('#home-stats').innerHTML = stats(); show('home'); }
 $('#play').onclick = () => { SFX.click(); ac(); say('hello'); openWorlds(S.world || 1); };
 $('#h-cards').onclick = () => { SFX.click(); openCards('home'); };
 $('#w-home').onclick = () => { SFX.click(); openHome(); };
+if (MUSIC) { $('#w-music').onclick = () => { SFX.click(); MUSIC.toggle(); }; MUSIC.onChange(on => $('#w-music').classList.toggle('off', !on)); } else $('#w-music').remove();
 document.querySelectorAll('.spidey-slot').forEach(e => { e.innerHTML = MASK; e.classList.add('spidey'); });
 
 let curW = 1;
@@ -1235,7 +1318,7 @@ function openWorlds(w) {
   MIS[w].forEach((st, s) => {
     const open = unlocked(w, s), stars = starsOf(w, s), best = S.best[sk(w, s)];
     const isNext = open && !stars && !nextMarked; if (isNext) nextMarked = true;
-    const m = el('button', 'mission' + (st.boss ? ' boss' : '') + (open ? '' : ' lock') + (isNext ? ' next' : ''));
+    const m = el('button', 'mission' + (st.boss ? ' boss' : '') + (st.pen ? ' pen' : '') + (open ? '' : ' lock') + (isNext ? ' next' : ''));
     m.style.backgroundImage = `url(img/bg_${Wd.bg}.webp?v=1)`;
     m.innerHTML = `<span class="num">${AD(s + 1)}</span><span class="ico">${st.boss ? '<img src="img/boss.webp?v=1">' : st.g === 'swing' ? '<img src="img/hero.webp?v=1">' : ICONS[st.g]}</span>${best ? `<span class="best">🏆 ${AD(best)}</span>` : ''}
       <div class="cap"><b>${st.name}</b><span class="pg">📖 ص ${st.p}</span><span class="stars">${[1, 2, 3].map(k => `<i class="${k <= stars ? 'on' : ''}">★</i>`).join('')}</span></div>`;
@@ -1265,7 +1348,7 @@ CLOUD && CLOUD.on(KEY, st => {
   if ($('#home').classList.contains('on')) $('#home-stats').innerHTML = stats();
   else if ($('#worlds').classList.contains('on')) openWorlds(curW);
 });
-if (TEST && /open=(\w+)/.test(location.search)) { const k = location.search.match(/open=(\w+)/)[1]; if (k === 'worlds') openWorlds(+(location.search.match(/w=(\d)/) || [0, 1])[1]); if (k === 'cards') { S.cards = { 0: 1, 3: 2, 5: 1, 7: 1 }; openCards('home'); } if (k === 'result') showResult({ w: 1, s: 0, score: 230, bestCombo: 6, st: MIS[1][0] }, true, 3, true, [{ n: 3, gold: true }, { n: 5, gold: false }]); }
+if (TEST && /open=(\w+)/.test(location.search)) { const k = location.search.match(/open=(\w+)/)[1]; if (k === 'stage') startStage(+(location.search.match(/w=(\d)/) || [0, 1])[1], +(location.search.match(/s=(\d)/) || [0, 0])[1]); if (k === 'worlds') openWorlds(+(location.search.match(/w=(\d)/) || [0, 1])[1]); if (k === 'cards') { S.cards = { 0: 1, 3: 2, 5: 1, 7: 1 }; openCards('home'); } if (k === 'result') showResult({ w: 1, s: 0, score: 230, bestCombo: 6, st: MIS[1][0] }, true, 3, true, [{ n: 3, gold: true }, { n: 5, gold: false }]); }
 if (TEST) window.__game = { get G() { return GAME; }, startStage, S, save, openWorlds, makeQ, traceDigit, W: () => [W, H],
   tick(sec) { for (let i = 0; i < sec * 20 && GAME; i++) { if (!GAME.paused) GAME.update(.05); drawFx(ctx, GAME, .05); } if (GAME) { ctx.save(); GAME.draw(ctx); drawFx(ctx, GAME, 0); ctx.restore(); } return GAME && GAME.t; },
   tap(x, y) { const r = cv.getBoundingClientRect(), o = { clientX: r.left + x, clientY: r.top + y, pointerType: 'pen', buttons: 1, bubbles: true, pointerId: 1 }; cv.dispatchEvent(new PointerEvent('pointerdown', o)); cv.dispatchEvent(new PointerEvent('pointerup', o)); },

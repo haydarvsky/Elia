@@ -222,7 +222,9 @@ kwk..kwk
 };
 
 /* ============ الصوت ============ */
-const voice = new Audio(); voice.preload = 'auto';
+const MUSIC = window.EliaMusic;                    // الموسيقى الخلفية (assets/music.js)
+const SHOP = window.EliaShop;                      // المتجر: السيف والرفيق والمؤثرات المجهَّزة (assets/shop.js)
+const voice = new Audio(); voice.preload = 'auto'; MUSIC && MUSIC.watch(voice);
 let playToken = 0;
 function play(src) {
   const tok = ++playToken;
@@ -267,6 +269,7 @@ const SFX = {
   good: () => { tone(523, .12, 'triangle', .12); tone(659, .12, 'triangle', .12, .1); tone(784, .22, 'triangle', .12, .2); },
   bad: () => tone(180, .3, 'sawtooth', .07, 0, 90),
   brk: () => { noise(.18, .35); tone(140, .08, 'square', .06); },
+  slash: () => { noise(.1, .32); tone(900, .13, 'sawtooth', .05, 0, 180); },
   hit: () => noise(.06, .2),
   xp: () => tone(1100, .09, 'sine', .08, 0, 1700),
   lvl: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .2, 'triangle', .1, i * .09)),
@@ -315,9 +318,10 @@ function nextCelebration() {
   if (!celebBag.length) celebBag = shuffle(['siuuu', 'siuuu', 'smart', 'smart', 'genius', 'genius', 'hero', 'easy']);  // بصوت إيليا الحقيقي
   return celebBag.pop();
 }
-function burst(n = 26, colors = ['#29d162', '#4ae3e0', '#ffd83d', '#fff'], cx = innerWidth / 2, cy = innerHeight * .55, k = 1) {
+function burst(n = 26, colors, cx = innerWidth / 2, cy = innerHeight * .55, k = 1) {
+  const F = SHOP ? SHOP.fx() : { colors: ['#29d162', '#4ae3e0', '#ffd83d', '#fff'], shape: '' }; if (!colors) { colors = F.colors; n = Math.round(n * (F.more || 1)); }
   for (let i = 0; i < n; i++) {
-    const b = el('i', 'burst'); const a = Math.random() * Math.PI * 2, d = (160 + Math.random() * 320) * k, sz = (k < 1 ? 12 : 16) + Math.random() * 10;
+    const b = el('i', 'burst ' + (F.shape || '')); const a = Math.random() * Math.PI * 2, d = (160 + Math.random() * 320) * k, sz = (k < 1 ? 12 : 16) + Math.random() * 10;
     b.style.left = cx - sz / 2 + 'px'; b.style.top = cy - sz / 2 + 'px'; b.style.width = b.style.height = sz + 'px'; b.style.background = pick(colors);
     b.style.setProperty('--dx', Math.cos(a) * d + 'px'); b.style.setProperty('--dy', Math.sin(a) * d - 120 * k + 'px'); b.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
     document.body.appendChild(b); setTimeout(() => b.remove(), 1200);
@@ -366,6 +370,7 @@ function factsFor(L) {
   return f;
 }
 function renderTitle() {
+  $('#t-pet').innerHTML = SHOP ? SHOP.pet() : '';
   const L = LET[currentLetterId() - 1]; const f = factsFor(L);
   const day = Math.floor(Date.now() / 864e5);
   $('#d-fact').innerHTML = f[day % f.length];
@@ -401,7 +406,9 @@ function renderMap() {
   enter(sc.querySelectorAll('.lvl'), 22); sc.querySelectorAll('.lvl .ink').forEach(e => centerInk([e]));
   requestAnimationFrame(() => { const y = sc.querySelector('.you'); if (y) y.parentElement.scrollIntoView({ block: 'center' }); });
 }
-$('#t-hub').innerHTML = IC.home;
+$('#t-hub').innerHTML = IC.home; $('#t-shop').innerHTML = IC.chest; if (!SHOP) $('#t-shop').remove();
+document.querySelectorAll('.musicbtn').forEach(b => { b.innerHTML = IC.note; b.onclick = () => { SFX.click(); MUSIC && MUSIC.toggle(); }; });
+MUSIC ? MUSIC.onChange(on => document.querySelectorAll('.musicbtn').forEach(b => b.classList.toggle('off', !on))) : document.querySelectorAll('.musicbtn').forEach(b => b.remove());
 $('#m-home').innerHTML = IC.home; $('#m-home').onclick = () => { SFX.click(); renderTitle(); show('title'); };
 
 /* ---- مستوى الحرف ---- */
@@ -420,9 +427,9 @@ function openLevel(id) {
   $('#l-name').textContent = CUR.name;
   let first = [0, 1, 2, 3].find(i => !stDone(id, i)); if (first == null) first = 4;
   if (S.done[id]) first = 0;
-  renderHearts(3, true); show('level'); openStation(first); enter($('#l-stations').children, 60);
+  renderHearts(3, true); setCombo(0); show('level'); openStation(first); enter($('#l-stations').children, 60);
 }
-$('#l-back').innerHTML = IC.back; $('#l-back').onclick = () => { SFX.click(); stopVoice(); renderMap(); show('map'); };
+$('#l-back').innerHTML = IC.back; $('#l-back').onclick = () => { SFX.click(); stopVoice(); endBattle(); renderMap(); show('map'); };
 function renderStations() {
   const box = $('#l-stations'); box.innerHTML = '';
   STATIONS.forEach((s, i) => {
@@ -438,7 +445,7 @@ function renderHearts(n, hide) {
   for (let i = 0; i < 3; i++) h.innerHTML += `<span class="${i < n ? '' : 'lost'}">${IC.heart}</span>`;
 }
 function openStation(i) {
-  CURST = i; renderStations(); renderHearts(3, i !== 4);
+  CURST = i; endBattle(); renderStations(); renderHearts(3, i !== 4);
   const stage = $('#stage'); stage.innerHTML = ''; stage.scrollTop = 0;
   ({ shape: stShape, sound: stSound, pos: stPos, words: stWords, boss: stBoss })[STATIONS[i].k](stage, CUR);
 }
@@ -580,6 +587,203 @@ const Q = {
   },
 };
 
+
+/* ============ تمارين قلم الآيباد ============ */
+const SK = window.STROKES || {};
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+function inkBox(c2, W, ch) {        // موضع صندوق حبر الحرف داخل مربّع الرسم
+  c2.textAlign = 'center'; c2.textBaseline = 'alphabetic';
+  c2.font = `700 ${W * .7}px "Sakkal Saad"`; let m = c2.measureText(ch);
+  const k = Math.min(W * .66 / (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent), W * .7 / (m.actualBoundingBoxLeft + m.actualBoundingBoxRight)), fs = W * .7 * k;
+  c2.font = `700 ${fs}px "Sakkal Saad"`; m = c2.measureText(ch);
+  const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent, w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+  const y = W / 2 + h / 2 - m.actualBoundingBoxDescent, x = W / 2 + (m.actualBoundingBoxLeft - m.actualBoundingBoxRight) / 2;
+  return { x, y, left: x - m.actualBoundingBoxLeft, top: y - m.actualBoundingBoxAscent, w, h };
+}
+function resample(pts, step) {      // نقاط متساوية البعد على المسار
+  const out = [pts[0]]; let need = step;
+  for (let i = 1; i < pts.length; i++) { let a = pts[i - 1]; const b = pts[i]; let d = dist(a, b);
+    while (d >= need) { const t = need / d; a = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; out.push(a); d -= need; need = step; } need -= d; }
+  if (dist(out[out.length - 1], pts[pts.length - 1]) > step * .3) out.push(pts[pts.length - 1]); return out;
+}
+function penCanvas(box, n) {        // طبقات كانفس متراكبة بدقّة الشاشة
+  const cs = Array.from({ length: n }, () => { const c = el('canvas'); box.appendChild(c); return c; });
+  const fit = () => { const W = box.clientWidth, dpr = devicePixelRatio || 1; cs.forEach(c => { c.width = c.height = Math.round(W * dpr); c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); }); return W; };
+  return { cs, fit };
+}
+const pt = (cv, e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+
+/* ---- الكتابة بترتيب الخط: نقطة بداية وسهم، والقلم يتبع المسار بالاتجاه الصحيح ---- */
+function strokeGame(host, L, opt = {}) {
+  const D = SK[glyph(L)]; if (!D) return traceGame(host, L);
+  return new Promise(res => {
+    const wrap = el('div', 'game'), box = el('div', 'tracebox pen'), row = el('div', 'row');
+    const { cs: [bg, gd, ink], fit } = penCanvas(box, 3), g = bg.getContext('2d'), x = gd.getContext('2d'), k = ink.getContext('2d');
+    const show = el('button', 'btn', '👀 أَرِني'), clr = el('button', 'btn', `<span style="width:30px;height:30px;display:inline-block">${IC.redo}</span> امْسَحْ`);
+    row.append(show, clr); wrap.append(box, row); host.appendChild(wrap);
+    let W = 0, T = 0, steps = [], cur = 0, prog = 0, on = false, down = false, penSeen = false, last = null, done = false, demo = 0, miss = 0, off = false;
+    function setup() {
+      W = fit(); T = W * .085; const B = inkBox(g, W, glyph(L)), P = p => [B.left + p[0] / 100 * B.w, B.top + p[1] / 100 * B.h];
+      g.clearRect(0, 0, W, W); g.fillStyle = '#e2d5ae'; g.fillText(glyph(L), B.x, B.y);
+      steps = D.s.map(s => ({ pts: resample(s.map(P), W * .022) })).concat(D.d.map(d => ({ dot: P(d), r: Math.max(W * .03, D.r / 100 * B.h) })));
+      cur = prog = 0; on = false; k.clearRect(0, 0, W, W);
+    }
+    const line = (pts, a, b) => { x.beginPath(); for (let i = a; i <= b; i++) i === a ? x.moveTo(pts[i][0], pts[i][1]) : x.lineTo(pts[i][0], pts[i][1]); x.stroke(); };
+    function frame(t) {
+      if (!document.body.contains(gd)) return; requestAnimationFrame(frame);
+      if (!steps.length) return; x.clearRect(0, 0, W, W); x.lineCap = x.lineJoin = 'round';
+      steps.forEach((s, i) => {
+        const isCur = i === cur && !done, past = i < cur || done;
+        if (s.dot) {
+          if (past) { x.fillStyle = '#2f9e44'; x.beginPath(); x.arc(s.dot[0], s.dot[1], s.r, 0, 7); x.fill(); }
+          else if (isCur) { const p = 1 + Math.sin(t / 160) * .18; x.strokeStyle = '#2f9e44'; x.lineWidth = 5; x.fillStyle = 'rgba(255,255,255,.9)'; x.beginPath(); x.arc(s.dot[0], s.dot[1], s.r * 1.25 * p, 0, 7); x.fill(); x.stroke(); }
+          return;
+        }
+        const n = s.pts.length - 1, upto = past ? n : isCur ? prog : -1;
+        if (upto > 0) { x.strokeStyle = '#2f9e44'; x.lineWidth = W * .07; x.setLineDash([]); line(s.pts, 0, upto); }
+        if (isCur && upto < n) {
+          x.strokeStyle = '#8a6a3a'; x.lineWidth = Math.max(3, W * .011); x.setLineDash([W * .02, W * .024]); line(s.pts, Math.max(0, upto), n); x.setLineDash([]);
+          const e = s.pts[n], f = s.pts[Math.max(0, n - 3)], a = Math.atan2(e[1] - f[1], e[0] - f[0]), r = W * .035;      // سهم النهاية
+          x.fillStyle = '#8a6a3a'; x.beginPath(); x.moveTo(e[0] + Math.cos(a) * r, e[1] + Math.sin(a) * r); x.lineTo(e[0] + Math.cos(a + 2.4) * r, e[1] + Math.sin(a + 2.4) * r); x.lineTo(e[0] + Math.cos(a - 2.4) * r, e[1] + Math.sin(a - 2.4) * r); x.fill();
+          if (!down && !demo) { const u = (t / 14) % ((n - upto) * 10 + 60) / 10, gi = Math.min(n, upto + Math.floor(u)), gp = s.pts[gi];              // نقطة شبحية تبيّن الاتجاه
+            x.fillStyle = 'rgba(47,158,68,.55)'; x.beginPath(); x.arc(gp[0], gp[1], W * .028, 0, 7); x.fill(); }
+          const st = s.pts[Math.max(0, upto)], p = 1 + Math.sin(t / 160) * .15;                                                                      // نقطة البداية
+          x.fillStyle = off ? '#e0342f' : '#2f9e44'; x.strokeStyle = '#fff'; x.lineWidth = 4; x.beginPath(); x.arc(st[0], st[1], W * .043 * p, 0, 7); x.fill(); x.stroke();
+          x.fillStyle = '#fff'; x.font = `800 ${W * .05}px "Sakkal Saad"`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(AR(i + 1), st[0], st[1] + W * .004);
+        }
+      });
+      if (demo) advanceDemo();
+    }
+    function stepDone() {
+      cur++; prog = 0; on = false; tone(600 + cur * 120, .1, 'triangle', .1);
+      if (cur >= steps.length) { done = true; SFX.good(); burstAt(box, 16, undefined, .5); setTimeout(() => res({ miss }), 600); }
+    }
+    function feed(p) {               // تقدّم القلم على المسار: كل نقطة تالية يجب أن يمرّ قربها بالترتيب
+      const s = steps[cur]; if (!s || s.dot) return; const n = s.pts.length - 1;
+      if (!on) { if (dist(p, s.pts[prog]) < T * 1.5) { on = true; off = false; } else return; }
+      let moved = false; while (prog < n && dist(p, s.pts[prog + 1]) < T) { prog++; moved = true; }
+      if (prog >= n) return stepDone();
+      if (!moved && dist(p, s.pts[prog]) > T * 2.3) { on = false; off = true; miss++; SFX.bad(); }
+    }
+    function advanceDemo() {         // عرض طريقة الكتابة
+      const s = steps[cur]; if (!s) { demo = 0; cur = prog = 0; done = false; return; }
+      if (s.dot) { if (++demo > 22) { demo = 1; cur++; } return; }
+      prog += 1; if (prog >= s.pts.length - 1) { cur++; prog = 0; }
+      if (cur >= steps.length) { demo = 0; setTimeout(() => { if (!done) { cur = prog = 0; } }, 500); }
+    }
+    ink.addEventListener('pointerdown', e => {
+      if (done || demo) return; if (e.pointerType === 'pen') penSeen = true; else if (penSeen && e.pointerType === 'touch') return;
+      e.preventDefault(); try { ink.setPointerCapture(e.pointerId); } catch (er) {} const p = pt(ink, e), s = steps[cur]; down = true; last = p;
+      if (s && s.dot) { if (dist(p, s.dot) < s.r * 2.2 + T * .6) stepDone(); else { miss++; off = true; setTimeout(() => off = false, 400); SFX.bad(); } return; }
+      feed(p);
+    });
+    ink.addEventListener('pointermove', e => {
+      if (!down || done || demo) return; e.preventDefault();
+      (e.getCoalescedEvents ? e.getCoalescedEvents() : [e]).concat([e]).forEach(ev => { const p = pt(ink, ev);
+        k.strokeStyle = on ? 'rgba(20,60,30,.55)' : 'rgba(224,52,47,.5)'; k.lineWidth = W * .018 * (ev.pointerType === 'pen' && ev.pressure ? .6 + ev.pressure * 1.4 : 1); k.lineCap = 'round';
+        k.beginPath(); k.moveTo(last[0], last[1]); k.lineTo(p[0], p[1]); k.stroke(); last = p; if (!done) feed(p); });
+    });
+    const up = () => { down = false; on = false; };
+    ink.addEventListener('pointerup', up); ink.addEventListener('pointercancel', up);
+    clr.onclick = () => { if (done) return; SFX.click(); demo = 0; setup(); };
+    show.onclick = () => { if (done) return; SFX.click(); setup(); demo = 1; };
+    if (TEST) box._solve = () => { if (!done) { cur = steps.length - 1; prog = 0; stepDone(); } };
+    document.fonts.ready.then(() => requestAnimationFrame(() => { setup(); if (opt.demo) demo = 1; requestAnimationFrame(frame); }));
+  });
+}
+
+/* ---- ضع النقط: هيكل الحرف بلا نقط، والطفل يضعها بالقلم في مكانها ---- */
+const dotFamily = L => [L, ...L.sisters.map(s => LET.find(M => M.ch === s || M.base === s)).filter(Boolean)].filter(M => M.ndots > 0 && SK[glyph(M)]);
+Q.dots = (host, L) => {
+  const fam = dotFamily(L); if (!fam.length) return Q.letterFind(host, L);
+  const Tg = fam.includes(L) && Math.random() < .7 ? L : pick(fam), D = SK[glyph(Tg)];
+  return new Promise(res => {
+    const g = el('div', 'game'); g.appendChild(el('div', 'q', `ضَعِ النُّقَطَ بِالْقَلَمِ لِيَصيرَ <span class="hl">${Tg.name}</span>`));
+    const lb = el('button', 'btn listen-btn pulse', IC.speak); lb.onclick = () => { SFX.click(); play(AU.name(Tg)); };
+    const box = el('div', 'tracebox pen dots'), { cs: [bg, cv], fit } = penCanvas(box, 2), b = bg.getContext('2d'), x = cv.getContext('2d');
+    const row = el('div', 'row'), clr = el('button', 'btn', `<span style="width:30px;height:30px;display:inline-block">${IC.redo}</span> امْسَحْ`), ok = el('button', 'btn green', '✔ تَمَّ');
+    row.append(clr, ok); const top = el('div', 'row'); top.append(box, lb); g.append(top, row); host.appendChild(g);
+    let W = 0, real = [], r = 10, put = [], locked = false, hint = false, tol = 0;
+    function setup() {
+      W = fit(); const B = inkBox(b, W, glyph(Tg)), P = p => [B.left + p[0] / 100 * B.w, B.top + p[1] / 100 * B.h];
+      b.clearRect(0, 0, W, W); b.fillStyle = '#3b2a14'; b.fillText(glyph(Tg), B.x, B.y);
+      D.e.forEach(q => { const a = P([q[0], q[1]]), c = P([q[2], q[3]]); b.clearRect(a[0] - 3, a[1] - 3, c[0] - a[0] + 6, c[1] - a[1] + 6); });      // امحُ النقط الأصلية
+      real = D.d.map(P); r = Math.max(W * .035, D.r / 100 * B.h); tol = Math.max(B.w, B.h) * .24; draw();
+    }
+    function draw() {
+      x.clearRect(0, 0, W, W);
+      if (hint) real.forEach(p => { x.strokeStyle = '#e0342f'; x.lineWidth = 4; x.setLineDash([6, 5]); x.beginPath(); x.arc(p[0], p[1], r * 1.2, 0, 7); x.stroke(); x.setLineDash([]); });
+      put.forEach(p => { x.fillStyle = locked ? '#2f9e44' : '#3b2a14'; x.beginPath(); x.moveTo(p[0], p[1] - r * 1.2); x.lineTo(p[0] + r * 1.2, p[1]); x.lineTo(p[0], p[1] + r * 1.2); x.lineTo(p[0] - r * 1.2, p[1]); x.closePath(); x.fill(); });
+    }
+    cv.addEventListener('pointerdown', e => {
+      if (locked) return; e.preventDefault(); const p = pt(cv, e), i = put.findIndex(q => dist(p, q) < r * 1.8);
+      if (i >= 0) put.splice(i, 1); else if (put.length < 4) put.push(p); SFX.hit(); draw();
+    });
+    function check() {
+      if (locked) return; locked = true;
+      const good = put.length === real.length && put.every(p => real.some(q => dist(p, q) < tol));
+      if (good) { put = real.slice(); draw(); SFX.good(); burstAt(box, 14); setTimeout(() => res(true), 500); }
+      else { SFX.bad(); hint = true; locked = false; draw(); locked = true; box.classList.add('nope'); setTimeout(() => res(false), 1300); }
+    }
+    ok.onclick = check; clr.onclick = () => { if (locked) return; SFX.click(); put = []; draw(); };
+    if (TEST) box._solve = good => { put = good ? real.slice() : [[5, 5]]; check(); };
+    document.fonts.ready.then(() => requestAnimationFrame(setup));
+    seq([AU.name(Tg)]);
+  });
+};
+
+/* ---- وصّل بخط: اسحب بالقلم من الكلمة إلى شكل الحرف فيها ---- */
+function connectQ(host, { prompt, pairs, onPick }) {
+  return new Promise(res => {
+    const g = el('div', 'game'); g.appendChild(el('div', 'q', prompt));
+    const wrap = el('div', 'link'), A = el('div', 'lcol'), B = el('div', 'lcol'), cv = el('canvas'); wrap.append(A, cv, B);
+    const mk = (side, p, i) => { const b = el('button', 'lnk ' + side, `<span class="ink">${side === 'a' ? p.a : p.b}</span><i class="pin"></i>`); b.dataset.k = i; return b; };
+    pairs.forEach((p, i) => A.appendChild(mk('a', p, i))); shuffle(pairs.map((p, i) => [p, i])).forEach(([p, i]) => B.appendChild(mk('b', p, i)));
+    g.appendChild(wrap); host.appendChild(g); enter(wrap.querySelectorAll('.lnk'), 60);
+    const x = cv.getContext('2d'), links = []; let from = null, cur = null, mist = 0, bad = null, sel = null;
+    const pin = b => { const r = b.querySelector('.pin').getBoundingClientRect(), w = wrap.getBoundingClientRect(); return [r.left + r.width / 2 - w.left, r.top + r.height / 2 - w.top]; };
+    function draw() {
+      const w = wrap.clientWidth, h = wrap.clientHeight, dpr = devicePixelRatio || 1; if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h); x.lineCap = 'round';
+      const ln = (p, q, c, lw) => { x.strokeStyle = '#000'; x.lineWidth = lw + 5; x.beginPath(); x.moveTo(p[0], p[1]); x.lineTo(q[0], q[1]); x.stroke(); x.strokeStyle = c; x.lineWidth = lw; x.stroke(); };
+      links.forEach(([a, b]) => ln(pin(a), pin(b), '#29d162', 7));
+      if (bad) ln(pin(bad[0]), pin(bad[1]), '#e0342f', 7);
+      if (from && cur) ln(pin(from), cur, '#ffd83d', 7);
+    }
+    function tryLink(a, b) {
+      if (a.classList.contains('b')) [a, b] = [b, a];
+      if (a.dataset.k === b.dataset.k) {
+        links.push([a, b]); [a, b].forEach(e => e.classList.add('ok')); SFX.good(); burstAt(b, 8, undefined, .3); if (onPick) onPick(pairs[+a.dataset.k]);
+        if (links.length === pairs.length) setTimeout(() => res(mist <= 1), 700);
+      } else { mist++; SFX.bad(); bad = [a, b]; [a, b].forEach(e => { e.classList.remove('nope'); void e.offsetWidth; e.classList.add('nope'); }); setTimeout(() => { bad = null; draw(); }, 450); }
+      draw();
+    }
+    const free = t => { const b = t && t.closest && t.closest('.lnk'); return b && wrap.contains(b) && !b.classList.contains('ok') ? b : null; };
+    wrap.addEventListener('pointerdown', e => { const b = free(e.target); if (!b) return; e.preventDefault(); try { wrap.setPointerCapture(e.pointerId); } catch (er) {} from = b; b.classList.add('sel'); SFX.click(); const w = wrap.getBoundingClientRect(); cur = [e.clientX - w.left, e.clientY - w.top]; draw(); });
+    wrap.addEventListener('pointermove', e => { if (!from) return; const w = wrap.getBoundingClientRect(); cur = [e.clientX - w.left, e.clientY - w.top]; draw(); });
+    const up = e => {
+      if (!from) return; const a = from; from = null; cur = null; a.classList.remove('sel');
+      const b = free(document.elementFromPoint(e.clientX, e.clientY));
+      if (b && b !== a && b.classList.contains('a') !== a.classList.contains('a')) { if (sel) { sel.classList.remove('sel'); sel = null; } tryLink(a, b); }
+      else if (b === a) {                                   // نقرة بلا سحب: اختر ثم انقر الطرف الآخر
+        if (sel && sel !== a && sel.classList.contains('a') !== a.classList.contains('a')) { const s = sel; sel.classList.remove('sel'); sel = null; tryLink(s, a); }
+        else { if (sel) sel.classList.remove('sel'); sel = a; a.classList.add('sel'); }
+      }
+      draw();
+    };
+    wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', () => { if (from) from.classList.remove('sel'); from = cur = null; draw(); });
+    centerInk(wrap.querySelectorAll('.lnk.b .ink'), true); requestAnimationFrame(draw);
+    if (TEST) wrap._solve = () => pairs.forEach((p, i) => { const a = A.querySelector(`[data-k="${i}"]`), b = B.querySelector(`[data-k="${i}"]`); if (!a.classList.contains('ok')) tryLink(a, b); });
+  });
+}
+Q.connect = (host, L) => {
+  const seen = new Set(), pairs = [];
+  shuffle(['start', 'middle', 'end', 'alone'].filter(k => L.forms[k].form && L.forms[k].words.length)).forEach(k => { const f = L.forms[k].form; if (seen.has(f)) return; seen.add(f); const w = pick(L.forms[k].words); pairs.push({ a: hlWord(w, L), b: f, w }); });
+  if (pairs.length < 2) return Q.posQ(host, L);
+  seq([AU.ui('where')]);
+  return connectQ(host, { prompt: 'وَصِّلْ بِالْقَلَمِ كُلَّ كَلِمَةٍ بِشَكْلِ الْحَرْفِ فيها', pairs: pairs.slice(0, 3), onPick: p => sayWord(L, p.w) });
+};
+
 /* ============ المحطة ١: شكل الحرف ============ */
 function stShape(stage, L) {
   const c = sectionCard(`${L.name}`, 'تَعَرَّفْ عَلَيْهِ');
@@ -601,8 +805,16 @@ function stShape(stage, L) {
   const r2 = el('div', 'row'); const st = el('div', 'story', hlWord(L.story, L)); st.style.flex = '1';
   r2.appendChild(st); r2.appendChild(speakBtn(() => seq([AU.ui('story'), AU.story(L)]))); sc.appendChild(r2); stage.appendChild(sc);
 
-  const tc = sectionCard('اُكْتُبِ الْحَرْفَ بِإِصْبَعِكَ', 'تَحَدٍّ صَغيرٌ ✏'); stage.appendChild(tc);
-  traceGame(tc, L).then(() => stationComplete(0));
+  const tc = sectionCard('اُكْتُبِ الْحَرْفَ بِالْقَلَمِ', 'اِبْدَأْ مِنَ النُّقْطَةِ الْخَضْراءِ وَاتْبَعِ السَّهْمَ ✏'); stage.appendChild(tc);
+  strokeGame(tc, L, { demo: true }).then(async () => {
+    if (!document.body.contains(tc)) return;
+    if (dotFamily(L).length) {      // ثم ضع النقط
+      setCombo(COMBO + 1); addXp(xpFor()); await cheer();
+      const dc = sectionCard('ضَعِ النُّقَطَ', 'بِالْقَلَمِ ✏'); stage.appendChild(dc); dc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      await miniRounds(dc, L, [Q.dots]);
+    }
+    stationComplete(0);
+  });
   setTimeout(() => play(AU.name(L)), 250);
 }
 function traceGame(host, L) {
@@ -691,7 +903,7 @@ function stPos(stage, L) {
   });
   c.appendChild(grid); stage.appendChild(c); enter(grid.children, 80);
   const g = sectionCard('أَيْنَ الْحَرْفُ؟', 'تَحَدٍّ صَغيرٌ 🧭'); stage.appendChild(g);
-  miniRounds(g, L, [Q.formGap, Q.posQ, Q.formGap, Q.posQ]).then(() => stationComplete(2));
+  miniRounds(g, L, [Q.formGap, Q.connect, Q.posQ, Q.formGap]).then(() => stationComplete(2));
 }
 
 /* ============ المحطة ٤: كلمات بالحرف ============ */
@@ -731,6 +943,19 @@ function mineGame(host, L) {
 }
 
 /* ============ جولات صغيرة ============ */
+/* عدّاد الحماس: إجابات متتالية تضاعف النقاط، والاحتفال الكبير عند ٣ و٥ و٨ ثم كل ٥ */
+let COMBO = 0;
+function setCombo(n) {
+  COMBO = n; const c = $('#l-combo'); c.style.display = n >= 2 ? '' : 'none';
+  if (n >= 2) { c.innerHTML = `${IC.fire}<span>×${AR(n)}</span>`; c.classList.toggle('hot', n >= 5); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+}
+const xpFor = () => 5 * Math.min(3, 1 + Math.floor(COMBO / 3));
+const bigCombo = n => n === 3 || n === 5 || n === 8 || (n > 8 && n % 5 === 0);
+const CHEERS = ['أَحْسَنْتَ!', 'صَحيحٌ!', 'مُمْتازٌ!', 'رائِعٌ!', 'يا بَطَلُ!'];
+function cheer() {                                  // تشجيع سريع في الزاوية بدل احتفال ملء الشاشة
+  SFX.good(); const c = $('#cheer'); c.querySelector('b').textContent = pick(CHEERS); c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');
+  return Math.random() < .35 ? Promise.all([play(AU.ui(pick(['great1', 'great2', 'great3']))), sleep(800)]) : sleep(800);
+}
 async function miniRounds(card, L, fns) {
   const prog = el('div', 'progress'); fns.forEach(() => prog.appendChild(el('i'))); card.appendChild(prog);
   const host = el('div'); host.style.width = '100%'; card.appendChild(host);
@@ -738,8 +963,8 @@ async function miniRounds(card, L, fns) {
   while (i < fns.length) {
     prog.children[i].className = 'cur'; host.innerHTML = '';
     const ok = await fns[i](host, L);
-    if (ok) { prog.children[i].className = 'ok'; addXp(5); await celebrate(); i++; }
-    else { prog.children[i].className = 'no'; await celebrate('try'); }
+    if (ok) { prog.children[i].className = 'ok'; setCombo(COMBO + 1); addXp(xpFor()); if (bigCombo(COMBO)) await celebrate(); else await cheer(); i++; }
+    else { prog.children[i].className = 'no'; setCombo(0); await celebrate('try'); }
   }
   host.innerHTML = '';
 }
@@ -747,34 +972,137 @@ async function miniRounds(card, L, fns) {
 /* ============ المحطة ٥: التحدي ============ */
 function stBoss(stage, L) {
   const c = sectionCard(`تَحَدّي ${L.gen} ⚔`, '٣ قُلوبٍ'); stage.appendChild(c);
-  const intro = el('div', 'row', `<div style="font-size:30px;line-height:1.6;flex:1;min-width:260px">لَدَيْكَ <b style="color:#e0342f">٣ قُلوبٍ</b>. أَجِبْ عَنْ ٨ أَسْئِلَةٍ، وَكُلُّ خَطَأٍ يُنْقِصُ قَلْباً. اِجْمَعِ النُّجومَ الثَّلاثَ!</div>`);
-  const img = el('img', 'pix'); img.src = '../assets/elia/think.webp'; img.style.height = '220px'; intro.appendChild(img);
-  const go = el('button', 'btn big gold', '⚔ ابْدَأِ التَّحَدّي'); const r = el('div', 'row'); r.appendChild(go);
+  const M = MOBS[L.unit] || MOBS[1];
+  const intro = el('div', 'row', `<span class="mobprev">${M.svg}</span><div style="font-size:30px;line-height:1.6;flex:1;min-width:260px"><b>${M.name}</b> يَحْرُسُ الْحَرْفَ التّالِيَ!<br>كُلُّ إِجابَةٍ صَحيحَةٍ <b style="color:#2f7d32">ضَرْبَةُ سَيْفٍ</b>، وَكُلُّ خَطَأٍ يُنْقِصُ قَلْباً مِنْ <b style="color:#e0342f">٣ قُلوبٍ</b>.<br>أَجِبْ بِسُرْعَةٍ لِتَضْرِبَ <b style="color:#b8860b">ضَرْبَةً خارِقَةً ⚡</b></div>`);
+  const img = el('img', 'pix'); img.src = '../assets/elia/think.webp'; img.style.height = '200px'; intro.appendChild(img);
+  const go = el('button', 'btn big gold', '⚔ ابْدَأِ الْمَعْرَكَةَ'); const r = el('div', 'row'); r.appendChild(go);
   c.append(intro, r);
-  go.onclick = () => { SFX.click(); c.innerHTML = ''; c.appendChild(el('h2', '', `تَحَدّي ${L.gen} ⚔`)); runBoss(c, L); };
+  go.onclick = () => { SFX.click(); c.innerHTML = ''; c.classList.add('fight'); runBoss(c, L); };
 }
+/* وحوش المعركة — بكسل مرسوم بالكود، وحش لكل وحدة */
+const MOBS = {
+  1: { name: 'وَحْشُ الْعُشْبِ', svg: pix(`
+....kkkkkk....
+..kkGGGGGGkk..
+.kGGggggggggk.
+kGGggggggggggk
+kGgggggggggggk
+kggkkggggkkggk
+kggwkggggwkggk
+kggggggggggggk
+kgggkkkkkkgggk
+kggggrrrrggggk
+kdggggggggggdk
+.kkkkkkkkkkkk.`, { k: '#000', g: '#5fc437', G: '#a5ee7a', d: '#3f8f22', w: '#fff', r: '#b3261e' }) },
+  2: { name: 'عِمْلاقُ الرِّمالِ', svg: pix(`
+...kkkkkkkk...
+...kSSssssk...
+...kskwskwk...
+...kssrrssk...
+.kkkkkkkkkkkk.
+kSSksssssskSSk
+kssksssssskssk
+kssksddddskssk
+kkkksddddskkkk
+...kssssssk...
+...ksskkssk...
+...kkk..kkk...`, { k: '#000', s: '#d8b45a', S: '#f3de96', d: '#a8812f', w: '#fff', r: '#b3261e' }) },
+  3: { name: 'غولُ الثَّلْجِ', svg: pix(`
+..kkk....kkk..
+.kwwwkkkkwwwk.
+kwwwwwwwwwwwwk
+kwwbbbbbbbbwwk
+kwbbkbbbbkbbwk
+kwbbbbbbbbbbwk
+kwwbbkrrkbbwwk
+kwwwbbbbbbwwwk
+kWwwwwwwwwwwWk
+kwwwkwwwwkwwwk
+.kwwk.kk.kwwk.
+..kk......kk..`, { k: '#000', w: '#f4fafc', W: '#c4dbe8', b: '#6fb4e8', r: '#b3261e' }) },
+};
+const swordIcon = () => pix(`
+......kk
+.....kck
+....kck.
+.k.kck..
+..kck...
+..kbk...
+.kbk.k..
+kk......`, Object.assign({ k: '#000', c: '#4ae3e0', b: '#8b5a2b' }, (window.EliaShop && EliaShop.sword && EliaShop.sword()) || {}));
+function endBattle() { $('#level').classList.remove('battle'); MUSIC && MUSIC.stop(); }
+
+/* المعركة: كل إجابة صحيحة ضربة سيف، وكل خطأ ضربة من الوحش، والضربة القاضية بكتابة الحرف */
 async function runBoss(card, L) {
   const prev = LET.filter(M => M.id < L.id);
-  const pool = [Q.syl, Q.letterFind, Q.posQ, Q.formGap, Q.whichWord, Q.listenWord, Q.build, Q.syl];
-  const plan = shuffle(pool).map(f => ({ f, L }));
+  const pool = [Q.syl, Q.letterFind, Q.posQ, Q.formGap, Q.whichWord, Q.listenWord, Q.build, Q.dots, Q.connect];
+  const plan = shuffle(pool).slice(0, 8).map(f => ({ f, L }));
   if (prev.length) { const rv = shuffle(prev).slice(0, 2); plan.splice(2, 1, { f: Q.letterFind, L: rv[0] }); if (rv[1]) plan.splice(5, 1, { f: pick([Q.syl, Q.whichWord]), L: rv[1] }); }
-  let hearts = 3; renderHearts(hearts);
-  const prog = el('div', 'progress'); plan.forEach(() => prog.appendChild(el('i'))); card.appendChild(prog);
-  const host = el('div'); host.style.width = '100%'; card.appendChild(host);
-  for (let i = 0; i < plan.length; i++) {
-    prog.children[i].className = 'cur'; host.innerHTML = '';
-    if (plan[i].L !== L) host.appendChild(el('div', 'q', `<span style="font-size:24px;background:#555;padding:0 12px 4px;border:3px solid #000">🔁 مُراجَعَةٌ: ${plan[i].L.name}</span>`));
-    const ok = await plan[i].f(host, plan[i].L);
-    if (ok) { prog.children[i].className = 'ok'; addXp(5); await celebrate(); }
-    else {
-      prog.children[i].className = 'no'; hearts--; renderHearts(hearts);
-      const hs = $('#l-hearts').children[hearts]; if (hs) hs.classList.add('pop');
-      if (hearts <= 0) { await celebrate('try'); return bossLose(card, L); }
-      await celebrate('try');
-    }
+  const HP = 6, CRIT = 9000; let hearts = 3, hp = HP, combo = 0; renderHearts(hearts);
+  $('#level').classList.add('battle'); $('#stage').scrollTop = 0;
+  const M = MOBS[L.unit] || MOBS[1];
+  const arena = el('div', 'arena u' + L.unit, `<div class="a-ground"></div>
+    <div class="a-info"><b>${M.name}</b><div class="a-hp">${'<i></i>'.repeat(HP)}</div></div>
+    <div class="a-crit"><span>⚡</span><div><i></i></div></div><div class="a-combo"></div>
+    <div class="a-mob">${M.svg}</div>
+    <span class="a-pet">${SHOP ? SHOP.pet() : ''}</span>
+    <div class="a-hero"><img class="pix" src="../assets/elia/hello.webp" alt=""><span class="a-sword">${swordIcon()}</span></div>`);
+  const host = el('div'); host.style.width = '100%'; card.append(arena, host);
+  const mob = arena.querySelector('.a-mob'), hero = arena.querySelector('.a-hero'), sword = arena.querySelector('.a-sword'), hpEls = arena.querySelectorAll('.a-hp i'), crit = arena.querySelector('.a-crit i'), comboEl = arena.querySelector('.a-combo');
+  const alive = () => document.body.contains(arena);
+  const dist = () => { const a = hero.getBoundingClientRect(), b = mob.getBoundingClientRect(); return Math.max(60, a.left - b.right + b.width * .3); };
+  const float = (txt, at, cls = '') => { const f = el('div', 'a-float ' + cls, txt), r = at.getBoundingClientRect(), ar = arena.getBoundingClientRect(); f.style.left = (r.left + r.width / 2 - ar.left) + 'px'; f.style.top = (r.top - ar.top + 6) + 'px'; arena.appendChild(f); setTimeout(() => f.remove(), 1000); };
+  const again = (e, c) => { e.classList.remove(c); void e.offsetWidth; e.classList.add(c); };
+  const SW = 'rotate(-20deg) scaleX(-1)';
+  async function heroHit(big, final) {
+    const d = dist(); hero.classList.toggle('crit', big);
+    hero.animate([{ transform: 'none' }, { transform: `translateX(${-d}px) rotate(-6deg)`, offset: .4 }, { transform: `translateX(${-d}px) rotate(5deg)`, offset: .62 }, { transform: 'none' }], { duration: 540, easing: 'ease-in-out' });
+    sword.animate([{ transform: 'rotate(35deg) scaleX(-1)' }, { transform: 'rotate(35deg) scaleX(-1)', offset: .36 }, { transform: 'rotate(-125deg) scaleX(-1)', offset: .6 }, { transform: SW }], { duration: 540 });
+    await sleep(230); SFX.slash(); if (big) SFX.xp(); again(mob, 'hit'); again(arena.querySelector('.a-pet'), 'hop');
+    burstAt(mob, big ? 24 : 12, big ? ['#ffe14d', '#fff', '#ff7a1a'] : ['#fff', '#e0342f', '#ffd83d'], big ? .6 : .4);
+    float(final ? 'الضَّرْبَةُ الْقاضِيَةُ!' : big ? 'ضَرْبَةٌ خارِقَةٌ!' : pick(['طاخ!', 'بوم!', 'هَيّا!', 'خُذْ!']), mob, big ? 'crit' : '');
+    arena.animate([{ transform: 'translate(-6px,3px)' }, { transform: 'translate(6px,-3px)' }, { transform: 'translate(-3px,-2px)' }, { transform: 'none' }], { duration: 240 });
+    if (!final) { hp--; if (hpEls[hp]) hpEls[hp].classList.add('off'); }
+    await sleep(400);
   }
-  bossWin(L, hearts);
+  async function mobHit() {
+    const d = dist();
+    mob.animate([{ transform: 'none' }, { transform: `translateX(${d}px) scale(1.22) rotate(9deg)`, offset: .45 }, { transform: 'none' }], { duration: 560, easing: 'ease-in' });
+    await sleep(250); SFX.bad(); noise(.2, .3); again(hero, 'hurt'); again(arena, 'flash'); float('آخ!', hero, 'bad'); await sleep(360);
+  }
+  MUSIC && MUSIC.start('battle');
+  for (let i = 0; i < plan.length && hp > 0 && hearts > 0; i++) {
+    host.innerHTML = '';
+    if (plan[i].L !== L) host.appendChild(el('div', 'q', `<span style="font-size:24px;background:#555;padding:0 12px 4px;border:3px solid #000">🔁 مُراجَعَةٌ: ${plan[i].L.name}</span>`));
+    crit.style.transition = 'none'; crit.style.width = '100%'; void crit.offsetWidth; crit.style.transition = `width ${CRIT}ms linear`; crit.style.width = '0%';
+    const t0 = performance.now(), ok = await plan[i].f(host, plan[i].L);
+    if (!alive()) return;
+    crit.style.width = getComputedStyle(crit).width; crit.style.transition = 'none';
+    if (ok) {
+      combo++; const big = performance.now() - t0 < CRIT;
+      comboEl.innerHTML = combo >= 2 ? `${IC.fire}<span>×${AR(combo)}</span>` : ''; if (combo >= 2) again(comboEl, 'pop');
+      await heroHit(big); addXp(big ? 10 : 5);
+      if (hp > 0 && (combo === 3 || combo === 5)) await play(AU.elia(combo === 3 ? 'easy' : 'genius'));
+    } else {
+      combo = 0; comboEl.innerHTML = ''; await mobHit(); hearts--; renderHearts(hearts);
+      const hs = $('#l-hearts').children[hearts]; if (hs) hs.classList.add('pop');
+      MUSIC && MUSIC.tense(hearts === 1); arena.classList.toggle('danger', hearts === 1);
+      if (hearts > 0) await play(AU.elia('tryagain'));
+    }
+    if (!alive()) return;
+  }
+  if (hearts <= 0) { endBattle(); await celebrate('try'); return bossLose(card, L); }
+  /* الضربة القاضية: اكتب الحرف */
+  mob.classList.add('stun'); arena.querySelector('.a-crit').style.display = 'none'; host.innerHTML = '';
+  host.appendChild(el('div', 'q', `<span class="fin">⚔ الضَّرْبَةُ الْقاضِيَةُ!</span><br>اُكْتُبْ ${L.name} لِتَهْزِمَ الْوَحْشَ`));
+  play(AU.ui('trace'));
+  await writeLetter(host, L);
+  if (!alive()) return;
+  mob.classList.remove('stun'); await heroHit(true, true);
+  mob.classList.add('dead'); SFX.brk(); burstAt(mob, 40, ['#4ae3e0', '#ffd83d', '#fff', '#29d162'], .9); await sleep(850);
+  endBattle(); bossWin(L, hearts);
 }
+const writeLetter = (host, L) => strokeGame(host, L);   // الضربة القاضية: كتابة الحرف بترتيب الخط
 function bossLose(card, L) {
   card.innerHTML = ''; play(AU.ui('lose'));
   const m = el('div', 'row', `<img class="pix" src="../assets/elia/tryagain.webp" style="height:240px"><div style="font-size:34px;line-height:1.6">انْتَهَتِ الْقُلوبُ!<br>لا بَأْسَ يا بَطَلُ، نُعيدُ الْمُحاوَلَةَ 💪</div>`);

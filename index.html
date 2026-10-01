@@ -40,6 +40,38 @@ header img{height:min(34vh,300px);filter:drop-shadow(8px 10px 0 rgba(0,0,0,.25))
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 8px;font-size:26px;background:rgba(0,0,0,.55);border:3px solid #000;box-shadow:inset 3px 3px 0 rgba(255,255,255,.15)}
 .chip svg{width:28px;height:28px}
+/* ===== المتجر ===== */
+button{font:inherit;color:inherit}
+.signbtn{display:inline-block;margin:26px 12px 18px 0;padding:4px 26px 10px;font-size:34px;color:#fff;text-shadow:3px 3px 0 var(--shadow);cursor:pointer;vertical-align:top;background:var(--tex-gold),#e7b416;background-size:64px;border:4px solid #000;box-shadow:inset 4px 4px 0 rgba(255,255,255,.4),inset -4px -6px 0 rgba(0,0,0,.3);animation:gopulse 1.8s ease-in-out infinite}
+.signbtn:active{transform:translateY(3px)}
+#shop{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:var(--safe-t) 14px calc(14px + var(--safe-b))}
+#shop.on{display:flex}
+.spanel{width:min(900px,100%);max-height:100%;overflow-y:auto;overscroll-behavior:contain;background:#c6c6c6;color:#1d1d1d;border:4px solid #000;box-shadow:inset 5px 5px 0 #fff,inset -5px -5px 0 #555;padding:14px 18px 20px;animation:enter .3s cubic-bezier(.2,1.4,.4,1)}
+.shead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.shead h2{margin:0;font-size:40px;flex:1}
+.sx{width:56px;height:56px;font-size:30px;color:#fff;background:#b3261e;border:4px solid #000;box-shadow:inset 3px 3px 0 rgba(255,255,255,.3),inset -3px -4px 0 rgba(0,0,0,.35);cursor:pointer}
+.sprev{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:150px;margin:10px 0 4px;background:linear-gradient(#5aa8ff,#cdeaff 78%,#5d9c33 78%);border:4px solid #000}
+.sprev img{height:140px}
+.sprev span{width:76px;display:block;margin-bottom:8px}.sprev span svg{width:100%;display:block}
+.sprev #s-sword{width:70px;margin-bottom:40px;transform:scaleX(-1) rotate(-20deg)}
+.sprev #s-pet{animation:bob 1.2s ease-in-out infinite}
+.stabs{display:flex;gap:8px;margin:12px 0}
+.stab{flex:1;min-height:56px;font-size:28px;color:#fff;text-shadow:3px 3px 0 var(--shadow);cursor:pointer;background:var(--tex-stone),#777;background-size:64px;border:4px solid #000;box-shadow:inset 4px 4px 0 rgba(255,255,255,.3),inset -4px -6px 0 rgba(0,0,0,.35)}
+.stab.on{background:var(--tex-grass),#4f8f2a;background-size:64px;outline:4px solid #fff;outline-offset:-8px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.sitem{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px 10px;background:#8b8b8b;border:4px solid;border-color:#373737 #fff #fff #373737}
+.sitem .ic{width:84px;height:84px;display:flex;align-items:center;justify-content:center;font-size:44px}
+.sitem .ic svg{width:100%;height:100%;filter:drop-shadow(3px 4px 0 rgba(0,0,0,.3))}
+.sitem b{font-size:24px;color:#fff;text-shadow:2px 2px 0 #000;text-align:center;line-height:1.2}
+.sitem button{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:50px;padding-bottom:4px;font-size:24px;color:#fff;text-shadow:2px 2px 0 #000;cursor:pointer;background:var(--tex-gold),#e7b416;background-size:64px;border:4px solid #000;box-shadow:inset 3px 3px 0 rgba(255,255,255,.35),inset -3px -5px 0 rgba(0,0,0,.3)}
+.sitem button svg{width:24px;height:24px}
+.sitem.own button{background:var(--tex-stone),#777;background-size:64px}
+.sitem.eq{background:#6f9a52;outline:5px solid #ffd83d;outline-offset:-2px}
+.sitem.eq button{background:var(--tex-grass),#4f8f2a;background-size:64px}
+.sitem.poor button{filter:grayscale(.85) brightness(.8)}
+.sitem.nope{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.smsg{min-height:40px;margin:10px 0 0;text-align:center;font-size:24px;line-height:1.5;color:#8a1b00}
 #cloud{font-size:20px;cursor:pointer}
 h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:34px;color:#2b1a08;background:var(--tex-plank),#a0763e;background-size:64px;border:4px solid #3b2a14;box-shadow:inset 4px 4px 0 rgba(255,255,255,.25),inset -4px -4px 0 rgba(0,0,0,.3)}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
@@ -94,19 +126,28 @@ h2.sign{display:inline-block;margin:26px 0 18px;padding:4px 26px 10px;font-size:
   </header>
 
   <h2 class="sign">🎮 الْعَوالِمُ</h2>
+  <button class="signbtn" id="shopbtn">🛒 الْمَتْجَرُ</button>
   <div class="games" id="games"></div>
 </main>
 
+<div id="shop"><div class="spanel">
+  <div class="shead"><h2>🛒 مَتْجَرُ إيليا</h2><span class="chip" id="s-bal"></span><button class="sx" id="s-close" aria-label="إغلاق">✕</button></div>
+  <div class="sprev"><span id="s-pet"></span><img class="pix" src="assets/elia/hello.webp" alt=""><span id="s-sword"></span></div>
+  <div class="stabs" id="s-tabs"></div>
+  <div class="sgrid" id="s-grid"></div>
+  <p class="smsg" id="s-msg"></p>
+</div></div>
 <div class="ground"></div>
 <div class="credit"><img src="assets/logo.png" alt=""><span>صُنِعَ بِحُبٍّ لِإيليا</span></div>
 
-<script src="assets/save.js?v=1"></script>
+<script src="assets/save.js?v=2"></script>
+<script src="assets/shop.js?v=1"></script>
 <script>
 /* لإضافة لعبة جديدة: أضف عنصراً هنا، وضع مجلدها بجانب huruf/ */
 const GAMES = [
   { id: 'huruf', title: 'لُعْبَةُ الْحُروفِ', desc: 'شَكْلُ الْحَرْفِ وَصَوْتُهُ وَمَواضِعُهُ وَكَلِماتُهُ — مِنْ كِتابِ لُغَتي.', face: 'أ ب ت', tex: 'gold', img: 'siuuu', href: 'huruf/', progressKey: 'elia-letters-v1', total: 28 },
   { id: 'english', title: 'فينوم × إيليا', desc: 'أَكْشِنْ إِنْجِليزِيٌّ: اِرْكُضْ وَفَقِّعْ وَاقْطَعْ وَاهْزِمِ الزَّعيمَ — مِنْ كِتابِ Skyline.', face: 'ABC', ltr: true, tex: 'obsidian', img: 'smart', cover: 'english/img/c_hero.webp', href: 'english/', progressKey: 'elia-venom-v2', total: 24 },
-  { id: 'math', title: 'سبايدر × إيليا', desc: 'أَلْغازُ الرِّياضِيّاتِ مَعَ سبايدر مان: تَأَرْجُحٌ وَصَيْدٌ وَقِطارٌ وَميزانٌ وَساعَةٌ — مِنْ كِتابِ الرِّياضِيّاتِ.', face: '١+٢', tex: 'diamond', img: 'think', cover: 'math/img/hero.webp', href: 'math/', progressKey: 'elia-spider-v1', total: 24 },
+  { id: 'math', title: 'سبايدر × إيليا', desc: 'أَلْغازُ الرِّياضِيّاتِ مَعَ سبايدر مان: تَأَرْجُحٌ وَصَيْدٌ وَقِطارٌ وَميزانٌ وَساعَةٌ — مِنْ كِتابِ الرِّياضِيّاتِ.', face: '١+٢', tex: 'diamond', img: 'think', cover: 'math/img/hero.webp', href: 'math/', progressKey: 'elia-spider-v1', total: 28 },
   { id: 'more', title: 'أَلْعابٌ قادِمَةٌ', desc: 'عَوالِمُ جَديدَةٌ في الطَّريقِ…', face: '؟', tex: 'obsidian', img: 'tryagain', soon: true },
 ];
 
@@ -148,6 +189,7 @@ GAMES.forEach(g => {
     <div class="go">${g.soon ? 'قَريباً 🔒' : (done ? 'تابِعْ ▶' : 'اِلْعَبْ ▶')}</div></div>`;
   box.appendChild(el);
 });
+if (window.EliaShop) gems = EliaShop.balance();   // المحفظة: ما جُمع ناقص ما صُرف
 document.getElementById('stats').innerHTML = `<span class="chip">${gem}<span>${AR(gems)}</span></span><span class="chip">${star}<span>${AR(stars)}</span></span><span class="chip" id="cloud">☁️ <span></span></span>`;
 const c = document.getElementById('cloud'); c.onclick = () => window.EliaSave && EliaSave.sync(); c.querySelector('span').textContent = CL[window.EliaSave ? EliaSave.state : 'err'];
 }
@@ -158,6 +200,37 @@ if (window.EliaSave) {
   EliaSave.onState(s => { const e = document.querySelector('#cloud span'); if (e) e.textContent = CL[s] || ''; });
 }
 addEventListener('pageshow', e => { if (e.persisted) render(); });   // العودة من لعبة بزرّ الرجوع
+
+/* ===== المتجر ===== */
+(() => {
+  const SH = window.EliaShop, $ = id => document.getElementById(id); if (!SH) return $('shopbtn').remove();
+  let tab = 'sword', AC = null;
+  const beep = (f, d = .12, f2) => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = 'triangle'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02); } catch (e) {} };
+  function draw() {
+    const bal = SH.balance(); $('s-bal').innerHTML = `${gem}<span>${AR(bal)}</span>`;
+    $('s-pet').innerHTML = SH.pet(); $('s-sword').innerHTML = SH.icon(SH.eq('sword').id);
+    $('s-tabs').innerHTML = SH.SLOTS.map(([k, n]) => `<button class="stab${k === tab ? ' on' : ''}" data-k="${k}">${n}</button>`).join('');
+    $('s-grid').innerHTML = SH.ITEMS.filter(i => i.slot === tab).map(i => {
+      const own = SH.owned(i.id), eq = SH.equipped(i.id), poor = !own && bal < i.price;
+      return `<div class="sitem${own ? ' own' : ''}${eq ? ' eq' : ''}${poor ? ' poor' : ''}" data-id="${i.id}"><span class="ic">${SH.icon(i.id) || '🚫'}</span><b>${i.name}</b>
+        <button>${eq ? 'مُجَهَّزٌ ✔' : own ? 'جَهِّزْ' : gem + '<span>' + AR(i.price) + '</span>'}</button></div>`; }).join('');
+  }
+  $('s-tabs').onclick = e => { const b = e.target.closest('.stab'); if (!b) return; tab = b.dataset.k; beep(700, .05); draw(); };
+  $('s-grid').onclick = e => {
+    const it = e.target.closest('.sitem'); if (!it) return; const id = it.dataset.id, item = SH.ITEMS.find(i => i.id === id);
+    if (SH.owned(id)) { SH.equip(id); beep(880, .08); $('s-msg').textContent = ''; }
+    else { const r = SH.buy(id);
+      if (r === 'ok') { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, .16), i * 90)); $('s-msg').textContent = `اِشْتَرَيْتَ ${item.name}! 🎉`; }
+      else { beep(200, .25, 90); it.classList.remove('nope'); void it.offsetWidth; it.classList.add('nope'); $('s-msg').textContent = `تَحْتاجُ ${AR(item.price - SH.balance())} جَواهِرَ أُخْرى — اِلْعَبْ لِتَجْمَعَها 💎`; return; } }
+    draw(); render();
+  };
+  const open = () => { $('s-msg').textContent = ''; draw(); $('shop').classList.add('on'); };
+  $('shopbtn').onclick = () => { beep(700, .05); open(); };
+  $('s-close').onclick = () => { $('shop').classList.remove('on'); if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search); };
+  $('shop').addEventListener('click', e => { if (e.target.id === 'shop') $('s-close').onclick(); });
+  SH.onChange(() => { if ($('shop').classList.contains('on')) draw(); render(); });
+  if (location.hash === '#shop') open();
+})();
 </script>
 </body>
 </html>

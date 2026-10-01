@@ -7,7 +7,7 @@
 const me = document.currentScript, ds = (me && me.dataset) || {};
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const CFG = { pid: 'vak-quiz-96d5f', key: 'AIzaSyADogtO8s6kDuTrs1Tup6J4acY47T5DmdM', col: 'elia_saves', doc: LOCAL ? 'test' : (ds.player || 'elia') };
-const KEYS = (ds.keys || 'elia-letters-v1,elia-venom-v2,elia-spider-v1').split(',');
+const KEYS = (ds.keys || 'elia-letters-v1,elia-venom-v2,elia-spider-v1,elia-shop-v1').split(',');
 const DOC = `https://firestore.googleapis.com/v1/projects/${CFG.pid}/databases/(default)/documents/${CFG.col}/${CFG.doc}?key=${CFG.key}`;
 const META = 'elia-cloud-v1';   // وقت آخر مزامنة ناجحة
 

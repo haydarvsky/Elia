@@ -43,7 +43,8 @@ const CONFUSE = { B: 'DPR', D: 'BPO', P: 'BRQ', Q: 'OGP', M: 'NW', N: 'MH', W: '
 
 /* ================= الصوت ================= */
 const slug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-const voice = new Audio(); voice.preload = 'auto';
+const MUSIC = window.EliaMusic;                   // الموسيقى الخلفية (assets/music.js)
+const voice = new Audio(); voice.preload = 'auto'; MUSIC && MUSIC.watch(voice);
 let playTok = 0;
 function playFile(src) {
   const tok = ++playTok;
@@ -59,7 +60,7 @@ const say = async t => (await playFile(`audio/t/${slug(t)}.mp3`)) !== 'cut';
 const sayLetter = async L => (await playFile(`audio/t/letter_${L.toLowerCase()}.mp3`)) !== 'cut';
 const venom = async k => (await playFile(`audio/v/${k}.mp3`)) !== 'cut';
 async function chain(...fns) { for (const f of fns) { if (!(await f())) return false; await sleep(60); } return true; }
-const clip = new Audio();
+const clip = new Audio(); MUSIC && MUSIC.watch(clip);
 function playClip(k) { return new Promise(res => { const d = () => { clip.onended = clip.onerror = null; res(); }; clip.onended = d; clip.onerror = d; clip.src = `../huruf/assets/audio/elia/${k}.mp3?v=5`; const p = clip.play(); if (p && p.catch) p.catch(d); setTimeout(d, 5000); }); }
 function stopVoice() { playTok++; try { voice.pause(); } catch (e) {} }
 
@@ -599,7 +600,7 @@ function startStage(w, s) {
   stopVoice(); S.world = w; save(); if (GAME) GAME.over = true; GAME = null;
   show('game'); $('#combo').className = 'combo'; $('#banner').className = 'banner'; $('#trace-ov').classList.remove('on');
   requestAnimationFrame(() => {
-    resize(); GAME = MAKERS[STAGES[s].g](w, s); hud(GAME); GAME.start();
+    resize(); GAME = MAKERS[STAGES[s].g](w, s); hud(GAME); GAME.start(); MUSIC && MUSIC.start(STAGES[s].g === 'boss' ? 'battle' : 'action');
     if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(loop); }
   });
 }
@@ -608,10 +609,10 @@ cv.addEventListener('pointerdown', e => { if (!GAME || GAME.paused || GAME.over)
 cv.addEventListener('pointermove', e => { if (!GAME || GAME.paused || GAME.over) return; if (e.pointerType === 'mouse' && !e.buttons && GAME.kind !== 'run' && GAME.kind !== 'boss' && GAME.kind !== 'catch') return; GAME.onMove && GAME.onMove(...pos(e), e); });
 cv.addEventListener('pointerup', e => { GAME && GAME.onUp && GAME.onUp(...pos(e), e); });
 $('#target').onclick = () => { if (!GAME) return; SFX.click(); if (GAME.kind === 'slash') say(GAME.word); else if (GAME.task) GAME.task.speak(); };
-$('#g-exit').onclick = async () => { const G = GAME; if (!G) return; SFX.click(); G.paused = true; if (await confirmBox('تَخْرُجُ مِنَ الْمُهِمَّةِ؟')) { G.over = true; if (GAME === G) GAME = null; stopVoice(); openWorlds(S.world); } else G.paused = false; };
+$('#g-exit').onclick = async () => { const G = GAME; if (!G) return; SFX.click(); G.paused = true; if (await confirmBox('تَخْرُجُ مِنَ الْمُهِمَّةِ؟')) { G.over = true; if (GAME === G) GAME = null; stopVoice(); MUSIC && MUSIC.stop(); openWorlds(S.world); } else G.paused = false; };
 
 async function endGame(G, win) {
-  if (G.over) return; G.over = true; stopVoice(); $('#combo').classList.remove('on');
+  if (G.over) return; G.over = true; stopVoice(); MUSIC && MUSIC.stop(); $('#combo').classList.remove('on');
   let stars = 0;
   if (win) {
     if (G.timeLeft != null) { const r = (G.kind === 'slash' ? G.words : G.hits) / G.goal; stars = r >= 1 ? 3 : r >= .65 ? 2 : 1; }
@@ -665,6 +666,7 @@ function openHome() { stopVoice(); $('#home-stats').innerHTML = stats(); show('h
 $('#play').onclick = () => { SFX.click(); ac(); venom('hello'); openWorlds(S.world || 1); };
 $('#h-cards').onclick = () => { SFX.click(); openCards('home'); };
 $('#w-home').onclick = () => { SFX.click(); openHome(); };
+if (MUSIC) { $('#w-music').onclick = () => { SFX.click(); MUSIC.toggle(); }; MUSIC.onChange(on => $('#w-music').classList.toggle('off', !on)); } else $('#w-music').remove();
 
 let curW = 1;
 function openWorlds(w) {

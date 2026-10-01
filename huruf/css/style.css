@@ -280,7 +280,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .toast .ad{color:var(--gold)}
 
 /* تمييز المقطع المسموع */
-.listen-btn{width:120px;height:120px}
+.listen-btn{width:120px;height:120px;padding:0;flex:none}
 .listen-btn svg{width:74px;height:74px}
 .pulse{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.07)}}
@@ -321,3 +321,104 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .orb.gem{background:var(--diamond);box-shadow:0 0 12px 3px rgba(74,227,224,.8)}
 .chip.bump{animation:heartpop .4s}
 #l-xp{width:min(200px,22vw)}
+
+/* ============ عدّاد الحماس والتشجيع السريع ============ */
+#l-combo{color:#ffb020}
+#l-combo.hot{color:#ff5a1a;box-shadow:inset 3px 3px 0 rgba(255,255,255,.15),0 0 0 3px #ff7a1a,0 0 18px 4px rgba(255,122,26,.7)}
+#l-combo.bump{animation:heartpop .4s}
+.musicbtn svg{width:40px;height:40px}
+.musicbtn.off{filter:grayscale(1) brightness(.55)}
+#cheer{position:fixed;z-index:45;left:var(--safe-l);bottom:calc(10px + var(--safe-b));display:flex;align-items:flex-end;gap:6px;pointer-events:none;opacity:0;transform:translateY(120%)}
+#cheer img{height:min(26vh,210px);filter:drop-shadow(5px 6px 0 rgba(0,0,0,.3))}
+#cheer b{margin-bottom:14vh;padding:2px 22px 10px;font-size:40px;font-weight:800;background:#fff;color:#111;border:5px solid #000;box-shadow:6px 6px 0 rgba(0,0,0,.35)}
+#cheer.on{animation:cheer .85s cubic-bezier(.2,1.3,.4,1)}
+@keyframes cheer{0%{opacity:0;transform:translateY(120%) rotate(-12deg)}22%{opacity:1;transform:translateY(0) rotate(4deg)}34%{transform:rotate(0)}78%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(120%)}}
+
+/* ============ ساحة المعركة ============ */
+#level.battle .stations{display:none}
+.card.fight{padding:12px 14px 16px}
+.mobprev{width:150px;flex:none;animation:mobidle 1.2s ease-in-out infinite}
+.mobprev svg{width:100%;display:block}
+.arena{position:relative;width:100%;height:min(236px,29vh);margin-bottom:12px;overflow:hidden;border:4px solid #000;background:linear-gradient(#5aa8ff,#cdeaff);box-shadow:inset 4px 4px 0 rgba(255,255,255,.35),inset -4px -4px 0 rgba(0,0,0,.2)}
+.arena.u2{background:linear-gradient(#ffb469,#ffe9b8)}
+.arena.u3{background:linear-gradient(#8fb6e8,#eef6ff)}
+.a-ground{position:absolute;left:0;right:0;bottom:0;height:30%;background:var(--tex-grass);background-size:64px;image-rendering:pixelated;border-top:4px solid #000}
+.arena.u2 .a-ground{background-image:var(--tex-sand)}
+.arena.u3 .a-ground{background-image:var(--tex-snow)}
+.a-info{position:absolute;left:12px;top:8px;width:min(300px,34%);color:#fff;font-size:22px;line-height:1.2;text-shadow:2px 2px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000}
+.a-info b{font-weight:800}
+.a-hp{display:flex;gap:3px;height:18px;margin-top:4px;direction:ltr}
+.a-hp i{flex:1;background:linear-gradient(#ff6a5f,#c9211b);border:3px solid #000;transition:background .2s,transform .2s}
+.a-hp i.off{background:#3a3a3a;transform:scaleY(.6)}
+.a-crit{position:absolute;right:12px;top:10px;width:min(240px,28%);display:flex;align-items:center;gap:6px;font-size:24px;direction:ltr}
+.a-crit div{flex:1;height:14px;background:#222;border:3px solid #000}
+.a-crit i{display:block;height:100%;width:100%;background:linear-gradient(#fff3a8,#ffc21a)}
+.a-combo{position:absolute;left:50%;top:8px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:34px;color:#ffb020;text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000}
+.a-combo svg{width:34px;height:34px}
+.a-combo.pop{animation:combopop .4s}
+@keyframes combopop{40%{transform:translateX(-50%) scale(1.6) rotate(-8deg)}}
+.a-mob{position:absolute;left:11%;bottom:7%;height:60%;aspect-ratio:14/12;animation:mobidle 1.2s ease-in-out infinite;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.28))}
+.a-mob svg{width:100%;height:100%;display:block}
+@keyframes mobidle{50%{transform:translateY(-6px) scaleY(1.04)}}
+.a-mob.hit{animation:mobhit .45s}
+@keyframes mobhit{0%{filter:brightness(4)}25%{transform:translateX(-20px) rotate(-9deg);filter:brightness(1.6) sepia(1) saturate(6) hue-rotate(-40deg)}55%{transform:translateX(10px)}}
+.a-mob.stun{animation:mobstun .5s ease-in-out infinite;filter:grayscale(.5) drop-shadow(5px 6px 0 rgba(0,0,0,.28))}
+@keyframes mobstun{25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+.a-mob.dead{animation:mobdead .85s forwards}
+@keyframes mobdead{25%{transform:scale(1.35) rotate(12deg);filter:brightness(4)}100%{transform:scale(0) rotate(400deg);opacity:0}}
+.a-hero{position:absolute;right:9%;bottom:3%;height:92%}
+.a-hero img{height:100%;display:block;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.28))}
+.a-sword{position:absolute;left:-52%;top:34%;width:44%;transform:rotate(-20deg) scaleX(-1);transform-origin:85% 85%;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.28));animation:swordbob 1.4s ease-in-out infinite}
+@keyframes swordbob{50%{margin-top:-8px}}
+.a-sword svg{width:100%;display:block}
+.a-hero.crit .a-sword{filter:drop-shadow(0 0 8px #ffe14d) brightness(1.3)}
+.a-hero.hurt{animation:shake .4s}
+.a-hero.hurt img{animation:hurtflash .4s}
+@keyframes hurtflash{30%{filter:brightness(1.4) sepia(1) saturate(8) hue-rotate(-50deg)}}
+.arena.flash::after{content:"";position:absolute;inset:0;background:rgba(224,52,47,.45);animation:fadeout .4s forwards;pointer-events:none}
+@keyframes fadeout{to{opacity:0}}
+.arena.danger{animation:danger .8s ease-in-out infinite}
+@keyframes danger{50%{box-shadow:inset 0 0 0 6px rgba(224,52,47,.75),inset 0 0 40px rgba(224,52,47,.5)}}
+.a-float{position:absolute;z-index:3;transform:translateX(-50%);white-space:nowrap;font-size:30px;color:#fff;text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000;animation:floatup .95s ease-out forwards;pointer-events:none}
+.a-float.crit{font-size:36px;color:#ffe14d}
+.a-float.bad{color:#ff6a5f}
+@keyframes floatup{0%{transform:translate(-50%,10px) scale(.4)}20%{transform:translate(-50%,-10px) scale(1.2)}100%{transform:translate(-50%,-60px) scale(1);opacity:0}}
+.q .fin{display:inline-block;padding:0 14px 6px;background:#b3261e;border:4px solid #000;color:#ffe14d}
+/* المعركة: السؤال مضغوط ليبقى الوحش ظاهراً فوقه */
+.fight .q{font-size:30px;line-height:1.35}
+.fight .q .big,.fight .gapword{font-size:76px}
+.fight .listen-btn{width:88px;height:88px}.fight .listen-btn svg{width:56px;height:56px}
+.fight .game{gap:12px}
+.fight .opt{min-height:112px;font-size:70px}.fight .opt.txt{font-size:42px;min-height:92px}
+.fight .tiles .opt{min-width:92px;min-height:92px;font-size:56px}
+.fight .slots .s{width:82px;height:88px}
+.fight .tracebox,.fight .meter{width:min(330px,70vw)}
+
+/* ============ تمارين القلم ============ */
+.tracebox.pen canvas{touch-action:none}
+.tracebox.dots{width:min(360px,60vw);background:#fffaf0}
+.tracebox.nope{animation:shake .4s}
+.link{position:relative;display:flex;justify-content:space-between;align-items:stretch;gap:min(200px,22vw);width:min(700px,100%);touch-action:none}
+.link canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.lcol{display:flex;flex-direction:column;gap:16px;flex:1}
+.lnk{position:relative;display:flex;align-items:center;justify-content:center;min-height:96px;padding:0 26px 6px;font-family:"Sakkal Saad";font-weight:700;font-size:50px;line-height:1.1;color:#222;background:#fff;border:4px solid #000;box-shadow:inset -4px -6px 0 #bdbdbd,inset 4px 4px 0 #fff;touch-action:none}
+.lnk.b{font-size:64px;color:#fff;text-shadow:3px 3px 0 #000;background:var(--tex-stone),#7a7a7a;background-size:64px;image-rendering:pixelated;box-shadow:inset 5px 5px 0 rgba(255,255,255,.3),inset -5px -7px 0 rgba(0,0,0,.4);padding-bottom:0}
+.lnk .pin{position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;background:#ffd83d;border:4px solid #000;z-index:3}
+.lnk.a .pin{left:-15px}.lnk.b .pin{right:-15px}
+.lnk.sel{outline:5px solid #ffd83d;outline-offset:-2px}
+.lnk.ok{background:var(--tex-grass),#4f8f2a;background-size:64px;color:#fff;text-shadow:3px 3px 0 #000}
+.lnk.ok .pin{background:#29d162}
+.lnk.nope{animation:shake .4s}
+.fight .lnk{min-height:76px;font-size:42px}.fight .lnk.b{font-size:54px}.fight .lcol{gap:10px}
+.fight .tracebox.pen{width:min(330px,70vw)}
+
+/* ============ المتجر: الرفيق والمؤثرات ============ */
+#t-shop svg{width:40px;height:40px}
+#title .pet{position:absolute;z-index:3;bottom:104px;right:calc(2.5vw + min(40vh,390px));width:min(13vh,120px);animation:enter .5s .6s cubic-bezier(.2,1.5,.4,1) backwards,bob 1.1s 1.1s ease-in-out infinite;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25));pointer-events:none}
+#title .pet svg,.a-pet svg{width:100%;display:block}
+.a-pet{position:absolute;right:1.5%;bottom:6%;width:min(9%,84px);animation:mobidle 1s ease-in-out infinite;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.28))}
+.a-pet.hop{animation:pethop .5s}
+@keyframes pethop{40%{transform:translateY(-26px) rotate(-12deg)}}
+.burst.star{border:0;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.burst.heart{border:0;clip-path:polygon(50% 100%,0 45%,0 20%,20% 0,40% 0,50% 15%,60% 0,80% 0,100% 20%,100% 45%)}
+.burst.dot{border-radius:50%;border-width:2px}
