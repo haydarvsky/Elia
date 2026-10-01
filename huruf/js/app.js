@@ -972,55 +972,89 @@ async function miniRounds(card, L, fns) {
 /* ============ المحطة ٥: التحدي ============ */
 function stBoss(stage, L) {
   const c = sectionCard(`تَحَدّي ${L.gen} ⚔`, '٣ قُلوبٍ'); stage.appendChild(c);
-  const M = MOBS[L.unit] || MOBS[1];
+  const M = mobFor(L);
   const intro = el('div', 'row', `<span class="mobprev">${M.svg}</span><div style="font-size:30px;line-height:1.6;flex:1;min-width:260px"><b>${M.name}</b> يَحْرُسُ الْحَرْفَ التّالِيَ!<br>كُلُّ إِجابَةٍ صَحيحَةٍ <b style="color:#2f7d32">ضَرْبَةُ سَيْفٍ</b>، وَكُلُّ خَطَأٍ يُنْقِصُ قَلْباً مِنْ <b style="color:#e0342f">٣ قُلوبٍ</b>.<br>أَجِبْ بِسُرْعَةٍ لِتَضْرِبَ <b style="color:#b8860b">ضَرْبَةً خارِقَةً ⚡</b></div>`);
   const img = el('img', 'pix'); img.src = '../assets/elia/think.webp'; img.style.height = '200px'; intro.appendChild(img);
   const go = el('button', 'btn big gold', '⚔ ابْدَأِ الْمَعْرَكَةَ'); const r = el('div', 'row'); r.appendChild(go);
   c.append(intro, r);
   go.onclick = () => { SFX.click(); c.innerHTML = ''; c.classList.add('fight'); runBoss(c, L); };
 }
-/* وحوش المعركة — بكسل مرسوم بالكود، وحش لكل وحدة */
+/* وحوش المعركة من عالم ماينكرافت — بكسل مرسوم بالكود.
+   الحروف العادية: كريبر ثم عنكبوت ثم زومبي بالتناوب. أقوى الوحوش: الويذر في آخر الوحدة الثانية، وتنّين الإندر في آخر حرف. */
 const MOBS = {
-  1: { name: 'وَحْشُ الْعُشْبِ', svg: pix(`
+  creeper: { name: 'الْكْريبَرُ', atk: 'boom', svg: pix(`
+GgggGggg
+ggGggggG
+gkkggkkg
+gkkggkkg
+gggkkggg
+ggkkkkgg
+ggkkkkgg
+ggkggkgg
+..gGgg..
+..ggGg..
+..gggg..
+..Gggg..
+dggddggd
+dgGddGgd`, { g: '#5cb85a', G: '#93dd82', d: '#2f7d32', k: '#101510' }) },
+  spider: { name: 'الْعَنْكَبوتُ', atk: 'jump', svg: pix(`
+d............d
+.d..........d.
+..d.dddddd.d..
+dd.dbbbbbbd.dd
+..ddbrbbrbdd..
+dd.dbbrrbbd.dd
+..d.dbbbbd.d..
+.d..d....d..d.`, { b: '#4a3f3f', d: '#1c1616', r: '#ff2a2a' }) },
+  zombie: { name: 'الزّومْبي', atk: 'lunge', svg: pix(`
+zzzzzzzz
+zZZZZZZz
+ZZZZZZZZ
+ZkkZZkkZ
+ZZZddZZZ
+ZZddddZZ
+ZZdZZdZZ
+ZZZZZZZZ
+cccccccc
+cccccccc
+ZZcCCcZZ
+ZZccccZZ
+..pppp..
+..pPPp..
+..pppp..
+..ssss..`, { z: '#3f6e2a', Z: '#6aa84f', d: '#2f5522', k: '#0e150c', c: '#2fa9a9', C: '#5fd0d0', p: '#4a3fb0', P: '#6a5fd0', s: '#555' }) },
+  wither: { name: 'الْويذَرُ', atk: 'shot', boss: true, bg: 'nether', shot: '#2b2b2b', svg: pix(`
 ....kkkkkk....
-..kkGGGGGGkk..
-.kGGggggggggk.
-kGGggggggggggk
-kGgggggggggggk
-kggkkggggkkggk
-kggwkggggwkggk
-kggggggggggggk
-kgggkkkkkkgggk
-kggggrrrrggggk
-kdggggggggggdk
-.kkkkkkkkkkkk.`, { k: '#000', g: '#5fc437', G: '#a5ee7a', d: '#3f8f22', w: '#fff', r: '#b3261e' }) },
-  2: { name: 'عِمْلاقُ الرِّمالِ', svg: pix(`
-...kkkkkkkk...
-...kSSssssk...
-...kskwskwk...
-...kssrrssk...
-.kkkkkkkkkkkk.
-kSSksssssskSSk
-kssksssssskssk
-kssksddddskssk
-kkkksddddskkkk
-...kssssssk...
-...ksskkssk...
-...kkk..kkk...`, { k: '#000', s: '#d8b45a', S: '#f3de96', d: '#a8812f', w: '#fff', r: '#b3261e' }) },
-  3: { name: 'غولُ الثَّلْجِ', svg: pix(`
-..kkk....kkk..
-.kwwwkkkkwwwk.
-kwwwwwwwwwwwwk
-kwwbbbbbbbbwwk
-kwbbkbbbbkbbwk
-kwbbbbbbbbbbwk
-kwwbbkrrkbbwwk
-kwwwbbbbbbwwwk
-kWwwwwwwwwwwWk
-kwwwkwwwwkwwwk
-.kwwk.kk.kwwk.
-..kk......kk..`, { k: '#000', w: '#f4fafc', W: '#c4dbe8', b: '#6fb4e8', r: '#b3261e' }) },
+....kwkkwk....
+....kkkkkk....
+kkkk.kwwk.kkkk
+kwwk.kkkk.kwwk
+kkkkkkkkkkkkkk
+kkkk.gkkg.kkkk
+....kkkkkk....
+....gkkkkg....
+....kkkkkk....
+.....gkkg.....
+......kk......`, { k: '#2b2b2b', g: '#4a4a4a', w: '#f2f2f2' }) },
+  dragon: { name: 'تِنّينُ الْإِنْدَرِ', atk: 'shot', boss: true, bg: 'end', shot: '#d05cff', svg: pix(`
+......kk..kk......
+.....kkkkkkkk.....
+.....kpkkkkpk.....
+k....kkkkkkkk....k
+kk...kkggggkk...kk
+kgk...kkkkkk...kgk
+kggk.kkkkkkkk.kggk
+kgggkkkkkkkkkkgggk
+kggkgkkkkkkkkgkggk
+kgk.kg.kkkk.gk.kgk
+k...k...kk...k...k
+........kk........`, { k: '#17171f', g: '#7a52b8', p: '#f06cff' }) },
 };
+function mobFor(L) {
+  if (L.id === LET.length) return MOBS.dragon;
+  if (L.unit === 2 && !LET.some(M => M.unit === 2 && M.id > L.id)) return MOBS.wither;
+  return MOBS[['creeper', 'spider', 'zombie'][(L.id - 1) % 3]];
+}
 const swordIcon = () => pix(`
 ......kk
 .....kck
@@ -1036,12 +1070,12 @@ function endBattle() { $('#level').classList.remove('battle'); MUSIC && MUSIC.st
 async function runBoss(card, L) {
   const prev = LET.filter(M => M.id < L.id);
   const pool = [Q.syl, Q.letterFind, Q.posQ, Q.formGap, Q.whichWord, Q.listenWord, Q.build, Q.dots, Q.connect];
-  const plan = shuffle(pool).slice(0, 8).map(f => ({ f, L }));
+  const M = mobFor(L), HP = M.boss ? 8 : 6;         // أقوى الوحوش تحتاج ٨ ضربات
+  const plan = shuffle(pool).concat(shuffle(pool)).slice(0, HP + 2).map(f => ({ f, L }));
   if (prev.length) { const rv = shuffle(prev).slice(0, 2); plan.splice(2, 1, { f: Q.letterFind, L: rv[0] }); if (rv[1]) plan.splice(5, 1, { f: pick([Q.syl, Q.whichWord]), L: rv[1] }); }
-  const HP = 6, CRIT = 9000; let hearts = 3, hp = HP, combo = 0; renderHearts(hearts);
+  const CRIT = 9000; let hearts = 3, hp = HP, combo = 0; renderHearts(hearts);
   $('#level').classList.add('battle'); $('#stage').scrollTop = 0;
-  const M = MOBS[L.unit] || MOBS[1];
-  const arena = el('div', 'arena u' + L.unit, `<div class="a-ground"></div>
+  const arena = el('div', 'arena u' + L.unit + (M.bg ? ' ' + M.bg : '') + (M.boss ? ' bossy' : ''), `<div class="a-ground"></div>
     <div class="a-info"><b>${M.name}</b><div class="a-hp">${'<i></i>'.repeat(HP)}</div></div>
     <div class="a-crit"><span>⚡</span><div><i></i></div></div><div class="a-combo"></div>
     <div class="a-mob">${M.svg}</div>
@@ -1065,10 +1099,24 @@ async function runBoss(card, L) {
     if (!final) { hp--; if (hpEls[hp]) hpEls[hp].classList.add('off'); }
     await sleep(400);
   }
-  async function mobHit() {
+  async function mobHit() {                          // لكل وحش هجومه
     const d = dist();
-    mob.animate([{ transform: 'none' }, { transform: `translateX(${d}px) scale(1.22) rotate(9deg)`, offset: .45 }, { transform: 'none' }], { duration: 560, easing: 'ease-in' });
-    await sleep(250); SFX.bad(); noise(.2, .3); again(hero, 'hurt'); again(arena, 'flash'); float('آخ!', hero, 'bad'); await sleep(360);
+    if (M.atk === 'boom') {                          // الكريبر: ينتفخ ويومض ثم ينفجر
+      mob.animate([{ filter: 'none', transform: 'scale(1)' }, { filter: 'brightness(3)', transform: 'scale(1.15)' }, { filter: 'none', transform: 'scale(1.1)' }, { filter: 'brightness(3)', transform: 'scale(1.28)' }, { filter: 'none', transform: 'scale(1.2)' }, { filter: 'brightness(4)', transform: 'scale(1.4)' }, { transform: 'scale(1)' }], { duration: 800 });
+      noise(.7, .12); await sleep(720); SFX.brk(); noise(.35, .5); burstAt(hero, 26, ['#fff', '#ffd83d', '#ff7a1a', '#888'], .7); float('بووم!', hero, 'bad');
+    } else if (M.atk === 'shot') {                   // الويذر والتنّين: قذيفة تطير نحو البطل
+      const a = mob.getBoundingClientRect(), h = hero.getBoundingClientRect(), ar = arena.getBoundingClientRect(), sh = el('i', 'a-shot'); sh.style.background = M.shot; sh.style.boxShadow = `0 0 14px 5px ${M.shot}`;
+      sh.style.left = (a.right - ar.left - 20) + 'px'; sh.style.top = (a.top - ar.top + a.height * .3) + 'px'; arena.appendChild(sh);
+      mob.animate([{ transform: 'none' }, { transform: 'scale(1.15) translateX(-10px)', offset: .3 }, { transform: 'none' }], { duration: 400 }); SFX.slash();
+      sh.animate([{ transform: 'translate(0,0) scale(.6)' }, { transform: `translate(${h.left - a.right + h.width * .4}px,${h.top - a.top + h.height * .1}px) scale(1.5) rotate(360deg)` }], { duration: 480, easing: 'ease-in', fill: 'forwards' });
+      await sleep(480); sh.remove();
+      SFX.bad(); noise(.25, .4); burstAt(hero, 14, [M.shot, '#fff', '#888'], .45); float('آخ!', hero, 'bad');
+    } else {                                         // الزومبي يهجم، والعنكبوت يقفز
+      const up = M.atk === 'jump' ? -arena.clientHeight * .3 : 0;
+      mob.animate([{ transform: 'none' }, { transform: `translate(${d * .5}px,${up}px) scale(1.1)`, offset: .3 }, { transform: `translateX(${d}px) scale(1.22) rotate(9deg)`, offset: .5 }, { transform: 'none' }], { duration: 600, easing: 'ease-in' });
+      await sleep(280); SFX.bad(); noise(.2, .3); float('آخ!', hero, 'bad');
+    }
+    again(hero, 'hurt'); again(arena, 'flash'); await sleep(360);
   }
   MUSIC && MUSIC.start('battle');
   await play(AU.ui('battle')); if (!alive()) return;
@@ -1172,6 +1220,7 @@ $('#t-hero').onclick = () => { celebrate(pick(['siuuu', 'smart', 'genius', 'hero
 let welcomed = false;
 $('#title').addEventListener('pointerdown', e => { if (welcomed || e.target.closest('button,#t-hero,.credit,#daily')) return; welcomed = true; play(AU.ui('welcome')); });
 renderTitle(); renderHud();
+if (TEST && /boss=(\d+)/.test(location.search)) { openLevel(+location.search.match(/boss=(\d+)/)[1]); openStation(4); $('.btn.big.gold').click(); }   // للاختبار: ادخل المعركة مباشرة
 /* تقدّم أحدث جاء من السحابة (جهاز آخر، أو بعد مسح سفاري للتخزين) */
 CLOUD && CLOUD.on(KEY, st => {
   if (!st) return; S = st; renderHud();
