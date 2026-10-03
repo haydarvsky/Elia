@@ -3,7 +3,7 @@
    EliaShop.balance() · buy(id) · equip(id) · eq(slot) · sword() · pet() · fx() · icon(id) · onChange(fn) */
 (() => {
 'use strict';
-const KEY = 'elia-shop-v1', GEMKEYS = ['elia-letters-v1', 'elia-venom-v2', 'elia-spider-v1'];
+const KEY = 'elia-shop-v1', GEMKEYS = ['elia-letters-v1', 'elia-venom-v2', 'elia-spider-v1', 'elia-tests-v1'];
 const lget = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
 function pix(map, colors) {
   const rows = map.trim().split('\n').map(s => s.trim()), w = rows[0].length; let out = '';

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2f7fd8">
+<title>اختبارات إيليا</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="apple-touch-icon" href="../assets/icon.png">
+<link rel="stylesheet" href="css/style.css?v=3">
+</head>
+<body>
+<div class="sky"><div class="sun"></div>
+  <div class="cloud" style="top:12%;width:190px;animation-duration:90s;animation-delay:-20s"></div>
+  <div class="cloud" style="top:30%;width:120px;animation-duration:110s;animation-delay:-70s"></div>
+</div>
+
+<!-- ===== الرئيسية ===== -->
+<section class="screen on" id="home">
+  <div class="topbar"><a class="iconbtn" href="../" aria-label="البيت">🏠</a><span class="chip" id="h-stars"></span></div>
+  <header class="hhead">
+    <div>
+      <h1 class="mc-title">اِخْتِباراتُ إيليا</h1>
+      <p class="mc-sub">اِخْتَرِ الْمادَّةَ… وَأَرِنا ذَكاءَكَ! 🧠</p>
+    </div>
+    <img class="pix hero-img" src="../assets/elia/hello.webp" alt="إيليا">
+  </header>
+  <div class="subjects" id="subjects"></div>
+  <button class="parentbtn" id="h-report">📋 تَقْريرُ وَلِيِّ الْأَمْرِ</button>
+</section>
+
+<!-- ===== الاختبار ===== -->
+<section class="screen" id="quiz">
+  <div class="topbar">
+    <button class="iconbtn" id="q-home" aria-label="خروج">✕</button>
+    <div class="track" id="q-track"></div>
+    <span class="chip" id="q-stars"></span>
+  </div>
+  <div class="qpanel">
+    <div class="qhead">
+      <button class="iconbtn say" id="q-say" aria-label="أعد السؤال">🔊</button>
+      <h2 class="qtext" id="q-text"></h2>
+    </div>
+    <div class="stage" id="stage"></div>
+  </div>
+</section>
+
+<!-- ===== النهاية ===== -->
+<section class="screen" id="end">
+  <div class="endbox">
+    <img class="pix trophy" src="../assets/elia/trophy.webp" alt="">
+    <div class="endcard">
+      <h2 class="mc-title" id="e-title"></h2>
+      <div class="bigstars" id="e-stars"></div>
+      <p class="e-msg" id="e-msg"></p>
+      <p class="e-gems" id="e-gems"></p>
+      <div class="endbtns">
+        <button class="mcbtn grass" id="e-again">🔁 مَرَّةً ثانِيَةً</button>
+        <button class="mcbtn gold" id="e-home">📚 اِخْتِبارٌ آخَرُ</button>
+      </div>
+      <button class="parentbtn" id="e-report">📋 تَقْريرُ وَلِيِّ الْأَمْرِ</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== الاحتفال ===== -->
+<div id="celebrate"><img class="who pix" id="c-img" alt=""><div class="bubble mc-title" id="c-say"></div><div class="cstars" id="c-stars"></div></div>
+<div id="oops"><img class="pix" src="../assets/elia/tryagain.webp" alt=""><span>حاوِلْ مَرَّةً ثانِيَةً! 💪</span></div>
+
+<!-- ===== تقرير ولي الأمر ===== -->
+<div class="modal" id="report"><div class="mpanel">
+  <div class="mhead"><h2>📋 تَقْريرُ وَلِيِّ الْأَمْرِ</h2><button class="sx" id="r-close" aria-label="إغلاق">✕</button></div>
+  <div id="r-body"></div>
+</div></div>
+
+<div class="ground"></div>
+<script src="../assets/save.js?v=3"></script>
+<script src="../assets/shop.js?v=2"></script>
+<script src="js/data.js?v=3"></script>
+<script src="js/app.js?v=3"></script>
+</body>
+</html>
