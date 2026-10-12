@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0d24">
+<title>خارطة الطريق — تحدّي الأبطال</title>
+<link rel="icon" href="img/icon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<link rel="stylesheet" href="style.css?v=3">
+<style>
+.map-head{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:var(--safe-t) 16px 0;text-align:center}
+.back{position:absolute;top:var(--safe-t);right:16px;padding:6px 16px 10px;font-size:20px;color:#fff;background:rgba(5,6,15,.7);border:3px solid #ffffff44;border-radius:14px}
+.map-head .title{font-size:clamp(46px,9vw,100px);margin-top:46px}
+.map-head .sub{margin-top:8px}
+.map-stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+
+/* الكنز في الأعلى */
+.treasure{position:relative;z-index:2;max-width:760px;margin:26px auto 0;padding:0 16px}
+.tcard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center;padding:16px;background:linear-gradient(150deg,#2a0b3f,#120b2e 60%,#1b0606);border:5px solid var(--ink);border-radius:24px;box-shadow:0 0 0 3px #a43cff66 inset,0 0 60px rgba(164,60,255,.45),10px 12px 0 rgba(0,0,0,.45)}
+.tcard .ph{position:relative;border:4px solid var(--ink);border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:#000}
+.tcard .ph img{width:100%;height:100%;object-fit:cover}
+.tcard.locked .ph.elia img{filter:blur(10px) brightness(.6)}
+.tcard .ph.elia .lk{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:56px;text-shadow:0 5px 0 var(--ink)}
+.tcard .ph.elia .lk span{font-size:20px;padding:4px 12px 8px;background:rgba(5,6,15,.75);border-radius:10px;text-align:center;line-height:1.4}
+.tcard:not(.locked) .lk{display:none}
+.tcard .ph.box{animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px) rotate(-1deg)}}
+.tcap{grid-column:1/-1;text-align:center}
+.tcap h2{margin:0;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(36px,6vw,54px);color:var(--gold);-webkit-text-stroke:7px var(--ink);paint-order:stroke fill;line-height:1.15}
+.tcap p{margin:4px 0 0;font-size:22px;line-height:1.5}
+
+/* الطريق */
+.road{position:relative;z-index:2;max-width:760px;margin:10px auto 0;padding:0 8px}
+.road svg{display:block;width:100%;height:auto;overflow:visible}
+.road .bed{fill:none;stroke:#05060f;stroke-width:44;stroke-linecap:round;stroke-linejoin:round}
+.road .lane{fill:none;stroke:#2a3170;stroke-width:30;stroke-linecap:round;stroke-linejoin:round}
+.road .dash{fill:none;stroke:#ffffff33;stroke-width:4;stroke-dasharray:14 16;stroke-linecap:round}
+.road .done{fill:none;stroke:url(#gl);stroke-width:30;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px #ff9e1b);transition:stroke-dashoffset 2.2s cubic-bezier(.2,.9,.2,1)}
+.stn{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;pointer-events:none}
+.stn .g{flex:none;width:68px;filter:drop-shadow(0 4px 0 #05060f)}
+.stn .g svg{width:100%;display:block}
+.stn .lb{padding:4px 12px 8px;font-size:19px;line-height:1.3;color:#fff;background:rgba(5,6,15,.82);border:3px solid #ffffff2a;border-radius:12px;white-space:nowrap}
+.stn .lb b{display:block;font-size:21px}
+.stn .lb small{color:#b9c0ff;font-size:16px}
+.stn.r{flex-direction:row}.stn.l{flex-direction:row-reverse}
+.stn.on .g{animation:glow 2.2s ease-in-out infinite;filter:drop-shadow(0 0 16px var(--c)) drop-shadow(0 4px 0 #05060f)}
+.stn.on .lb{border-color:var(--c)}
+.stn:not(.on) .g{filter:grayscale(.85) brightness(.75) drop-shadow(0 4px 0 #05060f)}
+.wk{position:absolute;transform:translate(-50%,-50%);padding:3px 10px 7px;font-size:16px;color:var(--ink);background:#fff7e6;border:3px solid var(--ink);border-radius:10px;white-space:nowrap;box-shadow:3px 3px 0 var(--ink)}
+.wk.ok{background:#7dffb2}
+.wk.miss{background:#ffd0d0}
+.flag{position:absolute;transform:translate(-50%,-100%);font-size:34px}
+.me{position:absolute;width:96px;height:96px;transform:translate(-50%,-50%);transition:left 2.2s cubic-bezier(.2,.9,.2,1),top 2.2s cubic-bezier(.2,.9,.2,1);z-index:3}
+.me img{width:100%;height:100%;border-radius:50%;border:5px solid var(--gold);box-shadow:0 0 0 4px var(--ink),0 0 30px var(--gold);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.me span{position:absolute;top:100%;left:50%;transform:translate(-50%,6px);padding:2px 12px 6px;font-size:18px;color:var(--ink);background:var(--gold);border:3px solid var(--ink);border-radius:10px;white-space:nowrap}
+.start{position:absolute;transform:translate(-50%,-50%);padding:6px 16px 10px;font-size:20px;color:#fff;background:#21b25b;border:4px solid var(--ink);border-radius:14px;white-space:nowrap}
+.legend{position:relative;z-index:2;max-width:760px;margin:20px auto 40px;padding:16px 20px;font-size:20px;line-height:1.7}
+.legend h3{margin:0 0 6px;font-size:26px;color:var(--gold)}
+.legend ul{margin:0;padding-inline-start:22px}
+@media (max-width:600px){.stn .g{width:50px}.stn .lb{font-size:16px}.stn .lb b{font-size:17px}.me{width:72px;height:72px}.wk{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="cosmos" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="map-head">
+  <a class="back" href="./">→ تَحَدِّي الْأَبْطالِ</a>
+  <h1 class="title">خارِطَةُ الطَّريقِ</h1>
+  <p class="sub">مِنْ أَوَّلِ نُقْطَةٍ … إِلى عُلْبَةِ فينوم لِيغو</p>
+  <div class="map-stats"><span class="chip" id="m-total"></span><span class="chip" id="m-left"></span><span class="chip hot" id="m-days"></span></div>
+</header>
+
+<section class="treasure">
+  <div class="tcard locked" id="tcard">
+    <div class="ph box"><img src="img/venom.webp" alt="ليغو فينوم"></div>
+    <div class="ph elia"><img src="img/prize.webp" alt=""><div class="lk" id="t-lock"></div></div>
+    <div class="tcap"><h2>🎁 الْهَدِيَّةُ الْكُبْرى: فينوم لِيغو</h2><p id="t-msg"></p></div>
+  </div>
+</section>
+
+<section class="road" id="road"></section>
+
+<section class="legend panel">
+  <h3>🧭 كَيْفَ أَمْشي عَلى الطَّريقِ؟</h3>
+  <ul>
+    <li>كُلُّ مُهِمَّةٍ تُنْجِزُها تُحَرِّكُكَ إِلى الْأَمامِ.</li>
+    <li>عِنْدَ كُلِّ حَجَرٍ مِنَ الْأَحْجارِ السِّتَّةِ تَحْصُلُ عَلَيْهِ — وَالسّادِسُ يَفْتَحُ الْهَدِيَّةَ.</li>
+    <li>🚩 أَعْلامُ الْأَسابيعِ تُخْبِرُكَ أَيْنَ يَجِبُ أَنْ تَكونَ في نِهايَةِ كُلِّ أُسْبوعٍ.</li>
+    <li>⭐ الْمُهِمّاتُ الْخَمْسُ في يَوْمٍ واحِدٍ = قَفْزَةٌ إِضافِيَّةٌ.</li>
+  </ul>
+</section>
+
+<script src="../assets/save.js?v=4"></script>
+<script>
+(() => {
+'use strict';
+const KEY = 'elia-heroes-v1', DAYS = 30, DEF_GOAL = 12000, BONUS = 50, ORDER = ['swim', 'tidy', 'study', 'morning', 'eat'];
+const $ = s => document.querySelector(s);
+const AR = n => Math.round(n).toLocaleString('ar-EG');
+const pad2 = n => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const dnum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(new Date(y, m - 1, d).getTime() / 864e5); };
+const STONES = [
+  { n: 'حَجَرُ الْفَضاءِ', c: '#2f8cff', f: .125 }, { n: 'حَجَرُ الْعَقْلِ', c: '#ffd31a', f: .25 }, { n: 'حَجَرُ الْواقِعِ', c: '#ff2b3a', f: .42 },
+  { n: 'حَجَرُ الْقُوَّةِ', c: '#a43cff', f: .6 }, { n: 'حَجَرُ الزَّمَنِ', c: '#22d36b', f: .8 }, { n: 'حَجَرُ الرّوحِ', c: '#ff8a1a', f: 1 },
+];
+const gem = c => `<svg viewBox="0 0 60 70"><path d="M30 2 52 18 52 50 30 68 8 50 8 18Z" fill="${c}" stroke="#05060f" stroke-width="4" stroke-linejoin="round"/><path d="M30 2 30 68M8 18 52 50M52 18 8 50" stroke="#fff" stroke-opacity=".25" stroke-width="2"/><path d="M30 10 44 20 30 28 16 20Z" fill="#fff" fill-opacity=".55"/></svg>`;
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; } };
+
+function stats(S) {
+  S = S || {}; const g = {}, del = S.del || {};
+  Object.entries(S.log || {}).forEach(([id, e]) => { if (!del[id]) (g[e.d] = g[e.d] || []).push(e); });
+  let total = 0;
+  Object.values(g).forEach(l => { const done = new Set(l.map(e => e.c)); total += l.reduce((a, e) => a + e.p, 0) + (ORDER.every(c => done.has(c)) ? BONUS : 0); });
+  const G = Math.max(1000, +S.goal || DEF_GOAL), start = S.start || today();
+  return { total, G, start, dn: dnum(today()) - dnum(start) + 1 };
+}
+
+/* الطريق: أفعى من الأسفل (البداية) إلى الأعلى (الهدية) */
+const W = 700, ROWS = 7, ROWH = 230, H = ROWS * ROWH + 120, M = 110;
+function pathD() {
+  let y = H - 60, d = `M ${W / 2} ${y} L ${W - M} ${y - 40}`, right = true; y -= 40;
+  for (let i = 0; i < ROWS; i++) {
+    const ny = y - ROWH, x = right ? W - M : M, nx = right ? M : W - M;
+    d += ` C ${x + (right ? 90 : -90)} ${y - ROWH * .55}, ${nx + (right ? -90 : 90)} ${ny + ROWH * .45}, ${nx} ${ny}`; // منعطف
+    y = ny; right = !right;
+  }
+  return d + ` L ${W / 2} 40`;
+}
+let built = false, P, L;
+function build() {
+  const road = $('#road');
+  road.innerHTML = `<svg viewBox="0 0 ${W} ${H}" id="svg"><defs><linearGradient id="gl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#22d36b"/><stop offset=".5" stop-color="#ffc83d"/><stop offset="1" stop-color="#ff3cac"/></linearGradient></defs>
+    <path class="bed" d="${pathD()}"/><path class="lane" d="${pathD()}"/><path class="dash" d="${pathD()}"/><path class="done" id="done" d="${pathD()}"/></svg>`;
+  P = $('#done'); L = P.getTotalLength(); P.style.strokeDasharray = L; P.style.strokeDashoffset = L;
+  built = true;
+}
+const at = f => { const p = P.getPointAtLength(L * Math.min(1, Math.max(0, f))); return { x: p.x / W * 100, y: p.y / H * 100 }; };
+const px = (el, f, dx = 0) => { const p = at(f); el.style.left = `calc(${p.x}% + ${dx}px)`; el.style.top = p.y + '%'; return p; };
+
+function render() {
+  if (!built) build();
+  const S = load(), { total, G, start, dn } = stats(S), f = Math.min(1, total / G);
+  $('#m-total').textContent = `⚡ ${AR(total)} نُقْطَة`;
+  $('#m-left').textContent = total >= G ? '🏆 وَصَلْتَ!' : `🎯 باقي ${AR(G - total)}`;
+  $('#m-days').textContent = dn < 1 ? 'لَمْ يَبْدَأِ الشَّهْرُ' : dn > DAYS ? '🏁 انْتَهى الشَّهْرُ' : `📅 الْيَوْمُ ${AR(dn)} مِنْ ${AR(DAYS)}`;
+  $('#tcard').classList.toggle('locked', total < G);
+  $('#t-lock').innerHTML = total < G ? `🔒<span>تُفْتَحُ عِنْدَ ${AR(G)} نُقْطَة<br>باقي ${AR(G - total)}</span>` : '';
+  $('#t-msg').textContent = total >= G ? 'أُسْطورَة! وَصَلْتَ إِلى نِهايَةِ الطَّريقِ — فينوم لِيغو صارَتْ لَكَ 🖤' : 'في نِهايَةِ هذا الطَّريقِ تَنْتَظِرُكَ عُلْبَةُ فينوم لِيغو الْحَقيقِيَّةُ. امْشِ كُلَّ يَوْمٍ خُطْوَةً!';
+
+  const road = $('#road'); road.querySelectorAll('.stn,.wk,.me,.start,.flag').forEach(x => x.remove());
+  const add = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; road.appendChild(d); return d; };
+  px(add('start', '🚀 الْبِدايَة'), 0);
+  STONES.forEach((s, i) => {
+    const need = Math.round(G * s.f / 50) * 50, on = total >= need, p = at(s.f);
+    const right = p.x > 50;   // على يمين الشاشة: الحجر على الطريق والبطاقة نحو اليسار (والعكس)
+    const el = add(`stn ${right ? 'r' : 'l'} ${on ? 'on' : ''}`, `<div class="g">${gem(s.c)}</div><div class="lb"><b>${s.f === 1 ? '🎁 ' : ''}${s.n}</b><small>${on ? '✓ مَعَكَ' : AR(need) + ' نُقْطَة'}</small></div>`);
+    el.style.setProperty('--c', s.c);
+    el.style.left = p.x + '%'; el.style.top = p.y + '%';
+    el.style.transform = right ? 'translate(calc(-100% + 34px),-50%)' : 'translate(-34px,-50%)';
+  });
+  // أعلام الأسابيع: أين يجب أن يكون في نهاية كل أسبوع
+  [[7, 'الْأُسْبوعُ ١'], [14, 'الْأُسْبوعُ ٢'], [21, 'الْأُسْبوعُ ٣'], [28, 'الْأُسْبوعُ ٤']].forEach(([d, t]) => {
+    const tf = d / DAYS, need = Math.round(G * tf / 50) * 50, past = dn > d, ok = total >= need;
+    const el = add(`wk ${ok ? 'ok' : past ? 'miss' : ''}`, `🚩 ${t}: ${AR(need)}${ok ? ' ✓' : ''}`);
+    const p = at(tf); el.style.left = (p.x > 50 ? p.x - 22 : p.x + 22) + '%'; el.style.top = (p.y - 3.2) + '%';
+  });
+  // إيليا
+  const me = add('me', `<img src="img/icon.png" alt="إيليا"><span>أَنا هُنا</span>`);
+  px(me, 0);
+  setTimeout(() => {   // لا rAF: قد يتوقف في الخلفية
+    P.style.strokeDashoffset = L * (1 - f); px(me, f);
+    setTimeout(() => { const r = me.getBoundingClientRect(); if (f > 0 && (r.top < 0 || r.bottom > innerHeight)) me.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 2400);
+  }, 80);
+}
+render();
+addEventListener('resize', () => { built = false; render(); });
+if (window.EliaSave) EliaSave.on(KEY, () => render());
+})();
+</script>
+</body>
+</html>

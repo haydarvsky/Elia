@@ -1,0 +1,252 @@
+@font-face{font-family:"Sakkal Saad";src:url(../assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2");font-weight:800;font-display:block}
+@font-face{font-family:"Sakkal Saad";src:url(../assets/fonts/SakkalSaad-Bold.woff2) format("woff2");font-weight:700;font-display:block}
+@font-face{font-family:"Sakkal Poster";src:url(../assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2");font-weight:900;font-display:block}
+
+:root{
+  --safe-t:calc(max(env(safe-area-inset-top,0px),14px) + 22px);--safe-b:env(safe-area-inset-bottom,0px);
+  --ink:#05060f;--night:#0a0d24;--deep:#12164a;--red:#e8202a;--gold:#ffc83d;--gold2:#ff9e1b;--paper:#fff7e6;
+  --ac:#ffc83d;--ac2:#e8202a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;overscroll-behavior-y:none}
+body{background:var(--night);color:#fff;font-family:"Sakkal Saad",system-ui,sans-serif;font-weight:800;-webkit-user-select:none;user-select:none;touch-action:manipulation;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit}
+img{display:block}
+
+/* ===== الفضاء: سديم + نقاط هالفتون كالمجلات المصوّرة ===== */
+.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 85% 10%,rgba(232,32,42,.35),transparent 60%),radial-gradient(ellipse 70% 60% at 10% 40%,rgba(90,60,255,.35),transparent 60%),radial-gradient(ellipse 90% 60% at 50% 110%,rgba(255,158,27,.25),transparent 60%),var(--night)}
+.cosmos::after{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.07) 1.2px,transparent 1.6px) 0 0/14px 14px}
+.cosmos i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:120px 80px #fff,340px 220px #fff8,600px 60px #fff,820px 300px #fff8,1000px 140px #fff,240px 520px #fff8,700px 640px #fff,1180px 480px #fff8,60px 760px #fff,940px 820px #fff8;animation:tw 4s ease-in-out infinite}
+.cosmos i:nth-child(2){left:50px;top:300px;animation-delay:-1.3s}.cosmos i:nth-child(3){left:400px;top:120px;animation-delay:-2.6s}
+@keyframes tw{50%{opacity:.35}}
+
+/* ===== الغلاف ===== */
+.hero{position:relative;z-index:1;overflow:hidden;padding-top:calc(var(--safe-t) - 22px)}
+.hero-frame{position:relative;width:100%;aspect-ratio:16/9;max-height:74vh;overflow:hidden}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;animation:kb 26s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.06)}}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,13,36,.35) 0%,rgba(10,13,36,0) 18%,rgba(10,13,36,0) 72%,var(--night) 100%)}
+.hero-txt{position:relative;width:100%;max-width:1100px;margin:-38px auto 0;padding:0 20px 26px;text-align:center}
+.kicker{display:inline-block;padding:4px 16px 8px;font-size:20px;letter-spacing:.5px;color:var(--ink);background:var(--gold);border:3px solid var(--ink);transform:skewX(-10deg);box-shadow:5px 5px 0 var(--ink)}
+.title{margin:10px 0 0;font-family:"Sakkal Poster","Sakkal Saad";font-weight:900;font-size:clamp(52px,10vw,140px);line-height:1.1;color:#fff;
+  -webkit-text-stroke:12px var(--ink);paint-order:stroke fill;text-shadow:0 8px 0 var(--red),0 14px 0 var(--ink),0 0 50px rgba(255,200,61,.5);animation:slam .8s cubic-bezier(.2,1.5,.4,1) backwards}
+@keyframes slam{from{transform:scale(2.6) rotate(-6deg);opacity:0}}
+.sub{margin:14px 0 0;font-size:clamp(20px,3.2vw,30px);color:var(--gold);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill}
+.chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.chip{padding:4px 16px 9px;font-size:22px;background:rgba(5,6,15,.78);border:3px solid #fff3;border-radius:999px;backdrop-filter:blur(6px)}
+.chip.hot{border-color:var(--gold2);color:var(--gold)}
+.chip:empty{display:none}
+
+main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(40px + var(--safe-b)) max(16px,env(safe-area-inset-left,0px))}
+.panel{position:relative;background:linear-gradient(160deg,#1b2160,#0e1238);border:5px solid var(--ink);border-radius:22px;box-shadow:0 0 0 3px rgba(255,255,255,.12) inset,10px 12px 0 rgba(0,0,0,.45)}
+
+/* ===== لوحة النقاط ===== */
+.board{margin-top:-6px;padding:20px 22px 22px}
+.board-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.score small,.today small{display:block;font-size:20px;color:#b9c0ff}
+.score b{display:block;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(70px,12vw,120px);line-height:1;color:var(--gold);-webkit-text-stroke:8px var(--ink);paint-order:stroke fill;text-shadow:0 6px 0 var(--red)}
+.score span{font-size:22px;color:#dfe3ff}
+.today{text-align:left}
+.today b{display:block;font-family:"Sakkal Poster";font-weight:900;font-size:64px;line-height:1.05;color:#7dffb2;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill}
+.today span{font-size:18px;color:var(--gold)}
+.beam{position:relative;height:30px;margin:26px 6px 0;background:#05061a;border:4px solid var(--ink);border-radius:99px;box-shadow:inset 0 3px 8px rgba(0,0,0,.8)}
+.beam>i{position:absolute;inset:0 0 0 auto;width:0;border-radius:99px;background:linear-gradient(90deg,#ff3cac,#ff9e1b,#ffe36e);box-shadow:0 0 18px #ff9e1b;transition:width 1.4s cubic-bezier(.2,.9,.2,1)}
+.beam>i::after{content:"";position:absolute;inset:0;border-radius:inherit;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.25) 0 10px,transparent 10px 20px);animation:flow 1s linear infinite}
+@keyframes flow{to{background-position:28px 0}}
+.beam-marks i{position:absolute;top:50%;width:6px;height:38px;margin:-19px -3px 0 0;background:var(--ink);border-radius:3px}
+.stones{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:18px}
+.stone{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;opacity:.55;filter:grayscale(.85)}
+.stone svg{width:min(74px,13vw);height:auto;filter:drop-shadow(0 4px 0 var(--ink))}
+.stone b{font-size:17px;line-height:1.15}
+.stone span{font-size:15px;color:#b9c0ff}
+.stone.on{opacity:1;filter:none}
+.stone.on svg{animation:glow 2.2s ease-in-out infinite;filter:drop-shadow(0 0 14px var(--c)) drop-shadow(0 4px 0 var(--ink))}
+.stone.next{opacity:.9;filter:grayscale(.4)}
+.stone.next svg{animation:wig 1.6s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.1)}}
+@keyframes wig{25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+
+/* ===== لافتة العناوين ===== */
+.banner{margin:40px 0 18px;text-align:center}
+.banner span{display:inline-block;padding:6px 30px 12px;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(32px,5vw,46px);color:#fff;background:var(--red);border:5px solid var(--ink);transform:skewX(-12deg) rotate(-1.5deg);box-shadow:8px 8px 0 var(--ink),0 0 0 4px #fff inset}
+
+/* ===== بطاقات المهمات ===== */
+.missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:24px}
+.m{position:relative;display:flex;flex-direction:column;text-align:right;background:var(--paper);color:var(--ink);border:5px solid var(--ink);border-radius:20px;overflow:hidden;
+  box-shadow:10px 12px 0 var(--ac2);transition:transform .15s;animation:pop .6s cubic-bezier(.2,1.5,.4,1) backwards;animation-delay:calc(.1s + var(--i)*90ms)}
+@keyframes pop{from{opacity:0;transform:translateY(50px) scale(.85) rotate(2deg)}}
+.m:active{transform:translateY(6px) rotate(-.6deg)}
+.m-art{position:relative;aspect-ratio:4/3.6;overflow:hidden;border-bottom:5px solid var(--ink);background:var(--ac2)}
+.m-art img{width:100%;height:100%;object-fit:cover;object-position:center 22%;transition:transform .5s}
+.m:hover .m-art img{transform:scale(1.05)}
+.m-hero{position:absolute;top:12px;right:12px;padding:3px 14px 7px;font-size:19px;color:#fff;background:var(--ac2);border:3px solid var(--ink);border-radius:10px;transform:rotate(-3deg);box-shadow:4px 4px 0 var(--ink)}
+.m-done{position:absolute;bottom:10px;left:10px;padding:4px 14px 8px;font-size:22px;color:var(--ink);background:#7dffb2;border:3px solid var(--ink);border-radius:12px;transform:rotate(4deg);box-shadow:4px 4px 0 var(--ink)}
+.m-done:empty{display:none}
+.m-body{padding:12px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.m h3{margin:0;font-family:"Sakkal Poster";font-weight:900;font-size:36px;line-height:1.1}
+.m p{margin:0;font-size:20px;line-height:1.45;color:#3a3550;font-weight:700}
+.m .rec{font-size:18px;color:#7a5a00}
+.m .rec:empty{display:none}
+.go{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;font-size:27px;color:#fff;background:var(--ac2);border:4px solid var(--ink);border-radius:14px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 4px 0 rgba(255,255,255,.3)}
+
+/* ===== الهدية ===== */
+.prize{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:center;margin-top:40px;padding:18px;background:linear-gradient(150deg,#3b0d4f,#120b2e 60%,#2a0b0b)}
+.prize-img{position:relative;border:5px solid var(--ink);border-radius:16px;overflow:hidden;aspect-ratio:3/4}
+.prize-img img{width:100%;height:100%;object-fit:cover;transition:filter 1s}
+.prize.locked .prize-img img{filter:blur(9px) saturate(.7) brightness(.75)}
+.lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:70px;text-shadow:0 6px 0 var(--ink)}
+.lock span{font-size:24px;padding:4px 14px 8px;background:rgba(5,6,15,.75);border-radius:12px}
+.prize:not(.locked) .lock{display:none}
+.prize h2{margin:8px 0 6px;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(44px,6vw,64px);line-height:1.05;color:var(--gold);-webkit-text-stroke:7px var(--ink);paint-order:stroke fill}
+.prize p{margin:0 0 12px;font-size:24px;line-height:1.5}
+.pbar{height:22px;background:#05061a;border:4px solid var(--ink);border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;margin-right:0;margin-left:auto;background:linear-gradient(90deg,#ffe36e,#ff3cac);transition:width 1.4s}
+.pace{font-size:20px!important;color:#dcd2ff;margin-top:12px!important}
+
+/* ===== السجل ===== */
+.log{padding:10px 18px 16px}
+.day{padding:12px 0;border-bottom:2px dashed #ffffff22}
+.day:last-child{border:0}
+.day h4{display:flex;justify-content:space-between;margin:0 0 8px;font-size:22px;color:var(--gold)}
+.day h4 span{color:#7dffb2}
+.ent{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:20px;font-weight:700}
+.ent .ic{flex:none;width:42px;height:42px;display:grid;place-items:center;font-size:24px;background:var(--c);border:3px solid var(--ink);border-radius:12px}
+.ent .tx{flex:1;line-height:1.35}
+.ent .tx small{display:block;color:#b9c0ff;font-size:16px}
+.ent .p{font-size:24px;color:#7dffb2}
+.ent .del{width:36px;height:36px;font-size:16px;color:#ff8a8a;border:2px solid #ff8a8a55;border-radius:10px}
+.empty{padding:20px;text-align:center;font-size:22px;color:#b9c0ff}
+
+footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:30px;flex-wrap:wrap}
+.ghost{padding:8px 18px 12px;font-size:20px;color:#dfe3ff;border:3px solid #ffffff33;border-radius:14px}
+.sync{font-size:16px;color:#9aa3e0}
+
+/* ===== شاشة المهمة ===== */
+.sheet{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:var(--safe-t) 14px calc(14px + var(--safe-b));background:rgba(3,4,12,.78);backdrop-filter:blur(6px)}
+.sheet.on{display:flex}
+.sheet-card{position:relative;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);width:min(1000px,100%);max-height:100%;overflow:hidden;background:var(--paper);color:var(--ink);border:6px solid var(--ink);border-radius:24px;box-shadow:14px 16px 0 var(--ac2);animation:zoomin .45s cubic-bezier(.2,1.4,.4,1)}
+.sheet-card.narrow{grid-template-columns:1fr;width:min(620px,100%)}
+@keyframes zoomin{from{transform:scale(.6) rotate(-4deg);opacity:0}}
+.sheet-art{position:relative;border-left:6px solid var(--ink);background:var(--ac2)}
+.sheet-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 25%}
+.sheet-hero{position:absolute;bottom:14px;right:14px;padding:4px 16px 8px;font-size:22px;color:#fff;background:var(--ac2);border:3px solid var(--ink);border-radius:12px;transform:rotate(-3deg)}
+.sheet-body{position:relative;padding:22px 24px 24px;overflow-y:auto;overscroll-behavior:contain;max-height:calc(100vh - var(--safe-t) - 30px)}
+.sheet-body h2{margin:0 0 0 54px;font-family:"Sakkal Poster";font-weight:900;font-size:44px;line-height:1.1}
+.rule{margin:6px 0 14px;font-size:21px;line-height:1.5;color:#3a3550;font-weight:700}
+.x{position:absolute;top:14px;left:14px;width:52px;height:52px;font-size:26px;color:#fff;background:var(--ink);border-radius:14px}
+
+/* الساعة */
+.clock{position:relative;width:min(290px,70vw);aspect-ratio:1;margin:6px auto 4px}
+.clock svg{width:100%;height:100%;transform:rotate(-90deg)}
+.clock .trk{fill:none;stroke:#0001;stroke-width:22}
+.clock .arc{fill:none;stroke:var(--ac2);stroke-width:22;stroke-linecap:round;transition:stroke-dashoffset .4s linear,stroke .4s}
+.clock .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.clock .t{font-family:"Sakkal Poster";font-weight:900;font-size:76px;line-height:1;direction:ltr}
+.clock .lp{font-size:22px;color:#3a3550}
+.clock.run .arc{filter:drop-shadow(0 0 8px var(--ac2))}
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.btn{flex:1;min-width:150px;min-height:64px;padding:4px 18px 10px;font-size:28px;color:#fff;background:var(--ac2);border:4px solid var(--ink);border-radius:16px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 4px 0 rgba(255,255,255,.3),5px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,4px);box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),2px 2px 0 var(--ink)}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.green{background:#21b25b}
+.btn.red{background:var(--red)}
+.btn.dark{background:#3a3550}
+.btn[disabled]{filter:grayscale(1) opacity(.5);pointer-events:none}
+.link{display:block;margin:14px auto 0;font-size:19px;color:#5a4f86;text-decoration:underline;text-underline-offset:5px}
+.manual{display:none;margin-top:12px;padding:14px;background:#0000000d;border-radius:14px;text-align:center}
+.manual.on{display:block}
+.step{display:flex;align-items:center;justify-content:center;gap:14px;font-size:30px}
+.step button{width:60px;height:60px;font-size:34px;color:#fff;background:var(--ink);border-radius:16px}
+.step b{min-width:150px;font-size:34px}
+.result{text-align:center;padding:6px 0}
+.result .big{font-family:"Sakkal Poster";font-weight:900;font-size:90px;line-height:1;color:#21b25b;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill}
+.result p{margin:6px 0;font-size:24px}
+.result .recflag{display:inline-block;margin-top:6px;padding:4px 16px 8px;font-size:24px;background:var(--gold);border:3px solid var(--ink);border-radius:12px;animation:wig 1s ease-in-out infinite}
+
+/* الصباح: الخطوات */
+.steps{display:grid;gap:12px}
+.stp{display:flex;align-items:center;gap:14px;min-height:72px;padding:8px 16px 12px;font-size:27px;text-align:right;background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:5px 6px 0 var(--ink)}
+.stp .n{flex:none;width:48px;height:48px;display:grid;place-items:center;font-size:30px;background:#eee;border:3px solid var(--ink);border-radius:50%}
+.stp .tm{margin-right:auto;font-size:20px;color:#6a6390;direction:ltr}
+.stp.done{background:#d9ffe7}
+.stp.done .n{background:#21b25b;color:#fff}
+.stp.next{animation:nudge 1.2s ease-in-out infinite;border-color:var(--ac2)}
+.stp:disabled{opacity:.45}
+@keyframes nudge{50%{transform:scale(1.03)}}
+.mini{display:flex;justify-content:center;gap:10px;margin:4px 0 12px;font-size:22px}
+.mini b{font-family:"Sakkal Poster";font-size:44px;direction:ltr}
+
+/* الدراسة والأكل: خيارات */
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.opt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px 12px;font-size:21px;line-height:1.25;background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:4px 5px 0 var(--ink)}
+.opt i{font-style:normal;font-size:38px}
+.opt small{font-size:17px;color:#21b25b}
+.opt.on{background:var(--ac);outline:4px solid var(--ac2);outline-offset:2px;transform:translateY(-3px)}
+.lbl{display:block;margin:16px 0 8px;font-size:22px}
+.note{width:100%;min-height:58px;padding:8px 14px 12px;font-size:24px;border:4px solid var(--ink);border-radius:14px;background:#fff;-webkit-user-select:text;user-select:text}
+.tog{display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 14px 14px;font-size:23px;background:#fff;border:4px solid var(--ink);border-radius:16px;text-align:right;width:100%}
+.tog .bx{flex:none;width:40px;height:40px;display:grid;place-items:center;border:3px solid var(--ink);border-radius:10px;font-size:26px}
+.tog.on{background:#d9ffe7}
+.tog.on .bx{background:#21b25b;color:#fff}
+.preview{margin:16px 0 0;text-align:center;font-size:24px}
+.preview b{font-family:"Sakkal Poster";font-size:44px;color:#21b25b}
+.warn{margin:10px 0 0;padding:8px 14px 12px;font-size:20px;background:#fff3cd;border:3px solid #e0b200;border-radius:12px}
+
+/* ===== سؤال بابا ===== */
+.gate{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:var(--safe-t) 14px 14px;background:rgba(3,4,12,.86)}
+.gate.on{display:flex}
+.gate-card{width:min(420px,100%);padding:20px;text-align:center;background:var(--paper);color:var(--ink);border:6px solid var(--ink);border-radius:24px;box-shadow:12px 14px 0 var(--red);animation:zoomin .35s cubic-bezier(.2,1.4,.4,1)}
+.gate h3{margin:0;font-size:24px}
+.gq{margin:10px 0 4px;font-family:"Sakkal Poster";font-size:56px;direction:ltr}
+.gin{min-height:60px;font-family:"Sakkal Poster";font-size:48px;letter-spacing:6px;direction:ltr;border-bottom:4px solid var(--ink);margin-bottom:12px}
+.gin.bad{animation:shake .4s;color:var(--red)}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;direction:ltr}
+.pad button{height:64px;font-size:32px;color:#fff;background:var(--ink);border-radius:14px}
+.pad button.ok{background:#21b25b}
+
+/* ===== الإعدادات ===== */
+.field{display:block;margin:14px 0 0;font-size:22px}
+.field input{display:block;width:100%;margin-top:6px;padding:8px 12px 10px;font-size:24px;border:4px solid var(--ink);border-radius:12px;background:#fff;-webkit-user-select:text;user-select:text}
+.field.row{display:flex;align-items:center;gap:12px}
+.field.row input{width:30px;height:30px;margin:0}
+.st-acts{display:grid;gap:12px;margin-top:20px}
+.how{margin-top:18px;font-size:19px;line-height:1.6}
+.how summary{font-size:22px;cursor:pointer}
+.how li{margin:4px 0}
+
+/* ===== الاحتفال ===== */
+.boom{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;pointer-events:none;overflow:hidden}
+.boom.on{display:flex}
+.boom-burst{position:absolute;width:200vmax;height:200vmax;background:repeating-conic-gradient(from 0deg,rgba(255,200,61,.95) 0 6deg,rgba(232,32,42,.95) 6deg 12deg);animation:spin 6s linear infinite,fadein .3s}
+.boom-burst::after{content:"";position:absolute;inset:0;background:radial-gradient(circle,transparent 8%,rgba(10,13,36,.55) 40%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadein{from{opacity:0}}
+.boom-in{position:relative;text-align:center;animation:slam .6s cubic-bezier(.2,1.6,.4,1)}
+.pow{display:block;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(90px,18vw,190px);line-height:1;color:var(--gold);-webkit-text-stroke:14px var(--ink);paint-order:stroke fill;text-shadow:0 12px 0 var(--red),0 20px 0 var(--ink);transform:rotate(-6deg)}
+.pts{display:inline-block;margin-top:18px;padding:6px 26px 12px;font-family:"Sakkal Poster";font-size:64px;color:#fff;background:#21b25b;border:6px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--ink)}
+.pts:empty{display:none}
+.boom p{max-width:min(640px,90vw);margin:18px auto 0;padding:6px 20px 12px;font-size:30px;color:var(--ink);background:var(--paper);border:5px solid var(--ink);border-radius:18px}
+.boom p:empty{display:none}
+.gem-big svg{width:150px;margin:14px auto 0;animation:glow 1.4s ease-in-out infinite;filter:drop-shadow(0 0 30px #fff)}
+.spark{position:absolute;width:14px;height:14px;background:var(--c);border:3px solid var(--ink);animation:fly 1.6s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) rotate(540deg);opacity:0}}
+
+/* ===== شاشات صغيرة ===== */
+@media (max-width:760px){
+  .sheet-card{grid-template-columns:1fr;max-height:100%;overflow-y:auto}
+  .sheet-art{height:190px;border-left:0;border-bottom:6px solid var(--ink)}
+  .sheet-body{max-height:none;overflow:visible}
+  .prize{grid-template-columns:1fr}
+  .prize-img{aspect-ratio:4/3}
+  .stones{grid-template-columns:repeat(3,1fr)}
+  .today{text-align:right}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
+
+.venom{display:flex;align-items:center;gap:12px;margin:0 0 12px!important}
+.venom img{width:84px;border:3px solid var(--ink);border-radius:10px;transform:rotate(-4deg);box-shadow:4px 4px 0 var(--ink)}
+.venom span{font-family:"Sakkal Poster";font-size:34px;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+.maplink{display:flex;align-items:center;justify-content:center;margin-top:16px;text-decoration:none;color:var(--ink)}

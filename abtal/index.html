@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تحدي الأبطال">
+<meta name="theme-color" content="#0a0d24">
+<title>تحدّي الأبطال — إيليا</title>
+<link rel="icon" href="img/icon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+<div class="cosmos" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<!-- ===== الغلاف ===== -->
+<header class="hero">
+  <div class="hero-frame"><img class="hero-img" src="img/cover.webp" alt=""><div class="hero-shade"></div></div>
+  <div class="hero-txt">
+    <span class="kicker">مُهِمَّةٌ سِرِّيَّةٌ · لِلْبَطَلِ إيليا فَقَطْ</span>
+    <h1 class="title">تَحَدِّي الْأَبْطالِ</h1>
+    <p class="sub">شَهْرٌ واحِدٌ · خَمْسُ مُهِمّاتٍ · سِتَّةُ أَحْجارٍ · هَدِيَّةٌ كُبْرى</p>
+    <div class="chips"><span class="chip" id="c-day"></span><span class="chip" id="c-left"></span><span class="chip hot" id="c-streak"></span></div>
+  </div>
+</header>
+
+<main>
+  <!-- ===== لوحة النقاط ===== -->
+  <section class="board panel">
+    <div class="board-top">
+      <div class="score">
+        <small>مَجْموعُ نِقاطِ الْبَطَلِ</small>
+        <b id="total">٠</b>
+        <span id="goal-line"></span>
+      </div>
+      <div class="today">
+        <small>نِقاطُ الْيَوْمِ</small>
+        <b id="today">٠</b>
+        <span id="today-bonus"></span>
+      </div>
+    </div>
+    <div class="beam"><i id="beam-fill"></i><div class="beam-marks" id="marks"></div></div>
+    <div class="stones" id="stones"></div>
+  </section>
+
+  <!-- ===== المهمات ===== -->
+  <h2 class="banner"><span>اخْتَرْ مُهِمَّتَكَ يا بَطَلُ</span></h2>
+  <section class="missions" id="missions"></section>
+
+  <!-- ===== الهدية ===== -->
+  <section class="prize panel" id="prize">
+    <div class="prize-img"><img src="img/prize.webp" alt=""><div class="lock" id="prize-lock"></div></div>
+    <div class="prize-txt">
+      <span class="kicker">نِهايَةُ الشَّهْرِ</span>
+      <h2>الْهَدِيَّةُ الْكُبْرى</h2>
+      <p class="venom"><img src="img/venom.webp" alt=""><span>فينوم لِيغو 🖤</span></p>
+      <p id="prize-msg"></p>
+      <div class="pbar"><i id="prize-bar"></i></div>
+      <p class="pace" id="pace"></p>
+      <a class="btn gold maplink" href="khareeta.html">🗺️ خارِطَةُ الطَّريقِ إِلى الْهَدِيَّةِ</a>
+    </div>
+  </section>
+
+  <!-- ===== السجل ===== -->
+  <h2 class="banner"><span>سِجِلُّ الْبُطولاتِ</span></h2>
+  <section class="log panel" id="log"></section>
+
+  <footer>
+    <button class="ghost" id="settings-btn">⚙️ إِعْداداتُ بابا</button>
+    <span class="sync" id="sync"></span>
+  </footer>
+</main>
+
+<!-- ===== شاشة المهمة ===== -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-card">
+    <div class="sheet-art"><img id="sh-img" alt=""><span class="sheet-hero" id="sh-hero"></span></div>
+    <div class="sheet-body">
+      <button class="x" id="sh-x" aria-label="إغلاق">✕</button>
+      <h2 id="sh-title"></h2>
+      <p class="rule" id="sh-rule"></p>
+      <div id="sh-ui"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== سؤال بابا ===== -->
+<div class="gate" id="gate" role="dialog" aria-modal="true">
+  <div class="gate-card">
+    <h3>🔐 تَأْكيدُ الْقائِدِ (بابا أَوْ ماما)</h3>
+    <p class="gq" id="gq"></p>
+    <div class="gin" id="gin"></div>
+    <div class="pad" id="pad"></div>
+    <button class="ghost" id="g-cancel">إِلْغاء</button>
+  </div>
+</div>
+
+<!-- ===== الإعدادات ===== -->
+<div class="sheet" id="settings" role="dialog" aria-modal="true">
+  <div class="sheet-card narrow">
+    <div class="sheet-body">
+      <button class="x" id="st-x" aria-label="إغلاق">✕</button>
+      <h2>⚙️ إِعْداداتُ بابا</h2>
+      <label class="field">بِدايَةُ الشَّهْرِ<input type="date" id="st-start"></label>
+      <label class="field">هَدَفُ الْهَدِيَّةِ الْكُبْرى (نُقْطَة)<input type="number" id="st-goal" min="1000" step="500" inputmode="numeric"></label>
+      <label class="field row"><input type="checkbox" id="st-gate"> سُؤالُ الضَّرْبِ قَبْلَ تَسْجيلِ النِّقاطِ</label>
+      <div class="st-acts">
+        <button class="btn gold" id="st-save">حِفْظ</button>
+        <button class="btn red" id="st-reset">تَصْفيرُ التَّحَدّي وَبَدْءُ شَهْرٍ جَديدٍ</button>
+      </div>
+      <details class="how"><summary>كَيْفَ تُحْسَبُ النِّقاطُ؟</summary><div id="how"></div></details>
+    </div>
+  </div>
+</div>
+
+<!-- ===== الاحتفال ===== -->
+<div class="boom" id="boom" aria-live="polite">
+  <div class="boom-burst"></div>
+  <div class="boom-in">
+    <b class="pow" id="b-word"></b>
+    <span class="pts" id="b-pts"></span>
+    <p id="b-msg"></p>
+    <div class="gem-big" id="b-gem"></div>
+  </div>
+</div>
+
+<script src="../assets/save.js?v=4"></script>
+<script src="app.js?v=3"></script>
+</body>
+</html>
