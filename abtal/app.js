@@ -18,13 +18,13 @@ const lget = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; 
 const lset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
 /* ---------- المهمات ---------- */
-const swimPts = s => s <= 240 ? 100 : s <= 600 ? Math.round(100 - (s - 240) / 360 * 60) : 10;
+const swimPts = s => s >= 480 && s <= 720 ? 100 : 50;   // بين ٨ و١٢ دقيقة = كاملة، وغير ذلك نصفها
 const tidyPts = s => s <= 300 ? 100 : s <= 1200 ? Math.round(100 - (s - 300) / 900 * 70) : 15;
 const mornBonus = s => s <= 600 ? 40 : s <= 900 ? 25 : s <= 1200 ? 10 : 0;
 
 const M = {
-  swim:  { hero: 'ثور', ic: '⚡', name: 'عاصِفَةُ ثور', task: 'تَحَدّي السِّباحَةِ', c: '#2f8cff', c1: '#bfe1ff', kind: 'timer', full: 600, fn: swimPts,
-           rule: 'اِسْبَحْ وَاخْرُجْ قَبْلَ ١٠ دَقائِقَ. كُلَّما كُنْتَ أَسْرَعَ زادَتْ نِقاطُكَ: ٤ دَقائِقَ أَوْ أَقَلَّ = ١٠٠ نُقْطَة.' },
+  swim:  { hero: 'ثور', ic: '⚡', name: 'عاصِفَةُ ثور', task: 'تَحَدّي السِّباحَةِ', c: '#2f8cff', c1: '#bfe1ff', kind: 'timer', full: 720, zone: [480, 720], noRec: true, fn: swimPts,
+           rule: 'اُخْرُجْ مِنَ السِّباحَةِ في نَحْوِ ١٠ دَقائِقَ: بَيْنَ ٨ وَ١٢ دَقيقَةً = ١٠٠ نُقْطَة، وَأَقَلُّ أَوْ أَكْثَرُ = ٥٠ نُقْطَة.' },
   tidy:  { hero: 'آيرون مان', ic: '🦾', name: 'مُخْتَبَرُ آيرون مان', task: 'تَحَدّي تَرْتيبِ الْأَلْعابِ وَالْغُرْفَةِ', c: '#d62828', c1: '#ffd27a', kind: 'timer', full: 1200, fn: tidyPts,
            rule: 'رَتِّبْ أَلْعابَكَ وَغُرْفَتَكَ بِسُرْعَةِ الْبَدْلَةِ الْحَديدِيَّةِ: ٥ دَقائِقَ أَوْ أَقَلَّ = ١٠٠ نُقْطَة.' },
   study: { hero: 'دكتور سترينج', ic: '📖', name: 'كِتابُ سترينج', task: 'تَحَدّي الدِّراسَةِ وَالْواجِباتِ', c: '#ff7a00', c1: '#ffe0b8', kind: 'study',
@@ -134,7 +134,7 @@ function render() {
     const m = M[c], list = (g[today()] || []).filter(e => e.c === c), pts = list.reduce((a, e) => a + e.p, 0), b = best(c);
     return `<button class="m" data-c="${c}" style="--i:${i};--ac:${m.c1};--ac2:${m.c}">
       <div class="m-art"><img src="img/${c}.webp" alt="" loading="lazy"><span class="m-hero">${m.ic} ${m.hero}</span><span class="m-done">${list.length ? `✓ الْيَوْمَ ${PL(pts)}` : ''}</span></div>
-      <div class="m-body"><h3>${m.name}</h3><p>${m.task}</p><span class="rec">${b ? `🏅 رَقْمُكَ الْقِياسِيُّ: ${mins(b)}` : ''}</span><span class="go">${m.ic} ابْدَأِ الْمُهِمَّةَ</span></div></button>`;
+      <div class="m-body"><h3>${m.name}</h3><p>${m.task}</p><span class="rec">${b && !m.noRec ? `🏅 رَقْمُكَ الْقِياسِيُّ: ${mins(b)}` : ''}</span><span class="go">${m.ic} ابْدَأِ الْمُهِمَّةَ</span></div></button>`;
   }).join('');
   // الهدية
   const pz = $('#prize'); pz.classList.toggle('locked', total < G);
@@ -203,7 +203,7 @@ async function award(e) {
 }
 function cheer(e) {
   const m = M[e.c]; const L = {
-    swim: 'ثور فَخورٌ بِكَ! عاصِفَةٌ سَريعَةٌ ⚡', tidy: 'آيرون مان: الْمُخْتَبَرُ نَظيفٌ تَماماً! 🦾', study: 'دكتور سترينج: عَقْلُكَ يَزْدادُ قُوَّةً! 📖',
+    swim: 'ثور فَخورٌ بِكَ! ⚡', tidy: 'آيرون مان: الْمُخْتَبَرُ نَظيفٌ تَماماً! 🦾', study: 'دكتور سترينج: عَقْلُكَ يَزْدادُ قُوَّةً! 📖',
     morning: 'كابتن أمريكا: جُنْدِيٌّ جاهِزٌ لِلْمَهَمَّةِ! 🛡️', eat: 'هالك: قَوِيٌّ مِثْلي! 💪' };
   return L[e.c] || m.name;
 }
@@ -242,11 +242,11 @@ function uiTimer(c) {
   const live = run && run.c === c ? run : null;
   $('#sh-ui').innerHTML = `
     <div class="clock" id="clk"><svg viewBox="0 0 280 280"><circle class="trk" cx="140" cy="140" r="${R}"/><circle class="arc" id="arc" cx="140" cy="140" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>
-      <div class="face"><span class="t" id="tt">٠:٠٠</span><span class="lp" id="lp">${c === 'swim' ? 'الْهَدَفُ: أَقَلُّ مِنْ ١٠ دَقائِق' : 'كُلَّما أَسْرَعْتَ زادَتِ النِّقاط'}</span></div></div>
+      <div class="face"><span class="t" id="tt">٠:٠٠</span><span class="lp" id="lp">${c === 'swim' ? 'الْهَدَفُ: بَيْنَ ٨ وَ١٢ دَقيقَة' : 'كُلَّما أَسْرَعْتَ زادَتِ النِّقاط'}</span></div></div>
     <div class="btns" id="tb"></div>
     <button class="link" id="mlink">نَسيتَ الْمُؤَقِّتَ؟ أَدْخِلِ الدَّقائِقَ بِيَدِكَ</button>
     <div class="manual" id="man"><div class="step"><button id="mm">−</button><b id="mv"></b><button id="mp">+</button></div><p class="preview" id="mpv"></p><div class="btns"><button class="btn green" id="msave">سَجِّلِ النِّقاطَ</button></div></div>`;
-  let mv = c === 'swim' ? 8 : 10;
+  let mv = 10;
   const mUpd = () => { $('#mv').textContent = `${AR(mv)} دَقيقَة`; $('#mpv').innerHTML = `النِّقاطُ: <b>${PL(m.fn(mv * 60))}</b>`; };
   $('#mlink').onclick = () => { $('#man').classList.toggle('on'); mUpd(); };
   $('#mm').onclick = () => { mv = Math.max(1, mv - 1); mUpd(); sfx.tap(); };
@@ -255,12 +255,13 @@ function uiTimer(c) {
   const paint = s => {
     $('#tt').textContent = mmss(s);
     const k = Math.min(1, s / m.full); $('#arc').style.strokeDashoffset = C * (1 - k);
-    $('#arc').style.stroke = s > m.full ? '#e8202a' : k > .7 ? '#ff9e1b' : m.c;
+    $('#arc').style.stroke = m.zone ? (s < m.zone[0] ? m.c : s <= m.zone[1] ? '#21b25b' : '#e8202a')   // أخضر داخل النافذة
+      : s > m.full ? '#e8202a' : k > .7 ? '#ff9e1b' : m.c;
     $('#lp').innerHTML = `لَوِ انْتَهَيْتَ الْآنَ: <b>${PL(m.fn(s))}</b>`;
   };
   const idle = () => {
     clearInterval(tick); $('#clk').classList.remove('run'); paint(0);
-    $('#lp').textContent = c === 'swim' ? 'الْهَدَفُ: أَقَلُّ مِنْ ١٠ دَقائِق' : 'كُلَّما أَسْرَعْتَ زادَتِ النِّقاط';
+    $('#lp').textContent = c === 'swim' ? 'الْهَدَفُ: بَيْنَ ٨ وَ١٢ دَقيقَة' : 'كُلَّما أَسْرَعْتَ زادَتِ النِّقاط';
     $('#tb').innerHTML = `<button class="btn green" id="go">▶ ابْدَأِ الْآنَ!</button>`;
     $('#go').onclick = () => { lset(RUN, { c, t0: Date.now() }); sfx.start(); running(Date.now()); };
   };
@@ -274,9 +275,10 @@ function uiTimer(c) {
     $('#cancel').onclick = () => { localStorage.removeItem(RUN); $('#mlink').style.display = ''; idle(); };
   };
   const result = s => {
-    const b = best(c), rec = b && s < b, p = m.fn(s) + (rec ? 20 : 0);
+    const b = best(c), rec = !m.noRec && b && s < b, p = m.fn(s) + (rec ? 20 : 0);
     $('#clk').classList.remove('run'); paint(s);
-    $('#lp').innerHTML = s <= (c === 'swim' ? 600 : 1200) ? 'أَحْسَنْتَ! 👏' : 'الْمَرَّةَ الْقادِمَةَ أَسْرَعُ! 💪';
+    $('#lp').innerHTML = m.zone ? (s < m.zone[0] ? 'أَسْرَعُ مِنَ اللّازِمِ — الْهَدَفُ ٨–١٢ دَقيقَة 🙂' : s <= m.zone[1] ? 'في الْوَقْتِ الْمِثالِيِّ! 👏' : 'تَأَخَّرْتَ قَليلاً — الْهَدَفُ ٨–١٢ دَقيقَة 💪')
+      : s <= 1200 ? 'أَحْسَنْتَ! 👏' : 'الْمَرَّةَ الْقادِمَةَ أَسْرَعُ! 💪';
     $('#tb').innerHTML = `<div class="result" style="width:100%"><div class="big">${PL(p)}</div>${rec ? `<span class="recflag">🏅 رَقْمٌ قِياسِيٌّ جَديد! ⁦+٢٠⁩</span>` : ''}<p>${mins(s)}</p></div>
       <button class="btn green" id="ok">⭐ سَجِّلِ النِّقاطَ</button><button class="btn dark" id="again">إِعادَة</button>`;
     $('#ok').onclick = () => award({ c, s, p, r: rec ? 1 : 0 });
@@ -368,12 +370,12 @@ $('#log').addEventListener('click', async e => {
 // الإعدادات
 function howHTML() {
   return `<ul>
-  <li>⚡ السِّباحَة: ٤ د أَوْ أَقَلّ = ١٠٠، وَتَنْزِلُ حَتّى ٤٠ عِنْدَ ١٠ د، وَبَعْدَها ١٠.</li>
+  <li>⚡ السِّباحَة: بَيْنَ ٨ وَ١٢ دَقيقَة = ١٠٠، وَأَقَلُّ أَوْ أَكْثَرُ = ٥٠.</li>
   <li>🦾 التَّرْتيب: ٥ د أَوْ أَقَلّ = ١٠٠، وَتَنْزِلُ حَتّى ٣٠ عِنْدَ ٢٠ د، وَبَعْدَها ١٥.</li>
   <li>🛡️ الصَّباح: ٣ خُطُواتٍ × ٢٠ + سُرْعَة (١٠ د = ٤٠، ١٥ د = ٢٥، ٢٠ د = ١٠) — مَرَّةً في الْيَوْم.</li>
   <li>📖 الدِّراسَة: ٢٥ لِكُلِّ إِنْجاز، وَ٥٠ لِلدَّرَجَةِ الْكامِلَة.</li>
   <li>💪 الْأَكْل: ٣٠ لِلصَّحْنِ كامِلاً، ١٥ لِأَغْلَبِه، ⁦+١٠⁩ لِلْخُضار — كُلُّ وَجْبَةٍ مَرَّة.</li>
-  <li>🏅 كَسْرُ الرَّقْمِ الْقِياسِيِّ بِالْمُؤَقِّت: ⁦+٢٠⁩.</li>
+  <li>🏅 كَسْرُ الرَّقْمِ الْقِياسِيِّ بِالْمُؤَقِّت (التَّرْتيبُ وَالصَّباح): ⁦+٢٠⁩.</li>
   <li>⭐ الْمُهِمّاتُ الْخَمْسُ في يَوْمٍ واحِد: ${PL(DAILY_BONUS)}.</li>
   <li>🎯 يَوْمٌ جَيِّدٌ ≈ ٣٥٠–٤٠٠ نُقْطَة، فَالْهَدَفُ ${AR(goal())} يَحْتاجُ الْتِزاماً شِبْهَ يَوْمِيٍّ طَوالَ الشَّهْر.</li></ul>`;
 }
