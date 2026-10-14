@@ -250,3 +250,24 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:10px;ma
 .venom img{width:84px;border:3px solid var(--ink);border-radius:10px;transform:rotate(-4deg);box-shadow:4px 4px 0 var(--ink)}
 .venom span{font-family:"Sakkal Poster";font-size:34px;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
 .maplink{display:flex;align-items:center;justify-content:center;margin-top:16px;text-decoration:none;color:var(--ink)}
+
+/* ===== ميزان بابا وماما ===== */
+.parents{margin-top:34px;padding:20px 20px 22px;background:linear-gradient(160deg,#23305f,#0e1238)}
+.pr-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.pr-ic{flex:none;width:68px;height:68px;display:grid;place-items:center;font-size:40px;background:var(--gold);border:4px solid var(--ink);border-radius:50%;box-shadow:4px 5px 0 var(--ink)}
+.parents h3{margin:0;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(32px,4.4vw,42px);line-height:1.1;color:var(--gold);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+.parents p{margin:4px 0 0;font-size:21px;color:#d9dcff}
+.pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.pr-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;border:4px solid var(--ink);border-radius:18px}
+.pr-col b{grid-column:1/-1;font-size:22px;text-align:center}
+.pr-col.plus{background:rgba(33,178,91,.18)}
+.pr-col.minus{background:rgba(232,32,42,.18)}
+.pb{min-height:66px;font-family:"Sakkal Poster";font-size:38px;color:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 4px 0 rgba(255,255,255,.3),5px 6px 0 var(--ink)}
+.plus .pb{background:#21b25b}
+.minus .pb{background:var(--red)}
+.pb:active{transform:translate(3px,4px);box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),2px 2px 0 var(--ink)}
+.ent.neg .p{color:#ff6b73}
+.boom.neg .boom-burst{background:repeating-conic-gradient(from 0deg,rgba(90,20,40,.95) 0 6deg,rgba(30,20,60,.95) 6deg 12deg)}
+.boom.neg .pow{color:#ff6b73;text-shadow:0 12px 0 var(--ink)}
+.boom.neg .pts{background:var(--red)}
+@media (max-width:560px){.pr-grid{grid-template-columns:1fr}}

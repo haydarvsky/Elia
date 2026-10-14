@@ -91,7 +91,7 @@
     <li>كُلُّ مُهِمَّةٍ تُنْجِزُها تُحَرِّكُكَ إِلى الْأَمامِ.</li>
     <li>عِنْدَ كُلِّ حَجَرٍ مِنَ الْأَحْجارِ السِّتَّةِ تَحْصُلُ عَلَيْهِ — وَالسّادِسُ يَفْتَحُ الْهَدِيَّةَ.</li>
     <li>🚩 أَعْلامُ الْأَسابيعِ تُخْبِرُكَ أَيْنَ يَجِبُ أَنْ تَكونَ في نِهايَةِ كُلِّ أُسْبوعٍ.</li>
-    <li>⭐ الْمُهِمّاتُ الْخَمْسُ في يَوْمٍ واحِدٍ = قَفْزَةٌ إِضافِيَّةٌ.</li>
+    <li>⭐ الْمُهِمّاتُ السِّتُّ في يَوْمٍ واحِدٍ = قَفْزَةٌ إِضافِيَّةٌ.</li>
   </ul>
 </section>
 
@@ -99,7 +99,7 @@
 <script>
 (() => {
 'use strict';
-const KEY = 'elia-heroes-v1', DAYS = 30, DEF_GOAL = 12000, BONUS = 50, ORDER = ['swim', 'tidy', 'study', 'morning', 'eat'];
+const KEY = 'elia-heroes-v1', DAYS = 30, DEF_GOAL = 12000, BONUS = 50, ORDER = ['swim', 'tidy', 'study', 'morning', 'eat', 'sleep'];
 const $ = s => document.querySelector(s);
 const AR = n => Math.round(n).toLocaleString('ar-EG');
 const pad2 = n => String(n).padStart(2, '0');
@@ -145,7 +145,7 @@ const px = (el, f, dx = 0) => { const p = at(f); el.style.left = `calc(${p.x}% +
 
 function render() {
   if (!built) build();
-  const S = load(), { total, G, start, dn } = stats(S), f = Math.min(1, total / G);
+  const S = load(), { total, G, start, dn } = stats(S), f = Math.max(0, Math.min(1, total / G));
   $('#m-total').textContent = `⚡ ${AR(total)} نُقْطَة`;
   $('#m-left').textContent = total >= G ? '🏆 وَصَلْتَ!' : `🎯 باقي ${AR(G - total)}`;
   $('#m-days').textContent = dn < 1 ? 'لَمْ يَبْدَأِ الشَّهْرُ' : dn > DAYS ? '🏁 انْتَهى الشَّهْرُ' : `📅 الْيَوْمُ ${AR(dn)} مِنْ ${AR(DAYS)}`;

@@ -4,10 +4,11 @@
    السجل كائنٌ بمعرّفات (لا مصفوفة) والحذف شاهدةٌ في del — لأن دمج save.js يأخذ اتحاد المفاتيح فلا يضيع إدخال جهازٍ آخر ولا يعود محذوف. */
 (() => {
 'use strict';
-const KEY = 'elia-heroes-v1', RUN = 'elia-heroes-run', DAYS = 30, DEF_GOAL = 12000, DAILY_BONUS = 50;
+const KEY = 'elia-heroes-v1', RUN = 'elia-heroes-run', DAYS = 30, DEF_GOAL = 12000, DAILY_BONUS = 50, CYCLE = 20;
 const $ = s => document.querySelector(s);
 const AR = n => Math.round(n).toLocaleString('ar-EG');
-const PL = n => `\u2066+${AR(n)}\u2069`;
+const PL = n => `\u2066${n < 0 ? '−' : '+'}${AR(Math.abs(n))}\u2069`;
+const PARENT = [50, 100];   // بونص بابا وماما أو خصمهم: هاتان القيمتان فقط
 const pad2 = n => String(n).padStart(2, '0');
 const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 const dnum = s => { const [y, m, d] = s.split('-').map(Number); return Math.round(new Date(y, m - 1, d).getTime() / 864e5); };
@@ -21,6 +22,7 @@ const lset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 const swimPts = s => s >= 480 && s <= 720 ? 100 : 50;   // بين ٨ و١٢ دقيقة = كاملة، وغير ذلك نصفها
 const tidyPts = s => s <= 300 ? 100 : s <= 1200 ? Math.round(100 - (s - 300) / 900 * 70) : 15;
 const mornBonus = s => s <= 600 ? 40 : s <= 900 ? 25 : s <= 1200 ? 10 : 0;
+const ydayOf = d => { const [y, m, dd] = d.split('-').map(Number); return ymd(new Date(y, m - 1, dd - 1)); };
 
 const M = {
   swim:  { hero: 'ثور', ic: '⚡', name: 'عاصِفَةُ ثور', task: 'تَحَدّي السِّباحَةِ', c: '#2f8cff', c1: '#bfe1ff', kind: 'timer', full: 720, zone: [480, 720], noRec: true, fn: swimPts,
@@ -31,10 +33,17 @@ const M = {
            rule: 'كُلُّ إِنْجازٍ دِراسِيٍّ تَكْتُبُهُ = ٢٥ نُقْطَة، وَالدَّرَجَةُ الْكامِلَةُ = ٥٠. بِلا تَوْقيتٍ.' },
   morning: { hero: 'كابتن أمريكا', ic: '🛡️', name: 'جُنْدِيُّ الصَّباحِ', task: 'تَحَدّي الِاسْتِيقاظِ', c: '#1f4fbf', c1: '#ffd0d0', kind: 'morning',
            rule: 'اِسْتَيْقِظْ ← فَرِّشْ أَسْنانَكَ ← اِلْبَسْ مَلابِسَ الْمَدْرَسَةِ. كُلُّ خُطْوَةٍ ٢٠، وَإِنْ جَهَزْتَ خِلالَ ١٠ دَقائِقَ فَلَكَ ٤٠ إِضافِيَّة.' },
+  sleep: { hero: 'بلاك بانثر', ic: '🌙', name: 'لَيْلَةُ بلاك بانثر', task: 'تَحَدّي الِاسْتِعْدادِ لِلنَّوْمِ', c: '#6b3cff', c1: '#dcd0ff', kind: 'sleep',
+           rule: 'فَرِّشْ أَسْنانَكَ ← اُدْخُلِ الْحَمّامَ ← إِلى الْفِراشِ. كُلُّ خُطْوَةٍ ٢٠، وَإِنْ كُنْتَ في فِراشِكَ خِلالَ ١٠ دَقائِقَ فَلَكَ ٤٠ إِضافِيَّة. وَإِنْ نَجَحْتَ صَباحاً في تَحَدّي الِاسْتِيقاظِ فَلَكَ ٢٠ مُكافَأَةُ النَّوْمِ وَالِاسْتِيقاظ.' },
   eat:   { hero: 'هالك', ic: '💪', name: 'قُوَّةُ هالك', task: 'تَحَدّي الْأَكْلِ', c: '#2e9e3f', c1: '#e6c8ff', kind: 'eat',
            rule: 'كُلُّ وَجْبَةٍ تُكْمِلُها = ٣٠ نُقْطَة، وَالْخُضارُ وَالْفاكِهَةُ تَزيدُكَ ١٠. هالك يَأْكُلُ لِيَصيرَ قَوِيّاً!' },
 };
-const ORDER = ['swim', 'tidy', 'study', 'morning', 'eat'];
+const ORDER = ['swim', 'tidy', 'study', 'morning', 'eat', 'sleep'];
+const STEPS = {
+  morning: [['⏰', 'اسْتَيْقَظْتُ!'], ['🪥', 'فَرَّشْتُ أَسْناني'], ['👕', 'لَبِسْتُ مَلابِسَ الْمَدْرَسَةِ']],
+  sleep: [['🌙', 'حانَ وَقْتُ النَّوْمِ!'], ['🪥', 'فَرَّشْتُ أَسْناني'], ['🚽', 'دَخَلْتُ الْحَمّامَ'], ['🛏️', 'في فِراشي وَالنّورُ مُطْفَأ']],
+};
+const TOK = { morning: 'تَحَدّيَ الصَّباحِ', sleep: 'تَحَدّيَ النَّوْمِ' };
 const STUDY = [['📝', 'حَلَلْتُ واجِبي'], ['📖', 'قَرَأْتُ دَرْساً'], ['🧠', 'حَفِظْتُ'], ['✍️', 'كَتَبْتُ بِخَطٍّ جَميلٍ'], ['🔁', 'راجَعْتُ لِلِاخْتِبارِ'], ['🏅', 'دَرَجَةٌ كامِلَةٌ', 50]];
 const MEALS = [['🍳', 'الْفُطور'], ['🍛', 'الْغَداء'], ['🍲', 'الْعَشاء'], ['🍎', 'وَجْبَةٌ خَفيفَةٌ']];
 const STONES = [
@@ -97,7 +106,7 @@ const sfx = {
   bad: () => tone([[200, 0, .2, 'sawtooth', .06], [150, .15, .3, 'sawtooth', .06]]),
   tick: () => tone([[1400, 0, .04, 'square', .03]]),
 };
-const VOICE = ['siuuu', 'hero', 'genius', 'smart', 'won'];
+const VOICE = ['siuuu', 'hero', 'genius', 'smart', 'won', 'cheer', 'imgenius'];
 let vo = null;
 function voice(name) {
   try { if (vo) vo.pause(); vo = new Audio(`../huruf/assets/audio/elia/${name || VOICE[Math.floor(Math.random() * VOICE.length)]}.mp3`); vo.play().catch(() => {}); } catch (e) {}
@@ -117,11 +126,11 @@ function render() {
   $('#c-day').textContent = dn < 1 ? `يَبْدَأُ التَّحَدّي بَعْدَ ${AR(1 - dn)} يَوْم` : dn > DAYS ? '🏁 انْتَهى شَهْرُ التَّحَدّي' : `📅 الْيَوْمُ ${AR(dn)} مِنْ ${AR(DAYS)}`;
   $('#c-left').textContent = dn >= 1 && dn <= DAYS ? `⏳ باقي ${AR(left)} ${left === 1 ? 'يَوْم' : 'يَوْماً'}` : '';
   const st = streak(g); $('#c-streak').textContent = st >= 2 ? `🔥 ${AR(st)} أَيّامٍ مُتَتالِيَة` : '';
-  countTo($('#total'), total);
+  countTo($('#total'), Math.max(0, total));
   $('#goal-line').textContent = total >= G ? '🏆 وَصَلْتَ إِلى الْهَدِيَّةِ الْكُبْرى!' : `مِنْ ${AR(G)} — باقي ${AR(G - total)} نُقْطَة`;
-  $('#today').textContent = AR(td.pts);
-  $('#today-bonus').textContent = td.full ? `⭐ مُكافَأَةُ الْأَفِنْجَرز ${PL(DAILY_BONUS)}` : `أَنْجِزِ الْمُهِمّاتِ الْخَمْسَ الْيَوْمَ = ${PL(DAILY_BONUS)}`;
-  const pct = Math.min(1, total / G);
+  $('#today').textContent = (td.pts < 0 ? '−' : '') + AR(Math.abs(td.pts));
+  $('#today-bonus').textContent = td.full ? `⭐ مُكافَأَةُ الْأَفِنْجَرز ${PL(DAILY_BONUS)}` : `أَنْجِزِ الْمُهِمّاتِ السِّتَّ الْيَوْمَ = ${PL(DAILY_BONUS)}`;
+  const pct = Math.max(0, Math.min(1, total / G));
   $('#beam-fill').style.width = (pct * 100).toFixed(2) + '%';
   $('#marks').innerHTML = STONES.slice(0, -1).map(s => `<i style="right:${s.f * 100}%"></i>`).join('');
   let nextSet = false;
@@ -152,14 +161,17 @@ function renderLog(g) {
     const l = g[d], t = dayTotal(l), dt = new Date(...d.split('-').map((x, i) => i === 1 ? x - 1 : +x));
     const label = d === today() ? 'الْيَوْمَ' : dt.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
     return `<div class="day"><h4>${label}<span>${PL(t.pts)}${t.full ? ' ⭐' : ''}</span></h4>${l.map(e => {
-      const m = M[e.c]; return `<div class="ent" style="--c:${m.c}"><span class="ic">${m.ic}</span><span class="tx">${desc(e)}<small>${m.hero} · ${new Date(e.t).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' })}</small></span><span class="p">${PL(e.p)}</span><button class="del" data-id="${e.id}" aria-label="حذف">✕</button></div>`;
-    }).join('')}${t.full ? `<div class="ent" style="--c:#ffc83d"><span class="ic">⭐</span><span class="tx">مُكافَأَةُ الْأَفِنْجَرز: الْمُهِمّاتُ الْخَمْسُ في يَوْمٍ واحِدٍ</span><span class="p">${PL(DAILY_BONUS)}</span><span style="width:36px"></span></div>` : ''}</div>`;
+      const m = e.c === 'parent' ? { c: e.p < 0 ? '#e8202a' : '#ffc83d', ic: e.p < 0 ? '⚠️' : '🎁', hero: 'بابا وَماما' } : M[e.c];
+      return `<div class="ent ${e.p < 0 ? 'neg' : ''}" style="--c:${m.c}"><span class="ic">${m.ic}</span><span class="tx">${desc(e)}<small>${m.hero} · ${new Date(e.t).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' })}</small></span><span class="p">${PL(e.p)}</span><button class="del" data-id="${e.id}" aria-label="حذف">✕</button></div>`;
+    }).join('')}${t.full ? `<div class="ent" style="--c:#ffc83d"><span class="ic">⭐</span><span class="tx">مُكافَأَةُ الْأَفِنْجَرز: الْمُهِمّاتُ السِّتُّ في يَوْمٍ واحِدٍ</span><span class="p">${PL(DAILY_BONUS)}</span><span style="width:36px"></span></div>` : ''}</div>`;
   }).join('');
 }
 function desc(e) {
   if (e.c === 'swim') return `سِباحَةٌ في ${mins(e.s)}${e.r ? ' 🏅 رَقْمٌ قِياسِيّ' : ''}${e.m ? ' (يَدَوِيّ)' : ''}`;
   if (e.c === 'tidy') return `تَرْتيبُ الْغُرْفَةِ في ${mins(e.s)}${e.r ? ' 🏅 رَقْمٌ قِياسِيّ' : ''}${e.m ? ' (يَدَوِيّ)' : ''}`;
-  if (e.c === 'morning') return `جاهِزٌ لِلْمَدْرَسَةِ في ${mins(e.s)}${e.r ? ' 🏅 رَقْمٌ قِياسِيّ' : ''}`;
+  if (e.c === 'morning') return `جاهِزٌ لِلْمَدْرَسَةِ في ${mins(e.s)}${e.r ? ' 🏅 رَقْمٌ قِياسِيّ' : ''}${e.x ? ' 🌙☀️ نَوْمٌ وَاسْتِيقاظ' : ''}`;
+  if (e.c === 'sleep') return `جاهِزٌ لِلنَّوْمِ في ${mins(e.s)}${e.r ? ' 🏅 رَقْمٌ قِياسِيّ' : ''}`;
+  if (e.c === 'parent') return `${e.p < 0 ? 'خَصْمُ عُقوبَةٍ' : 'بونَصٌ خاصٌّ'}${e.n ? ' — ' + e.n : ''}`;
   return e.n || M[e.c].task;
 }
 
@@ -195,8 +207,9 @@ async function award(e) {
   const after = totals().total, dayFull = dayTotal(byDay()[today()] || []).full && !dayTotal((byDay()[today()] || []).filter(x => x.id !== id)).full;
   const won = STONES.filter(s => { const need = Math.round(G * s.f / 50) * 50; return before < need && after >= need; }).pop();
   const words = ['بوم!', 'واو!', 'خارِق!', 'بَطَل!', 'أُسْطورَة!'];
-  if (won) celebrate(won.f === 1 ? 'الْهَدِيَّة!' : 'حَجَرٌ جَديد!', e.p, won.f === 1 ? '🏆 أَكْمَلْتَ الْقُفّازَ! فينوم لِيغو لَكَ!' : `حَصَلْتَ عَلى ${won.n}! 💎`, won.c, 'stone');
-  else if (dayFull) celebrate('أَفِنْجَرز!', e.p + DAILY_BONUS, `أَنْجَزْتَ الْمُهِمّاتِ الْخَمْسَ الْيَوْمَ! ${PL(DAILY_BONUS)} مُكافَأَة ⭐`, null, 'win');
+  if (e.c === 'parent') celebrate(e.p < 0 ? 'خَصْم!' : 'بونَص!', e.p, e.n || (e.p < 0 ? 'بابا وَماما خَصَموا نِقاطاً — الْبَطَلُ يَلْتَزِمُ الْمَرَّةَ الْقادِمَةَ 💪' : 'بابا وَماما فَخورانِ بِكَ! 🌟'), null, e.p < 0 ? 'bad' : 'win');
+  else if (won) celebrate(won.f === 1 ? 'الْهَدِيَّة!' : 'حَجَرٌ جَديد!', e.p, won.f === 1 ? '🏆 أَكْمَلْتَ الْقُفّازَ! فينوم لِيغو لَكَ!' : `حَصَلْتَ عَلى ${won.n}! 💎`, won.c, 'stone');
+  else if (dayFull) celebrate('أَفِنْجَرز!', e.p + DAILY_BONUS, `أَنْجَزْتَ الْمُهِمّاتِ السِّتَّ الْيَوْمَ! ${PL(DAILY_BONUS)} مُكافَأَة ⭐`, null, 'win');
   else celebrate(e.r ? 'رَقْمٌ قِياسِيّ!' : words[Math.floor(Math.random() * words.length)], e.p, cheer(e), null, 'win');
   render();
   return true;
@@ -204,7 +217,7 @@ async function award(e) {
 function cheer(e) {
   const m = M[e.c]; const L = {
     swim: 'ثور فَخورٌ بِكَ! ⚡', tidy: 'آيرون مان: الْمُخْتَبَرُ نَظيفٌ تَماماً! 🦾', study: 'دكتور سترينج: عَقْلُكَ يَزْدادُ قُوَّةً! 📖',
-    morning: 'كابتن أمريكا: جُنْدِيٌّ جاهِزٌ لِلْمَهَمَّةِ! 🛡️', eat: 'هالك: قَوِيٌّ مِثْلي! 💪' };
+    morning: 'كابتن أمريكا: جُنْدِيٌّ جاهِزٌ لِلْمَهَمَّةِ! 🛡️', eat: 'هالك: قَوِيٌّ مِثْلي! 💪', sleep: 'بلاك بانثر: نَمْ يا بَطَلُ، غَداً مُهِمَّةٌ جَديدَة! 🌙' };
   return L[e.c] || m.name;
 }
 function celebrate(word, pts, msg, gem, kind) {
@@ -217,8 +230,10 @@ function celebrate(word, pts, msg, gem, kind) {
     s.style.cssText = `left:50%;top:50%;--c:${cols[i % cols.length]};--x:${Math.cos(a) * r}px;--y:${Math.sin(a) * r}px;animation-delay:${Math.random() * .25}s`;
     box.appendChild(s);
   }
-  box.classList.add('on'); (kind === 'stone' ? sfx.stone : sfx.win)();
-  setTimeout(() => voice(kind === 'stone' ? 'won' : null), 450);
+  if (kind === 'bad') box.querySelectorAll('.spark').forEach(x => x.remove());
+  box.classList.toggle('neg', kind === 'bad');
+  box.classList.add('on'); (kind === 'stone' ? sfx.stone : kind === 'bad' ? sfx.bad : sfx.win)();
+  if (kind !== 'bad') setTimeout(() => voice(kind === 'stone' ? 'won' : null), 450);
   clearTimeout(celebrate.t); celebrate.t = setTimeout(() => box.classList.remove('on'), kind === 'stone' ? 4200 : 2900);
 }
 $('#boom').addEventListener('click', () => $('#boom').classList.remove('on'));
@@ -230,7 +245,7 @@ function openSheet(c) {
   card.style.setProperty('--ac', m.c1); card.style.setProperty('--ac2', m.c);
   $('#sh-img').src = `img/${c}.webp`; $('#sh-hero').textContent = `${m.ic} ${m.hero}`;
   $('#sh-title').textContent = m.name; $('#sh-rule').textContent = m.rule;
-  ({ timer: uiTimer, morning: uiMorning, study: uiStudy, eat: uiEat })[m.kind](c);
+  ({ timer: uiTimer, morning: uiSteps, sleep: uiSteps, study: uiStudy, eat: uiEat })[m.kind](c);
   $('#sheet').classList.add('on'); sfx.tap();
 }
 function closeSheet() { $('#sheet').classList.remove('on'); clearInterval(tick); }
@@ -287,34 +302,38 @@ function uiTimer(c) {
   live ? running(live.t0) : idle();
 }
 
-/* الصباح: استيقظت ← فرّشت ← لبست */
-function uiMorning(c) {
+/* خطوات بمؤقّت — الصباح: استيقظت ← فرّشت ← لبست · النوم: حان الوقت ← فرّشت ← الحمام ← الفراش
+   الخطوة الأولى تبدأ العدّ، وكل خطوةٍ بعدها ٢٠ (الصباح يحسب الأولى أيضاً) فالأساس ٦٠ في الاثنين */
+function uiSteps(c) {
   const m = M[c], done = (byDay()[today()] || []).some(e => e.c === c);
   let run = lget(RUN, null); if (run && run.c !== c) run = null;
-  const steps = [['⏰', 'اسْتَيْقَظْتُ!'], ['🪥', 'فَرَّشْتُ أَسْناني'], ['👕', 'لَبِسْتُ مَلابِسَ الْمَدْرَسَةِ']];
+  const steps = STEPS[c], N = steps.length;
   const draw = () => {
     const marks = (run && run.marks) || [], n = marks.length;
     const el = n ? Math.floor((Date.now() - run.t0) / 1000) : 0;
-    $('#sh-ui').innerHTML = `${done ? '<p class="warn">✓ سَجَّلْتَ تَحَدّيَ الصَّباحِ الْيَوْمَ. يُحْسَبُ مَرَّةً واحِدَةً كُلَّ يَوْمٍ.</p>' : ''}
+    $('#sh-ui').innerHTML = `${done ? `<p class="warn">✓ سَجَّلْتَ ${TOK[c]} الْيَوْمَ. يُحْسَبُ مَرَّةً واحِدَةً كُلَّ يَوْمٍ.</p>` : ''}
       <div class="mini">⏱ <b id="mt">${mmss(el)}</b></div>
       <div class="steps">${steps.map(([ic, t], i) => `<button class="stp ${i < n ? 'done' : ''} ${i === n ? 'next' : ''}" data-i="${i}" ${i !== n || done ? 'disabled' : ''}><span class="n">${i < n ? '✓' : ic}</span>${t}<span class="tm">${i < n && i ? mmss((marks[i] - run.t0) / 1000) : ''}</span></button>`).join('')}</div>
-      <div class="btns">${n ? '<button class="btn dark" id="mreset">إِعادَةُ الصَّباحِ</button>' : ''}</div>`;
+      <div class="btns">${n ? '<button class="btn dark" id="mreset">إِعادَةُ الْبِدايَةِ</button>' : ''}</div>`;
     $('#sh-ui').querySelectorAll('.stp').forEach(b => b.onclick = () => {
       const i = +b.dataset.i; if (i !== ((run && run.marks) || []).length) return;
       if (i === 0) { run = { c, t0: Date.now(), marks: [Date.now()] }; sfx.start(); } else { run.marks.push(Date.now()); sfx.tap(); }
       lset(RUN, run);
-      if (run.marks.length === 3) return finish(); draw();
+      if (run.marks.length === N) return finish(); draw();
     });
     const r = $('#mreset'); if (r) r.onclick = () => { run = null; localStorage.removeItem(RUN); draw(); };
-    clearInterval(tick); if (n && n < 3) tick = setInterval(() => { const t = $('#mt'); if (t) t.textContent = mmss((Date.now() - run.t0) / 1000); }, 500);
+    clearInterval(tick); if (n && n < N) tick = setInterval(() => { const t = $('#mt'); if (t) t.textContent = mmss((Date.now() - run.t0) / 1000); }, 500);
   };
   const finish = () => {
     clearInterval(tick); localStorage.removeItem(RUN);
-    const s = Math.max(1, Math.floor((run.marks[2] - run.t0) / 1000)), b = best(c), rec = b && s < b, p = 60 + mornBonus(s) + (rec ? 20 : 0);
-    $('#sh-ui').innerHTML = `<div class="result"><div class="big">${PL(p)}</div>${rec ? `<span class="recflag">🏅 رَقْمٌ قِياسِيٌّ جَديد! ⁦+٢٠⁩</span>` : ''}
-      <p>جَهَزْتَ في ${mins(s)} — الْخُطُواتُ ٦٠ + السُّرْعَةُ ${AR(mornBonus(s))}</p></div>
+    const s = Math.max(1, Math.floor((run.marks[N - 1] - run.t0) / 1000)), b = best(c), rec = b && s < b;
+    // دورة النوم والاستيقاظ: صباحٌ بعد ليلةٍ سُجِّل فيها استعداد النوم
+    const cyc = c === 'morning' && (byDay()[ydayOf(today())] || []).some(e => e.c === 'sleep');
+    const p = 60 + mornBonus(s) + (rec ? 20 : 0) + (cyc ? CYCLE : 0);
+    $('#sh-ui').innerHTML = `<div class="result"><div class="big">${PL(p)}</div>${rec ? `<span class="recflag">🏅 رَقْمٌ قِياسِيٌّ جَديد! ⁦+٢٠⁩</span>` : ''}${cyc ? `<span class="recflag">🌙☀️ نِمْتَ وَاسْتَيْقَظْتَ كَالْأَبْطالِ ${PL(CYCLE)}</span>` : ''}
+      <p>${c === 'sleep' ? 'جَهَزْتَ لِلنَّوْمِ' : 'جَهَزْتَ'} في ${mins(s)} — الْخُطُواتُ ٦٠ + السُّرْعَةُ ${AR(mornBonus(s))}</p></div>
       <div class="btns"><button class="btn green" id="ok">⭐ سَجِّلِ النِّقاطَ</button><button class="btn dark" id="again">إِعادَة</button></div>`;
-    $('#ok').onclick = () => award({ c, s, p, r: rec ? 1 : 0 });
+    $('#ok').onclick = () => award(Object.assign({ c, s, p, r: rec ? 1 : 0 }, cyc ? { x: 1 } : {}));
     $('#again').onclick = () => { run = null; draw(); };
   };
   draw();
@@ -367,6 +386,13 @@ $('#log').addEventListener('click', async e => {
   if (!(await gate())) return;
   S.del = S.del || {}; S.del[b.dataset.id] = 1; save(); render();
 });
+// بونص بابا وماما وخصمهم: ٥٠ أو ١٠٠ فقط، بعد سؤال الضرب
+$('#parents').addEventListener('click', e => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  const p = +b.dataset.p; if (!PARENT.includes(Math.abs(p))) return;
+  sfx.tap(); const why = $('#pr-why').value.trim();
+  award({ c: 'parent', p, n: why }).then(ok => { if (ok) $('#pr-why').value = ''; });
+});
 // الإعدادات
 function howHTML() {
   return `<ul>
@@ -375,9 +401,12 @@ function howHTML() {
   <li>🛡️ الصَّباح: ٣ خُطُواتٍ × ٢٠ + سُرْعَة (١٠ د = ٤٠، ١٥ د = ٢٥، ٢٠ د = ١٠) — مَرَّةً في الْيَوْم.</li>
   <li>📖 الدِّراسَة: ٢٥ لِكُلِّ إِنْجاز، وَ٥٠ لِلدَّرَجَةِ الْكامِلَة.</li>
   <li>💪 الْأَكْل: ٣٠ لِلصَّحْنِ كامِلاً، ١٥ لِأَغْلَبِه، ⁦+١٠⁩ لِلْخُضار — كُلُّ وَجْبَةٍ مَرَّة.</li>
-  <li>🏅 كَسْرُ الرَّقْمِ الْقِياسِيِّ بِالْمُؤَقِّت (التَّرْتيبُ وَالصَّباح): ⁦+٢٠⁩.</li>
-  <li>⭐ الْمُهِمّاتُ الْخَمْسُ في يَوْمٍ واحِد: ${PL(DAILY_BONUS)}.</li>
-  <li>🎯 يَوْمٌ جَيِّدٌ ≈ ٣٥٠–٤٠٠ نُقْطَة، فَالْهَدَفُ ${AR(goal())} يَحْتاجُ الْتِزاماً شِبْهَ يَوْمِيٍّ طَوالَ الشَّهْر.</li></ul>`;
+  <li>🌙 النَّوْم: فِرْشاة + حَمّام + فِراش × ٢٠ + سُرْعَة (مِثْلُ الصَّباح) — مَرَّةً في الْيَوْم.</li>
+  <li>🌙☀️ صَباحٌ بَعْدَ لَيْلَةٍ سُجِّلَ فيها النَّوْم: ${PL(CYCLE)} عَلى تَحَدّي الِاسْتِيقاظ.</li>
+  <li>🏅 كَسْرُ الرَّقْمِ الْقِياسِيِّ بِالْمُؤَقِّت (التَّرْتيبُ وَالصَّباحُ وَالنَّوْم): ⁦+٢٠⁩.</li>
+  <li>⭐ الْمُهِمّاتُ السِّتُّ في يَوْمٍ واحِد: ${PL(DAILY_BONUS)}.</li>
+  <li>⚖️ بونَصُ بابا وَماما أَوْ خَصْمُهُما: ٥٠ أَوْ ١٠٠ فَقَط.</li>
+  <li>🎯 يَوْمٌ جَيِّدٌ ≈ ٤٥٠–٥٠٠ نُقْطَة، فَالْهَدَفُ ${AR(goal())} يَحْتاجُ الْتِزاماً شِبْهَ يَوْمِيٍّ طَوالَ الشَّهْر.</li></ul>`;
 }
 $('#settings-btn').onclick = async () => {
   if (!(await gate())) return;

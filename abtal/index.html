@@ -12,7 +12,7 @@
 <title>تحدّي الأبطال — إيليا</title>
 <link rel="icon" href="img/icon.png">
 <link rel="apple-touch-icon" href="img/icon.png">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="cosmos" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -23,7 +23,7 @@
   <div class="hero-txt">
     <span class="kicker">مُهِمَّةٌ سِرِّيَّةٌ · لِلْبَطَلِ إيليا فَقَطْ</span>
     <h1 class="title">تَحَدِّي الْأَبْطالِ</h1>
-    <p class="sub">شَهْرٌ واحِدٌ · خَمْسُ مُهِمّاتٍ · سِتَّةُ أَحْجارٍ · هَدِيَّةٌ كُبْرى</p>
+    <p class="sub">شَهْرٌ واحِدٌ · سِتُّ مُهِمّاتٍ · سِتَّةُ أَحْجارٍ · هَدِيَّةٌ كُبْرى</p>
     <div class="chips"><span class="chip" id="c-day"></span><span class="chip" id="c-left"></span><span class="chip hot" id="c-streak"></span></div>
   </div>
 </header>
@@ -50,6 +50,19 @@
   <!-- ===== المهمات ===== -->
   <h2 class="banner"><span>اخْتَرْ مُهِمَّتَكَ يا بَطَلُ</span></h2>
   <section class="missions" id="missions"></section>
+
+  <!-- ===== ميزان بابا وماما ===== -->
+  <section class="parents panel" id="parents">
+    <div class="pr-head">
+      <span class="pr-ic">⚖️</span>
+      <div><h3>مِيزانُ بابا وَماما</h3><p>بونَصٌ خاصٌّ عَلى تَصَرُّفٍ جَميلٍ، أَوْ خَصْمٌ عِنْدَ الْعُقوبَةِ.</p></div>
+    </div>
+    <input class="note" id="pr-why" maxlength="60" placeholder="السَّبَبُ (اخْتِيارِيّ) — مَثَلاً: ساعَدَ أَخاهُ">
+    <div class="pr-grid">
+      <div class="pr-col plus"><b>🎁 بونَص</b><button class="pb" data-p="50">⁦+٥٠⁩</button><button class="pb" data-p="100">⁦+١٠٠⁩</button></div>
+      <div class="pr-col minus"><b>⚠️ خَصْم</b><button class="pb" data-p="-50">⁦−٥٠⁩</button><button class="pb" data-p="-100">⁦−١٠٠⁩</button></div>
+    </div>
+  </section>
 
   <!-- ===== الهدية ===== -->
   <section class="prize panel" id="prize">
@@ -129,6 +142,6 @@
 </div>
 
 <script src="../assets/save.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
