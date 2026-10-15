@@ -58,17 +58,13 @@ async function pull() {
   const d = await r.json();
   try { return JSON.parse(d.fields.j.stringValue) || {}; } catch (e) { return {}; }
 }
-/* نسخةٌ احتياطية يومية من السحابة قبل أول كتابةٍ فوقها في اليوم: elia_saves/<doc>-bk-YYYY-MM-DD (واحدةٌ لكل يوم) */
-async function snapshot(remote) {
-  try {
-    if (!remote || !Object.keys(remote).length) return;
-    const d = new Date(), tag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, mk = 'elia-cloud-bk';
-    if (lget(mk) === tag) return;
-    const slot = `${CFG.doc}-bk-${tag}`, url = DOC.replace(`/${CFG.doc}?`, `/${slot}?`);
-    const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { j: { stringValue: JSON.stringify(remote) }, ts: { integerValue: String(Date.now()) } } }) });
-    if (r.ok) lset(mk, tag);
-  } catch (e) {}
+/* نسخةٌ احتياطية داخل الوثيقة نفسها (القواعد لا تسمح بغيرها): _bk = { 'YYYY-MM-DD': حالة تحدّي الأبطال قبل أول كتابةٍ في ذلك اليوم } — آخر ١٤ يوماً */
+const BK = 'elia-heroes-v1', BKN = 14;
+function backup(out, remote) {
+  const h = remote[BK]; if (!h || !Object.keys(h.log || {}).length) return;
+  const d = new Date(), tag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const bk = Object.assign({}, remote._bk || {}); if (bk[tag]) return;
+  bk[tag] = h; Object.keys(bk).sort().slice(0, -BKN).forEach(k => delete bk[k]); out._bk = bk;
 }
 async function put(obj, keepalive) {
   const r = await fetch(DOC, { method: 'PATCH', keepalive: !!keepalive, headers: { 'Content-Type': 'application/json' },
@@ -77,7 +73,7 @@ async function put(obj, keepalive) {
 }
 
 /* ---------- المزامنة ---------- */
-let state = 'idle', busy = null, again = false, timer = 0, synced = false, lastSync = 0;
+let lastRemote = {}, state = 'idle', busy = null, again = false, timer = 0, synced = false, lastSync = 0;
 const subs = [], stSubs = [];
 const setState = s => { state = s; stSubs.forEach(f => { try { f(s); } catch (e) {} }); };
 function sync() {
@@ -92,10 +88,12 @@ function sync() {
         if (ms !== stable(local[k] || null)) { lset(k, m); changed.push(k); }
         if (ms !== stable(remote[k] || null)) dirty = true;
       });
-      if (dirty) { await snapshot(remote); await put(out); }
+      // الصفحة تأخذ المدمَج فوراً — حتى لو تعثّرت الكتابة إلى السحابة لا تبقى على حالةٍ قديمة تعيد حفظها
+      changed.forEach(k => subs.forEach(s => { if (s.k === k) try { s.fn(lget(k)); } catch (e) {} }));
+      lastRemote = out;
+      if (dirty) { backup(out, remote); await put(out); }
       synced = true; lastSync = Date.now(); lset(META, { ts: lastSync });
       setState('ok');
-      changed.forEach(k => subs.forEach(s => { if (s.k === k) try { s.fn(lget(k)); } catch (e) {} }));
     } catch (e) { setState(navigator.onLine === false ? 'off' : 'err'); }
     busy = null;
     if (again) { again = false; push(); }
@@ -105,7 +103,7 @@ function sync() {
 function push() { if (!timer) timer = setTimeout(sync, 2500); }
 function flush() {               // عند إغلاق الصفحة: ارفع فوراً ما لم يُرفع (بعد مزامنة ناجحة فقط حتى لا يُطمَس السحابي)
   if (!timer || !synced) return; clearTimeout(timer); timer = 0;
-  try { put(bundle(), true).catch(() => {}); } catch (e) {}
+  try { put(Object.assign({}, lastRemote, bundle()), true).catch(() => {}); } catch (e) {}   // مع ما في السحابة من غير المفاتيح (_bk)
 }
 addEventListener('pagehide', flush);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); else if (Date.now() - lastSync > 30000) sync(); });
