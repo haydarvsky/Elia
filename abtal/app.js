@@ -1,6 +1,7 @@
 /* تحدّي الأبطال — شهرٌ من المهمات اليومية لإيليا بثيمة الأفنجرز
    البيانات في مفتاح واحد يُزامَن سحابياً عبر EliaSave:
-   { start:'YYYY-MM-DD', goal:'12000', gate:'1'|'0', log:{id:{c,p,d,t,s,n,m,r}}, del:{id:1}, rst }
+   { start:'YYYY-MM-DD', goal:'12000', gate:'1'|'0', sat, log:{id:{c,p,d,t,s,n,m,r}}, del:{id:1}, rst, rby }
+   rst+rby يُختمان بأمر وليّ الأمر «تصفير» فقط، وsat وقت آخر تعديلٍ للإعدادات — فجهازٌ جديدٌ يُفتح لأول مرة لا يمسح السحابة ولا يغيّر إعداداتها.
    السجل كائنٌ بمعرّفات (لا مصفوفة) والحذف شاهدةٌ في del — لأن دمج save.js يأخذ اتحاد المفاتيح فلا يضيع إدخال جهازٍ آخر ولا يعود محذوف. */
 (() => {
 'use strict';
@@ -54,7 +55,7 @@ const gemSVG = c => `<svg viewBox="0 0 60 70"><path d="M30 2 52 18 52 50 30 68 8
 
 /* ---------- الحالة ---------- */
 let S = lget(KEY, null);
-function fresh() { return { start: today(), goal: String(DEF_GOAL), gate: '1', log: {}, del: {}, rst: Date.now() }; }
+function fresh() { return { start: today(), goal: String(DEF_GOAL), gate: '1', log: {}, del: {}, rst: 0, sat: 0 }; }   // حالة جهازٍ جديد: لا تصفير ولا إعدادات
 if (!S || !S.start) { S = Object.assign(fresh(), S || {}, { start: (S && S.start) || today() }); save(); }
 function save() { lset(KEY, S); window.EliaSave && EliaSave.push(); }
 const goal = () => Math.max(1000, +S.goal || DEF_GOAL);
@@ -418,12 +419,12 @@ $('#st-save').onclick = () => {
   const st = $('#st-start').value, g = Math.round(+$('#st-goal').value / 50) * 50;
   if (/^\d{4}-\d\d-\d\d$/.test(st)) S.start = st;
   if (g >= 1000) S.goal = String(g);
-  S.gate = $('#st-gate').checked ? '1' : '0';
+  S.gate = $('#st-gate').checked ? '1' : '0'; S.sat = Date.now();
   save(); $('#settings').classList.remove('on'); shown = 0; render();
 };
 $('#st-reset').onclick = () => {
   if (!confirm('سَيُمْسَحُ سِجِلُّ هذا الشَّهْرِ كُلُّهُ وَيَبْدَأُ تَحَدٍّ جَديدٌ مِنَ الْيَوْمِ. مُتَأَكِّد؟')) return;
-  const g = S.goal, gt = S.gate; S = Object.assign(fresh(), { goal: g, gate: gt }); save(); localStorage.removeItem(RUN);
+  const g = S.goal, gt = S.gate; S = Object.assign(fresh(), { goal: g, gate: gt, rst: Date.now(), rby: 1, sat: Date.now() }); save();   // التصفير الوحيد المعتمد localStorage.removeItem(RUN);
   $('#settings').classList.remove('on'); shown = 0; render();
 };
 // المزامنة

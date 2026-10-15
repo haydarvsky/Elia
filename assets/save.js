@@ -26,11 +26,21 @@ function union(a, b) {
   return a;
 }
 const dayOf = s => { const p = String(s || '').split('-').map(Number); return p.length === 3 ? Math.round(new Date(p[0], p[1] - 1, p[2]).getTime() / 864e5) : 0; };
+const isHeroes = x => isObj(x) && 'log' in x && 'start' in x;
+// تحدّي الأبطال: لا يُعتدّ بالتصفير إلا إن ختمه وليّ الأمر (rby) — جهازٌ جديدٌ أنشأ حالةً فارغة لا يمسح شيئاً
+const rstOf = x => isHeroes(x) ? (x.rby ? x.rst || 0 : 0) : (x.rst || 0);
+const nLog = x => Object.keys(x.log || {}).length;
 function merge(a, b) {            // a محلي، b سحابي
   if (!a) return b; if (!b) return a;
-  const ra = a.rst || 0, rb = b.rst || 0;
+  const ra = rstOf(a), rb = rstOf(b);
   if (ra !== rb) return ra > rb ? a : b;          // بعد «من جديد» يغلب الأحدث تصفيراً كاملاً ولا يعود القديم
   const m = union(a, b);
+  if (isHeroes(a) || isHeroes(b)) {               // الإعدادات من آخر من عدّلها؛ وإن لم يعدّلها أحد فمن صاحب السجل الأكبر وأقدم بداية
+    const sa = a.sat || 0, sb = b.sat || 0, src = sa !== sb ? (sa > sb ? a : b) : (nLog(a) >= nLog(b) ? a : b);
+    ['goal', 'gate'].forEach(k => { if (src[k] != null) m[k] = src[k]; });
+    m.start = sa !== sb ? src.start : [a.start, b.start].filter(Boolean).sort()[0];
+    m.sat = Math.max(sa, sb); m.rst = Math.max(ra, rb); if (m.rst) m.rby = 1; else delete m.rby;
+  }
   if ('last' in a || 'last' in b) {               // سلسلة الأيام: من صاحب اليوم الأحدث، وتتّصل إن كانا متتاليين
     const da = dayOf(a.last), db = dayOf(b.last), hi = db > da ? b : a, lo = db > da ? a : b, gap = Math.abs(da - db);
     m.last = hi.last;
@@ -47,6 +57,18 @@ async function pull() {
   if (!r.ok) throw new Error('http ' + r.status);
   const d = await r.json();
   try { return JSON.parse(d.fields.j.stringValue) || {}; } catch (e) { return {}; }
+}
+/* نسخةٌ احتياطية يومية من السحابة قبل أول كتابةٍ فوقها في اليوم: elia_saves/<doc>-bk-YYYY-MM-DD (واحدةٌ لكل يوم) */
+async function snapshot(remote) {
+  try {
+    if (!remote || !Object.keys(remote).length) return;
+    const d = new Date(), tag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, mk = 'elia-cloud-bk';
+    if (lget(mk) === tag) return;
+    const slot = `${CFG.doc}-bk-${tag}`, url = DOC.replace(`/${CFG.doc}?`, `/${slot}?`);
+    const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { j: { stringValue: JSON.stringify(remote) }, ts: { integerValue: String(Date.now()) } } }) });
+    if (r.ok) lset(mk, tag);
+  } catch (e) {}
 }
 async function put(obj, keepalive) {
   const r = await fetch(DOC, { method: 'PATCH', keepalive: !!keepalive, headers: { 'Content-Type': 'application/json' },
@@ -70,7 +92,7 @@ function sync() {
         if (ms !== stable(local[k] || null)) { lset(k, m); changed.push(k); }
         if (ms !== stable(remote[k] || null)) dirty = true;
       });
-      if (dirty) await put(out);
+      if (dirty) { await snapshot(remote); await put(out); }
       synced = true; lastSync = Date.now(); lset(META, { ts: lastSync });
       setState('ok');
       changed.forEach(k => subs.forEach(s => { if (s.k === k) try { s.fn(lget(k)); } catch (e) {} }));
