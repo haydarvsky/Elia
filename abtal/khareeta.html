@@ -23,9 +23,11 @@
 .tcard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center;padding:16px;background:linear-gradient(150deg,#2a0b3f,#120b2e 60%,#1b0606);border:5px solid var(--ink);border-radius:24px;box-shadow:0 0 0 3px #a43cff66 inset,0 0 60px rgba(164,60,255,.45),10px 12px 0 rgba(0,0,0,.45)}
 .tcard .ph{position:relative;border:4px solid var(--ink);border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:#000}
 .tcard .ph img{width:100%;height:100%;object-fit:cover}
-.tcard.locked .ph.elia img{filter:blur(10px) brightness(.6)}
-.tcard .ph.elia .lk{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:56px;text-shadow:0 5px 0 var(--ink)}
-.tcard .ph.elia .lk span{font-size:20px;padding:4px 12px 8px;background:rgba(5,6,15,.75);border-radius:10px;text-align:center;line-height:1.4}
+/* مقفلة: الصورة واضحة ليتحمّس، والقفل شارةٌ ذهبية تتأرجح فوقها */
+.tcard .ph.elia .lk{position:absolute;inset:auto 0 0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:34px 8px 12px;background:linear-gradient(transparent,rgba(5,6,15,.82) 55%);pointer-events:none}
+.tcard .ph.elia .lk b{display:grid;place-items:center;width:66px;height:66px;font-size:38px;line-height:1;background:radial-gradient(circle at 35% 30%,#fff3b0,var(--gold) 45%,var(--gold2));border:4px solid var(--ink);border-radius:50%;box-shadow:5px 6px 0 var(--ink);transform-origin:50% 0;animation:lockswing 2.4s ease-in-out infinite}
+.tcard .ph.elia .lk span{font-size:18px;padding:3px 12px 7px;color:var(--gold);background:var(--ink);border:3px solid var(--gold);border-radius:10px;text-align:center;line-height:1.4}
+@keyframes lockswing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg) scale(1.04)}}
 .tcard:not(.locked) .lk{display:none}
 .tcard .ph.box{animation:float 3s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-8px) rotate(-1deg)}}
@@ -95,7 +97,7 @@
   </ul>
 </section>
 
-<script src="../assets/save.js?v=7"></script>
+<script src="../assets/save.js?v=8"></script>
 <script>
 (() => {
 'use strict';
@@ -150,7 +152,7 @@ function render() {
   $('#m-left').textContent = total >= G ? '🏆 وَصَلْتَ!' : `🎯 باقي ${AR(G - total)}`;
   $('#m-days').textContent = dn < 1 ? 'لَمْ يَبْدَأِ الشَّهْرُ' : dn > DAYS ? '🏁 انْتَهى الشَّهْرُ' : `📅 الْيَوْمُ ${AR(dn)} مِنْ ${AR(DAYS)}`;
   $('#tcard').classList.toggle('locked', total < G);
-  $('#t-lock').innerHTML = total < G ? `🔒<span>تُفْتَحُ عِنْدَ ${AR(G)} نُقْطَة<br>باقي ${AR(G - total)}</span>` : '';
+  $('#t-lock').innerHTML = total < G ? `<b>🔒</b><span>تُفْتَحُ عِنْدَ ${AR(G)} نُقْطَة<br>باقي ${AR(G - total)}</span>` : '';
   $('#t-msg').textContent = total >= G ? 'أُسْطورَة! وَصَلْتَ إِلى نِهايَةِ الطَّريقِ — فينوم لِيغو صارَتْ لَكَ 🖤' : 'في نِهايَةِ هذا الطَّريقِ تَنْتَظِرُكَ عُلْبَةُ فينوم لِيغو الْحَقيقِيَّةُ. امْشِ كُلَّ يَوْمٍ خُطْوَةً!';
 
   const road = $('#road'); road.querySelectorAll('.stn,.wk,.me,.start,.flag').forEach(x => x.remove());

@@ -60,13 +60,16 @@ async function pull() {
   const d = await r.json();
   try { return JSON.parse(d.fields.j.stringValue) || {}; } catch (e) { return {}; }
 }
-/* نسخةٌ احتياطية داخل الوثيقة نفسها (القواعد لا تسمح بغيرها): _bk = { 'YYYY-MM-DD': حالة تحدّي الأبطال قبل أول كتابةٍ في ذلك اليوم } — آخر ١٤ يوماً */
-const BK = 'elia-heroes-v1', BKN = 14;
+/* نسخةٌ احتياطية داخل الوثيقة نفسها (القواعد لا تسمح بغيرها): _bk = { 'YYYY-MM-DD': حالة التحدّي قبل أول كتابةٍ في ذلك اليوم }
+   القواعد تحدّ النصّ بـ٣٠٬٠٠٠ حرف، فالنسخ تُحذف من الأقدم حتى يبقى الحجم دون ٢٤٬٠٠٠ — النسخة لا تُفشل الحفظ أبداً */
+const BK = KEYS.find(k => /heroes/.test(k)), BKN = 7, ROOM = 24000;
 function backup(out, remote) {
-  const h = remote[BK]; if (!h || !Object.keys(h.log || {}).length) return;
+  const h = BK && remote[BK]; if (!h || !Object.keys(h.log || {}).length) return;
   const d = new Date(), tag = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const bk = Object.assign({}, remote._bk || {}); if (bk[tag]) return;
-  bk[tag] = h; Object.keys(bk).sort().slice(0, -BKN).forEach(k => delete bk[k]); out._bk = bk;
+  const bk = Object.assign({}, remote._bk || {}); if (!bk[tag]) bk[tag] = h;
+  let ks = Object.keys(bk).sort().slice(-BKN); out._bk = {}; ks.forEach(k => { out._bk[k] = bk[k]; });
+  while (ks.length && JSON.stringify(out).length > ROOM) { delete out._bk[ks.shift()]; }
+  if (!ks.length) delete out._bk;
 }
 async function put(obj, keepalive) {
   const r = await fetch(DOC, { method: 'PATCH', keepalive: !!keepalive, headers: { 'Content-Type': 'application/json' },
