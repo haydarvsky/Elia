@@ -148,7 +148,7 @@ function render() {
   }).join('');
   // الهدية
   const pz = $('#prize'); pz.classList.toggle('locked', total < G);
-  $('#prize-lock').innerHTML = total < G ? `🔒<span>تُفْتَحُ عِنْدَ ${AR(G)} نُقْطَة</span>` : '';
+  $('#prize-lock').innerHTML = total < G ? `<b>🔒</b><span>تُفْتَحُ عِنْدَ ${AR(G)} نُقْطَة</span>` : '';
   $('#prize-msg').textContent = total >= G ? 'جَمَعْتَ الْأَحْجارَ السِّتَّةَ يا بَطَلُ! فينوم لِيغو صارَتْ لَكَ 🎁🖤' : `اجْمَعِ الْأَحْجارَ السِّتَّةَ وَاصِلْ إِلى ${AR(G)} نُقْطَة قَبْلَ نِهايَةِ الشَّهْرِ لِتَفوزَ بِعُلْبَةِ فينوم لِيغو الْحَقيقِيَّةِ!`;
   $('#prize-bar').style.width = (pct * 100).toFixed(2) + '%';
   const daysLeft = Math.max(1, DAYS - Math.max(1, dn) + (g[today()] ? 0 : 1));

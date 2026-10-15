@@ -95,9 +95,11 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 max(16
 .prize{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:center;margin-top:40px;padding:18px;background:linear-gradient(150deg,#3b0d4f,#120b2e 60%,#2a0b0b)}
 .prize-img{position:relative;border:5px solid var(--ink);border-radius:16px;overflow:hidden;aspect-ratio:3/4}
 .prize-img img{width:100%;height:100%;object-fit:cover;transition:filter 1s}
-.prize.locked .prize-img img{filter:blur(9px) saturate(.7) brightness(.75)}
-.lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:70px;text-shadow:0 6px 0 var(--ink)}
-.lock span{font-size:24px;padding:4px 14px 8px;background:rgba(5,6,15,.75);border-radius:12px}
+/* مقفلة: الصورة واضحة ليتحمّس، والقفل شارةٌ ذهبية تتأرجح فوقها */
+.lock{position:absolute;inset:auto 0 0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:40px 10px 14px;background:linear-gradient(transparent,rgba(5,6,15,.82) 55%);pointer-events:none}
+.lock b{display:grid;place-items:center;width:80px;height:80px;font-size:48px;line-height:1;background:radial-gradient(circle at 35% 30%,#fff3b0,var(--gold) 45%,var(--gold2));border:5px solid var(--ink);border-radius:50%;box-shadow:0 0 0 4px rgba(255,200,61,.35),6px 7px 0 var(--ink);transform-origin:50% 0;animation:lockswing 2.4s ease-in-out infinite}
+.lock span{font-size:24px;padding:4px 16px 8px;color:var(--gold);background:var(--ink);border:3px solid var(--gold);border-radius:12px}
+@keyframes lockswing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg) scale(1.04)}}
 .prize:not(.locked) .lock{display:none}
 .prize h2{margin:8px 0 6px;font-family:"Sakkal Poster";font-weight:900;font-size:clamp(44px,6vw,64px);line-height:1.05;color:var(--gold);-webkit-text-stroke:7px var(--ink);paint-order:stroke fill}
 .prize p{margin:0 0 12px;font-size:24px;line-height:1.5}
