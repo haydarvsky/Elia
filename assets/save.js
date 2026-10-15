@@ -39,7 +39,9 @@ function merge(a, b) {            // a محلي، b سحابي
     const sa = a.sat || 0, sb = b.sat || 0, src = sa !== sb ? (sa > sb ? a : b) : (nLog(a) >= nLog(b) ? a : b);
     ['goal', 'gate'].forEach(k => { if (src[k] != null) m[k] = src[k]; });
     m.start = sa !== sb ? src.start : [a.start, b.start].filter(Boolean).sort()[0];
-    m.sat = Math.max(sa, sb); m.rst = Math.max(ra, rb); if (m.rst) m.rby = 1; else delete m.rby;
+    m.sat = Math.max(sa, sb);
+    // بلا تصفيرٍ معتمد يبقى أكبرُ ختمٍ خام (درع السحابة ٩e12) حتى تأخذ النسخُ القديمة المفتوحة السحابةَ ولا تطمسها
+    if (ra || rb) { m.rst = Math.max(ra, rb); m.rby = 1; } else { m.rst = Math.max(a.rst || 0, b.rst || 0); delete m.rby; }
   }
   if ('last' in a || 'last' in b) {               // سلسلة الأيام: من صاحب اليوم الأحدث، وتتّصل إن كانا متتاليين
     const da = dayOf(a.last), db = dayOf(b.last), hi = db > da ? b : a, lo = db > da ? a : b, gap = Math.abs(da - db);
@@ -106,7 +108,12 @@ function flush() {               // عند إغلاق الصفحة: ارفع ف�
   try { put(Object.assign({}, lastRemote, bundle()), true).catch(() => {}); } catch (e) {}   // مع ما في السحابة من غير المفاتيح (_bk)
 }
 addEventListener('pagehide', flush);
-document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); else if (Date.now() - lastSync > 30000) sync(); });
+const BORN = Date.now();   // صفحةٌ بقيت مفتوحة ساعاتٍ في الخلفية تعيد تحميل نفسها لتأخذ أحدث كود قبل أي مزامنة
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return flush();
+  if (Date.now() - BORN > 3 * 3600e3 && !timer) return location.reload();
+  if (Date.now() - lastSync > 30000) sync();
+});
 addEventListener('online', sync);
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
 
