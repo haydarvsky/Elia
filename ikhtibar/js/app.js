@@ -35,7 +35,8 @@ const GEM = '<svg viewBox="0 0 8 7" shape-rendering="crispEdges"><path fill="#00
 const stars = n => STAR.repeat(n) + STAR0.repeat(3 - n);
 
 /* ---------- الصوت ---------- */
-const T = k => `audio/${k}.mp3?v=1`;                                // صوت المعلّمة
+const T = k => k.startsWith('en:') ? `../english/audio/t/${k.slice(3)}.mp3`   // كلمات الإنجليزي وأسماء حروفه
+  : `audio/${k}.mp3?v=1`;                                             // صوت المعلّمة
 const EL = k => `../huruf/assets/audio/elia/${k}.mp3?v=5`;          // صوت إيليا الحقيقي
 const UI = k => `../huruf/assets/audio/ui/${k}.mp3`;
 const voice = new Audio(); voice.preload = 'auto';
@@ -51,6 +52,8 @@ function play(src) {
   });
 }
 function stopVoice() { vTok++; try { voice.pause(); } catch (e) {} if (vRes) { const r = vRes; vRes = null; r(false); } }
+async function playSeq(list) { for (const k of [].concat(list).filter(Boolean)) if (!await play(T(k))) return false; return true; }
+const playQ = q => playSeq([q.au, q.au2]);                          // السؤال ثم ملحقه (مثل اسم الحرف بالإنجليزي)
 let AC = null;
 const ac = () => { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; };
 function tone(f, d, type = 'triangle', vol = .1, when = 0, f2) {
@@ -167,6 +170,7 @@ function icon(ic) {
   if (ic.startsWith('html:')) return HTML[ic.slice(5)]();
   if (ic.startsWith('flag:')) return flagSvg(ic.slice(5));
   if (ic.startsWith('map:')) return mapSvg(ic.slice(4));
+  if (ic.startsWith('img:')) return `<img src="img/${ic.slice(4)}.webp" alt="" draggable="false">`;
   return ic;
 }
 const SCENE = {
@@ -188,9 +192,13 @@ function optBtn(o, i, wide) {
   const b = el('button', 'opt' + (wide ? ' wide' : ''), `<span class="ic">${icon(o.ic)}</span>${o.lb ? `<span class="lb">${o.lb}</span>` : ''}`);
   b.style.setProperty('--i', i); if (TEST && o.ok) b.dataset.ok = 1; return b;
 }
-function scene(q, st) { if (q.scene && q.scene !== 'none') { const s = el('div', 'scene', SCENE[q.scene]()); st.appendChild(s); } }
+function scene(q, st) {
+  if (!q.scene || q.scene === 'none') return;
+  const img = q.scene.startsWith('img:') ? q.scene.slice(4) : null;
+  st.appendChild(el('div', 'scene' + (img ? ' pic' + (img.startsWith('sc_') ? ' wide' : '') : ''), img ? icon(q.scene) : SCENE[q.scene]()));
+}
 async function readOpts(q, btns) {     // المعلّمة تقرأ السؤال ثم الخيارات وكلُّ خيارٍ يتوهّج حين يُقرأ
-  if (!await play(T(q.au))) return;
+  if (!await playQ(q)) return;
   if (!q.read) return;
   for (let i = 0; i < q.opts.length; i++) {
     const o = q.opts[i]; if (!o.say || btns[i].classList.contains('off')) continue;
@@ -235,13 +243,13 @@ R.multi = (q, st, api) => new Promise(done => {
 });
 
 R.sort = (q, st, api) => new Promise(done => {
-  const wrap = el('div', 'sortwrap'), pool = el('div', 'pool'), bins = el('div', 'bins'); st.appendChild(wrap);
+  const wrap = el('div', 'sortwrap ' + (q.cls || '')), pool = el('div', 'pool'), bins = el('div', 'bins'); st.appendChild(wrap);
   const binEls = {};
   q.bins.forEach(b => { const e = el('div', 'bin ' + b.cls, `<h4>${b.label}</h4><div class="got"></div>`); e.dataset.bin = b.id; binEls[b.id] = e; bins.appendChild(e); });
   wrap.appendChild(pool); wrap.appendChild(bins);
   let left = q.items.filter(i => i.bin).length, sel = null;
   const items = shuffle(q.items).map((it, i) => {
-    const e = el('div', 'item' + (it.big ? ' big' : ''), it.img ? `<img src="img/${it.img}.webp" alt="" draggable="false">` : it.ic);
+    const e = el('div', 'item' + (it.big ? ' big' : it.img ? ' pic' : ''), it.img ? `<img src="img/${it.img}.webp" alt="" draggable="false">` : it.ic);
     e.style.setProperty('--i', i); e._it = it; if (TEST && it.bin) e.dataset.ok = it.bin; pool.appendChild(e); return e;
   });
   const binAt = (x, y) => { for (const k in binEls) { const r = binEls[k].getBoundingClientRect(); if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return k; } return null; };
@@ -253,7 +261,7 @@ R.sort = (q, st, api) => new Promise(done => {
       e.style.transform = ''; e.classList.remove('drag', 'hint'); e.classList.add('in'); binEls[bin].querySelector('.got').appendChild(e);
       SFX.ding(); burstAt(e); if (e._it.say) play(T(e._it.say)); left--; if (!left) { await sleep(450); done(); }
     } else {
-      back(e); await api.bad(e, q.wrongAu);
+      back(e); await api.bad(e, e._it.wrongAu || q.wrongAu);
       if (api.wrong() >= 3) items.forEach(x => !x.classList.contains('in') && x._it.bin && api.hint(x, true));
     }
   }
@@ -274,7 +282,7 @@ R.sort = (q, st, api) => new Promise(done => {
   });
   Object.entries(binEls).forEach(([k, b]) => b.addEventListener('click', () => { if (sel) place(sel, k); }));
   api.solve = () => items.filter(e => e._it.bin && !e.classList.contains('in')).forEach(e => place(e, e._it.bin));
-  play(T(q.au));
+  playQ(q);
 });
 
 R.parts = (q, st, api) => new Promise(async done => {
@@ -304,8 +312,9 @@ R.parts = (q, st, api) => new Promise(async done => {
 });
 
 R.find = (q, st, api) => new Promise(async done => {
-  const box = el('div', 'opts bigic'); st.appendChild(box); let cur = null, miss = 0;
-  const btns = q.cards.map((c, i) => { const b = optBtn({ ic: `<img src="img/${c.img}.webp" alt="">` }, i); b._id = c.id; box.appendChild(b); return b; });
+  const box = el('div', 'opts bigic ' + (q.cls || '')); st.appendChild(box); let cur = null, miss = 0;
+  const btns = q.cards.map((c, i) => { const b = optBtn({ ic: c.img ? `<img src="img/${c.img}.webp" alt="" draggable="false">` : `<span class="lt">${c.t}</span>` }, i); b._id = c.id; box.appendChild(b); return b; });
+  if (q.intro) await play(T(q.intro));
   btns.forEach(b => b.onclick = async () => {
     if (!cur || b.classList.contains('right')) return; stopVoice();
     if (b._id === cur.id) { b.classList.add('right'); b.classList.remove('hint'); SFX.ding(); burstAt(b); const r = cur.res; cur = null; r(); }
@@ -460,6 +469,135 @@ R.tf = (q, st, api) => new Promise(async done => {
   done();
 });
 
+/* صِلْ بخطّ: عمودان، يُسحب الخطّ بالإصبع من بطاقةٍ إلى نظيرتها (أو نقرةٌ ثم نقرةٌ في العمود الآخر) */
+R.match = (q, st, api) => new Promise(done => {
+  const NS = 'http://www.w3.org/2000/svg', wrap = el('div', 'matchwrap ' + (q.cls || ''));
+  const colA = el('div', 'mcol a'), colB = el('div', 'mcol b'), svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'mlines'); wrap.append(colA, colB, svg); st.appendChild(wrap);
+  const face = it => it.img ? `<img src="img/${it.img}.webp" alt="" draggable="false">` : `<span class="lt">${it.t}</span>`;
+  const mk = (it, side, i) => { const c = el('div', 'mcard' + (it.img ? ' pic' : ''), face(it) + '<i class="dot"></i>'); c._it = it; c._side = side; c.style.setProperty('--i', i * 2 + (side === 'b')); if (TEST) c.dataset.ok = it.id; return c; };
+  let order; do order = shuffle(q.right); while (order.every((r, i) => r.id === q.left[i].id));
+  const A = q.left.map((it, i) => mk(it, 'a', i)), B = order.map((it, i) => mk(it, 'b', i));
+  A.forEach(c => colA.appendChild(c)); B.forEach(c => colB.appendChild(c));
+  const COL = ['#e0342f', '#1e6fd9', '#1f9e46', '#a64bd6', '#ff8a00', '#0aa5a5'];
+  const pairs = []; let left = A.length, sel = null, live = null, fin = false;
+  const pt = c => { const d = c.querySelector('.dot').getBoundingClientRect(), w = wrap.getBoundingClientRect(); return [d.left + d.width / 2 - w.left, d.top + d.height / 2 - w.top]; };
+  const line = (x1, y1, x2, y2, stroke, cls) => { const l = document.createElementNS(NS, 'line'); Object.entries({ x1, y1, x2, y2, stroke, class: cls }).forEach(([k, v]) => l.setAttribute(k, v)); svg.appendChild(l); return l; };
+  const redraw = () => { svg.querySelectorAll('.keep').forEach(l => l.remove()); pairs.forEach(([a, b, c]) => line(...pt(a), ...pt(b), c, 'keep')); };
+  addEventListener('resize', redraw);
+  async function attempt(x, y) {
+    const a = x._side === 'a' ? x : y, b = a === x ? y : x;
+    [a, b].forEach(c => c.classList.remove('sel'));
+    if (a._it.id === b._it.id) {
+      const c = COL[pairs.length % COL.length]; pairs.push([a, b, c]);
+      [a, b].forEach(e => { e.classList.add('done'); e.classList.remove('hint'); e.style.setProperty('--c', c); });
+      redraw(); SFX.ding(); burstAt(b, 12);
+      const s = a._it.say || b._it.say; if (s) play(T(s));
+      if (!--left) { fin = true; await sleep(1000); removeEventListener('resize', redraw); done(); }
+    } else {
+      const l = line(...pt(a), ...pt(b), '#e0342f', 'bad'); setTimeout(() => l.remove(), 550);
+      [a, b].forEach(e => { e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); });
+      await api.bad(null);
+      if (api.wrong() >= 3) { const h = A.find(e => !e.classList.contains('done')); if (h) { api.hint(h, true); api.hint(B.find(e => e._it.id === h._it.id), true); } }
+    }
+  }
+  [...A, ...B].forEach(c => {
+    let id = null, x0, y0, drag = false;
+    c.addEventListener('pointerdown', ev => { if (fin || c.classList.contains('done')) return; id = ev.pointerId; x0 = ev.clientX; y0 = ev.clientY; drag = false; try { c.setPointerCapture(id); } catch (e) {} });
+    c.addEventListener('pointermove', ev => {
+      if (ev.pointerId !== id) return;
+      if (!drag && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) { drag = true; stopVoice(); if (sel) sel.classList.remove('sel'); sel = null; c.classList.add('sel'); const p = pt(c); live = line(...p, ...p, '#333', 'live'); }
+      if (drag && live) { const w = wrap.getBoundingClientRect(); live.setAttribute('x2', ev.clientX - w.left); live.setAttribute('y2', ev.clientY - w.top); }
+    });
+    c.addEventListener('pointerup', ev => {
+      if (ev.pointerId !== id) return; id = null;
+      if (drag) {
+        if (live) { live.remove(); live = null; } c.classList.remove('sel');
+        const t = document.elementFromPoint(ev.clientX, ev.clientY), tc = t && t.closest('.mcard');
+        if (tc && wrap.contains(tc) && tc._side !== c._side && !tc.classList.contains('done')) attempt(c, tc);
+      } else {
+        SFX.click();
+        if (sel && sel !== c && sel._side !== c._side) { const s = sel; sel = null; attempt(s, c); }
+        else { if (sel) sel.classList.remove('sel'); sel = sel === c ? null : c; if (sel) sel.classList.add('sel'); }
+      }
+    });
+    c.addEventListener('pointercancel', ev => { if (ev.pointerId !== id) return; id = null; if (live) { live.remove(); live = null; } c.classList.remove('sel'); });
+  });
+  api.solve = () => A.filter(c => !c.classList.contains('done')).forEach(a => attempt(a, B.find(b => b._it.id === a._it.id)));
+  playQ(q);
+});
+
+/* الرقم على الصورة: لكل كلمةٍ رقم؛ يُسحب الرقم (أو يُنقر ثم تُنقر الصورة) إلى صورة كلمته */
+R.label = (q, st, api) => new Promise(done => {
+  const wrap = el('div', 'labelwrap'), bar = el('div', 'badges'), pics = el('div', 'lpics'); wrap.append(bar, pics); st.appendChild(wrap);
+  const bs = q.words.map((w, i) => { const b = el('div', 'badge', `<b>${w.n}</b><span class="lt">${w.w}</span>`); b._w = w; b.style.setProperty('--i', i); if (TEST) b.dataset.ok = w.img; bar.appendChild(b); return b; });
+  let order; do order = shuffle(q.words); while (order.every((w, i) => w === q.words[i]));
+  const cs = order.map((w, i) => { const c = el('div', 'lpic', `<img src="img/${w.img}.webp" alt="" draggable="false"><i class="lnum"></i>`); c._w = w; c.style.setProperty('--i', i + 2); pics.appendChild(c); return c; });
+  let left = bs.length, sel = null;
+  const at = (x, y) => cs.find(c => { const r = c.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; });
+  const back = b => { b.classList.add('back'); b.style.transform = ''; setTimeout(() => b.classList.remove('back'), 360); };
+  async function place(b, c) {
+    cs.forEach(x => x.classList.remove('hot')); if (sel) { sel.classList.remove('sel'); sel = null; }
+    if (c.classList.contains('done')) return back(b);
+    if (b._w === c._w) {
+      b.style.transform = ''; b.classList.remove('drag', 'hint'); b.classList.add('used'); c.classList.add('done'); c.classList.remove('hint');
+      c.querySelector('.lnum').textContent = b._w.n; SFX.ding(); burstAt(c, 12); play(T('en:' + b._w.w));
+      if (!--left) { await sleep(900); done(); }
+    } else {
+      back(b); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); await api.bad(null);
+      if (api.wrong() >= 3) { const h = bs.find(x => !x.classList.contains('used')); if (h) { api.hint(h, true); api.hint(cs.find(x => x._w === h._w), true); } }
+    }
+  }
+  bs.forEach(b => {
+    let x0, y0, drag = false, id = null;
+    b.addEventListener('pointerdown', ev => { if (b.classList.contains('used')) return; id = ev.pointerId; x0 = ev.clientX; y0 = ev.clientY; drag = false; try { b.setPointerCapture(id); } catch (e) {} });
+    b.addEventListener('pointermove', ev => {
+      if (ev.pointerId !== id) return; const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!drag && Math.hypot(dx, dy) > 10) { drag = true; b.classList.add('drag'); stopVoice(); }
+      if (drag) { b.style.transform = `translate(${dx}px,${dy}px) scale(1.1)`; const t = at(ev.clientX, ev.clientY); cs.forEach(x => x.classList.toggle('hot', x === t)); }
+    });
+    b.addEventListener('pointerup', ev => {
+      if (ev.pointerId !== id) return; id = null;
+      if (drag) { b.classList.remove('drag'); const t = at(ev.clientX, ev.clientY); if (t) place(b, t); else { back(b); cs.forEach(x => x.classList.remove('hot')); } }
+      else { SFX.click(); if (sel) sel.classList.remove('sel'); sel = sel === b ? null : b; if (sel) b.classList.add('sel'); }
+    });
+    b.addEventListener('pointercancel', ev => { if (ev.pointerId === id) { id = null; b.classList.remove('drag'); back(b); } });
+  });
+  cs.forEach(c => c.addEventListener('click', () => { if (sel) place(sel, c); }));
+  api.solve = () => bs.filter(b => !b.classList.contains('used')).forEach(b => place(b, cs.find(c => c._w === b._w)));
+  playQ(q);
+});
+
+/* الإملاء: يسمع الكلمة ثم يبنيها حرفاً حرفاً من بلاطات الحروف (فيها حروفٌ زائدة) */
+R.spell = (q, st, api) => new Promise(async done => {
+  const w = q.word, wrap = el('div', 'spellwrap');
+  const top = el('div', 'spelltop', `<button class="iconbtn hear" aria-label="اسمع الكلمة">🔊</button>${q.img ? `<img src="img/${q.img}.webp" alt="" draggable="false">` : ''}`);
+  const slots = el('div', 'lslots', [...w].map(() => '<i></i>').join('')), tiles = el('div', 'tiles');
+  wrap.append(top, slots, tiles); st.appendChild(wrap);
+  let order; do order = shuffle([...w, ...(q.extra || '')]); while (order.join('').startsWith(w));
+  const ts = order.map((ch, i) => { const b = el('button', 'tile lt', ch); b._ch = ch; b.style.setProperty('--i', i); tiles.appendChild(b); return b; });
+  let next = 0, miss = 0;
+  const say = () => play(T('en:' + w));
+  top.querySelector('.hear').onclick = () => { SFX.click(); say(); };
+  const mark = () => { if (TEST) ts.forEach(t => t.dataset.ok = !t.classList.contains('off') && t._ch === w[next] ? 1 : ''); };
+  slots.children[0].classList.add('cur'); mark();
+  ts.forEach(t => t.onclick = async () => {
+    if (t.classList.contains('off') || next >= w.length) return;
+    if (t._ch === w[next]) {
+      t.classList.add('off'); ts.forEach(x => x.classList.remove('hint'));
+      const s = slots.children[next]; s.textContent = t._ch; s.classList.remove('cur'); s.classList.add('full'); SFX.ding(); burstAt(s, 8);
+      next++; miss = 0;
+      if (next < w.length) { slots.children[next].classList.add('cur'); mark(); }
+      else { stopVoice(); slots.classList.add('win'); await sleep(300); await say(); await sleep(250); done(); }
+    } else {
+      miss++; t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); await api.bad(null);
+      if (miss >= 2 && next < w.length) api.hint(ts.find(x => !x.classList.contains('off') && x._ch === w[next]));
+    }
+  });
+  api.solve = () => { const t = ts.find(x => !x.classList.contains('off') && x._ch === w[next]); if (t) t.click(); };
+  if (await playQ(q)) { await sleep(150); say(); }
+});
+
 /* ---------- الحفظ ---------- */
 const lget = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
 let S = Object.assign({ gems: 0, done: {}, log: {} }, lget());
@@ -472,7 +610,7 @@ function renderHome() {
   const box = $('#subjects'); box.innerHTML = '';
   Object.entries(TESTS).forEach(([k, t]) => {
     const best = S.done[k] || 0, max = t.qs.length * 3;
-    const b = el('button', 'subj', `<div class="face" style="background-image:var(--tex-${t.tex})"><img class="pix" src="../assets/elia/${t.img}.webp" alt=""><span>${t.icon}</span></div>
+    const b = el('button', 'subj', `<div class="face" style="background-image:var(--tex-${t.tex})"><img class="pix" src="../assets/elia/${t.img}.webp" alt="">${t.icon ? `<span${t.ltr ? ' class="lt"' : ''}>${t.icon}</span>` : ''}${(t.art || []).map(a => `<img class="art" src="img/${a}.webp" alt="">`).join('')}</div>
       <div class="body"><h3>${t.title}</h3><p>${t.desc}</p><div class="best">${best ? `أَفْضَلُ نَتيجَةٍ: ${AR(best)} / ${AR(max)} ⭐` : `${AR(t.qs.length)} سُؤالاً — هَلْ أَنْتَ جاهِزٌ؟`}</div><div class="go">${best ? 'اِخْتَبِرْ مَرَّةً ثانِيَةً ▶' : 'اِبْدَأِ الِاخْتِبارَ ▶'}</div></div>`);
     b.onclick = () => { SFX.click(); startTest(k); }; box.appendChild(b);
   });
@@ -495,12 +633,13 @@ async function startTest(k) {
 function updHud() { $('#q-stars').innerHTML = `${STAR}<span>${AR(RUN.stars)}</span>`; [...$('#q-track').children].forEach((x, i) => { if (i === RUN.i && !x.className.startsWith('s')) x.className = 'cur'; }); }
 let curAu = null;
 function setText(t, au) { const h = $('#q-text'); h.textContent = t; h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop'); if (au) curAu = au; }
-$('#q-say').onclick = () => { SFX.click(); if (curAu) play(T(curAu)); };
+$('#q-say').onclick = () => { SFX.click(); if (curAu) playSeq(curAu); };
 voice.addEventListener('play', () => $('#q-say').classList.add('talk'));
 ['pause', 'ended'].forEach(e => voice.addEventListener(e, () => $('#q-say').classList.remove('talk')));
 
 async function runQuestion(q, my) {
-  updHud(); setText(q.text, q.au); const st = $('#stage'); st.innerHTML = '';
+  updHud(); setText(q.text, q.type === 'spell' ? 'en:' + q.word : [q.au, q.au2]); const st = $('#stage'); st.innerHTML = '';
+  st.dir = my.t.ltr ? 'ltr' : 'rtl';
   let wrong = 0;
   const api = {
     wrong: () => wrong, addWrong: n => wrong += n, setText,
