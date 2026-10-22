@@ -1,4 +1,4 @@
-/* اختبارات إيليا — العلوم والاجتماعيات (الصف الأول)
+/* اختبارات إيليا — العلوم والاجتماعيات والإنجليزي والعربية (الصف الأول)
    المحرّك: لكل نوع سؤالٍ عارضٌ في R يرسم المسرح ويعيد وعداً يُحَلّ عند الإجابة الصحيحة.
    النجوم: من أول محاولة ٣، بخطأ أو خطأين ٢، وأكثر ١ — ولا يَعلَق أبداً: بعد خطأين يظهر التلميح.
    وضع الاختبار: #test في الرابط يعلّم الصحيح بـdata-ok ويكشف window.__t.solve(). */
@@ -36,6 +36,7 @@ const stars = n => STAR.repeat(n) + STAR0.repeat(3 - n);
 
 /* ---------- الصوت ---------- */
 const T = k => k.startsWith('en:') ? `../english/audio/t/${k.slice(3)}.mp3`   // كلمات الإنجليزي وأسماء حروفه
+  : k.startsWith('hr:') ? `../huruf/assets/audio/${k.slice(3)}.mp3`  // أسماء الحروف العربية وأصواتها وكلماتها (لعبة الحروف)
   : `audio/${k}.mp3?v=1`;                                             // صوت المعلّمة
 const EL = k => `../huruf/assets/audio/elia/${k}.mp3?v=5`;          // صوت إيليا الحقيقي
 const UI = k => `../huruf/assets/audio/ui/${k}.mp3`;
@@ -224,7 +225,7 @@ R.pick = (q, st, api) => new Promise(done => {
 R.multi = (q, st, api) => new Promise(done => {
   scene(q, st);
   const need = q.opts.filter(o => o.ok).length; let got = 0;
-  const cnt = el('div', 'counter', ''); const box = el('div', 'opts'); st.appendChild(box); st.appendChild(cnt);
+  const cnt = el('div', 'counter', ''); const box = el('div', 'opts ' + (q.cls || '')); st.appendChild(box); st.appendChild(cnt);
   const upd = () => cnt.textContent = `وَجَدْتَ ${AR(got)} مِنْ ${AR(need)} ✔`; upd();
   const btns = q.opts.map((o, i) => optBtn(o, i)); btns.forEach(b => box.appendChild(b));
   readOpts(q, btns);
@@ -427,7 +428,7 @@ R.maze = (q, st, api) => new Promise(done => {
 });
 
 R.order = (q, st, api) => new Promise(done => {
-  const slots = el('div', 'slots'), box = el('div', 'opts'); st.appendChild(slots); st.appendChild(box);
+  const slots = el('div', 'slots ' + (q.cls || '')), box = el('div', 'opts'); st.appendChild(slots); st.appendChild(box);
   const sl = q.words.map(() => { const s = el('div', 'slot'); slots.appendChild(s); return s; });
   let next = 0, order;
   do order = shuffle(q.words.map((w, i) => i)); while (order.every((v, i) => v === i));
@@ -441,7 +442,7 @@ R.order = (q, st, api) => new Promise(done => {
     } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 500); await api.bad(b); if (api.wrong() >= 2) api.hint(btns.find(x => x._wi === next)); }
   });
   api.solve = () => btns.find(x => x._wi === next).click();
-  play(T(q.au));
+  playQ(q);
 });
 
 R.tf = (q, st, api) => new Promise(async done => {
