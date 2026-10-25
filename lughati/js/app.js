@@ -369,16 +369,19 @@ function makeCtx(L, G, opt) {
     },
     async say(keys, text, pose) { chk(); if (pose) TEACH.pose(pose); if (text) TEACH.say(text, 2600); await AU.play(keys); chk(); },
     replay() { if (replay) { TEACH.pose(replay.pose); AU.play(replay.keys); } },
-    async good(el, quiet = false) {
-      chk(); if (el) burst(el); SFX.ding();
-      if (quiet) { TEACH.pose(rnd(GOODP)); return; }
+    // pre: مقاطع تُسمع قبل المديح/التصحيح (كلمة الصورة مثلاً) فلا يقطعها
+    async good(el, quiet = false, pre = []) {
+      chk(); if (el) burst(el); SFX.ding(); pre = [].concat(pre);
+      if (quiet) { TEACH.pose(rnd(GOODP)); if (pre.length) { await AU.play(pre); chk(); } return; }
       const k = 'c' + (1 + Math.floor(Math.random() * 12));
       TEACH.pose(rnd(GOODP)); TEACH.say(TXT['g/' + k].replace(/[ً-ْ]/g, ''), 1800);
-      await AU.play(['g/' + k]); chk();
+      await AU.play([...pre, ...(pre.length ? [200] : []), 'g/' + k]); chk();
     },
-    async bad(el, speak = true) {
-      chk(); mist++; shakeEl(el); SFX.buzz(); TEACH.pose(rnd(['hint', 'think']));
-      if (speak) { const k = 'w' + (1 + Math.floor(Math.random() * 5)); TEACH.say(TXT['g/' + k].replace(/[ً-ْ]/g, ''), 2200); await AU.play(['g/' + k]); chk(); }
+    async bad(el, speak = true, pre = []) {
+      chk(); mist++; shakeEl(el); SFX.buzz(); TEACH.pose(rnd(['hint', 'think'])); pre = [].concat(pre);
+      if (!speak) { if (pre.length) { await AU.play(pre); chk(); } return; }
+      const k = 'w' + (1 + Math.floor(Math.random() * 5)); TEACH.say(TXT['g/' + k].replace(/[ً-ْ]/g, ''), 2200);
+      await AU.play([...pre, ...(pre.length ? [200] : []), 'g/' + k]); chk();
     },
     wait: ms => sleep(ms).then(chk),
   };
@@ -491,8 +494,8 @@ GAMES.sort = {
     const dd = dnd(balls, () => goals, async (b, g) => {
       if (b.dataset.p === g.dataset.p) {
         b.classList.add('used'); b.style.visibility = 'hidden'; $('.in', g).append(h('img', { src: imgOf(b.dataset.id), alt: '' }));
-        g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); SFX.kick(); AU.play('w/' + b.dataset.id);
-        const k = cnt.hit(); await c.good(g, k < balls.length);
+        g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); SFX.kick();
+        const k = cnt.hit(); await c.good(g, k < balls.length, 'w/' + b.dataset.id);
       } else { AU.play('w/' + b.dataset.id); await c.bad(b, false); TEACH.say(POSN[b.dataset.p] ? 'أين تسمع الحرف؟' : '', 1800); }
     });
     c.solve = () => { const b = balls.find(x => x.style.visibility !== 'hidden'); if (b) dd.drop(b, goals.find(g => g.dataset.p === b.dataset.p)); };
@@ -526,7 +529,7 @@ GAMES.forms = {
       c.stage.append(h('div', { class: 'treewrap' }, tree, card)); enter([tree, card, ...apples], 60);
       let res; const done = new Promise(r => (res = r));
       const dd = dnd(apples, () => [blank], async a => {
-        if (a.dataset.g === need) { a.classList.add('used'); a.style.visibility = 'hidden'; wd.innerHTML = hl(d, L.b); AU.play('w/' + id); await c.good(wd); res(); }
+        if (a.dataset.g === need) { a.classList.add('used'); a.style.visibility = 'hidden'; wd.innerHTML = hl(d, L.b); await c.good(wd, false, 'w/' + id); res(); }
         else await c.bad(a);
       });
       c.solve = () => dd.drop(apples.find(x => x.dataset.g === need), blank);
@@ -673,8 +676,8 @@ GAMES.match = {
         const tryConnect = async (a, b) => {
           if (a.dataset.k === b.dataset.k) {
             const l = mkLine(a, 'ok'); const [x, y] = pt(b); l.setAttribute('x2', x); l.setAttribute('y2', y);
-            a.classList.add('ok', 'used'); b.classList.add('ok', 'used'); SFX.whoosh(); AU.play('w/' + a.dataset.id);
-            const k = cnt.hit(); await c.good(b, k < pairs.length);
+            a.classList.add('ok', 'used'); b.classList.add('ok', 'used'); SFX.whoosh();
+            const k = cnt.hit(); await c.good(b, k < pairs.length, 'w/' + a.dataset.id);
           } else await c.bad(b);
         };
         A.forEach(a => {
@@ -773,9 +776,9 @@ GAMES.race = {
       c.stage.append(h('div', { class: 'track' }, lanes)); enter(lanes, 90);
       let res; const done = new Promise(rr => (res = rr)); let busy = false;
       $$('.car', c.stage).forEach(car => car.addEventListener('click', async () => {
-        if (busy) return; busy = true; AU.play('w/' + car.dataset.id);
-        if (car.dataset.ok === '1') { SFX.whoosh(); car.classList.add('win'); await c.wait(900); await c.good(car); res(); }
-        else { car.classList.remove('stall'); void car.offsetWidth; car.classList.add('stall'); await c.bad(car, true); busy = false; }
+        if (busy) return; busy = true;
+        if (car.dataset.ok === '1') { SFX.whoosh(); car.classList.add('win'); await c.good(car, false, 'w/' + car.dataset.id); res(); }
+        else { car.classList.remove('stall'); void car.offsetWidth; car.classList.add('stall'); await c.bad(car, true, 'w/' + car.dataset.id); busy = false; }
       }));
       c.solve = () => $$('.car', c.stage).find(x => x.dataset.ok === '1').click();
       c.prompt(['p/race_' + lk], TXT['p/race_' + lk], 'point');
@@ -810,7 +813,7 @@ async function buildWord(c, L, id, { mode }) {
     const right = mode === 'pencils' ? +t.dataset.i === k : t.dataset.g === gl[k];
     if (right) {
       t.classList.add('used'); const s = slots[k]; s.classList.add('full'); s.append(h('span', {}, gl[k])); SFX.pop(); burst(s, 8); k++;
-      if (k === n) { await c.wait(250); const wd = h('div', { class: 'word enter' }, d); c.stage.querySelector('.slots').replaceWith(wd); AU.play('w/' + id); await c.good(wd); res(); }
+      if (k === n) { await c.wait(250); const wd = h('div', { class: 'word enter' }, d); c.stage.querySelector('.slots').replaceWith(wd); await c.good(wd, false, 'w/' + id); res(); }
     } else await c.bad(t, false);
   }));
   c.solve = () => { const t = tiles.find(x => !x.classList.contains('used') && (mode === 'pencils' ? +x.dataset.i === k : x.dataset.g === gl[k])); if (t) t.click(); };
@@ -843,7 +846,7 @@ GAMES.miss = {
       const pad = Pad(c, need, { guide: 'none', normalize: true, h: Math.round(Math.min(window.innerHeight * 0.34, 300)), w: Math.min(c.stage.clientWidth - 20, 520) });
       c.stage.append(h('div', { class: 'row' }, card, wd), pad.el); c.solve = pad.solve;
       await c.prompt(['g/miss', 250, 'w/' + id], TXT['g/miss'], 'pencil');
-      await pad.done; c.chk(); wd.innerHTML = hl(d, L.b); AU.play('w/' + id); await c.good(wd, i < qs.length - 1);
+      await pad.done; c.chk(); wd.innerHTML = hl(d, L.b); await c.good(wd, i < qs.length - 1, 'w/' + id);
     }
   },
 };
@@ -875,7 +878,7 @@ GAMES.wordw = {
       const pad = Pad(c, plainOf(W(id).d), { guide: 'trace' });
       c.stage.append(card, pad.el); c.solve = pad.solve;
       await c.prompt(['g/wordw', 250, 'w/' + id], TXT['g/wordw'], 'pencil');
-      await pad.done; c.chk(); AU.play('w/' + id); await c.say(['g/wgood'], 'خطّ جميل!', 'star');
+      await pad.done; c.chk(); await c.say(['w/' + id, 200, 'g/wgood'], 'خطّ جميل!', 'star');
     }
   },
 };
@@ -922,7 +925,7 @@ function home() {
       h('div', { class: 'sech' }, h('h2', {}, 'الحروف'), h('p', {}, 'كلّ الحروف مفتوحة، ابدأ بأيّ حرف')),
       h('div', { class: 'letters' }, LETTERS.map(L => {
         const col = colorOf(L), s = ST.letter(LK(L));
-        return h('button', { class: 'lt', style: { background: col, '--sh': SHADE(col) }, 'aria-label': L.name, onclick: () => { SFX.unlock(); AU.play('n/' + LK(L)); location.hash = '#/' + LK(L); } },
+        return h('button', { class: 'lt', style: { background: col, '--sh': SHADE(col) }, 'aria-label': L.name, onclick: () => { SFX.unlock(); location.hash = '#/' + LK(L); } },
           h('span', {}, L.ch), ST.count(LK(L)) ? h('span', { class: 'st' }, [1, 2, 3].map(i => (i <= s ? h('b', {}, '★') : '★'))) : null);
       }))),
     h('section', { class: 'sec' },
@@ -954,6 +957,7 @@ function letterPage(L) {
   }
   el.append(h('div', { style: { height: '40px' } }));
   enter($$('.act', el), 30);
+  AU.play('n/' + lk);
 }
 
 async function play(L, g, opt = {}) {
