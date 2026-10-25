@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#56C3F0">
+<title>لغتي مع أستاذ أحمد</title>
+<link rel="icon" href="img/icon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+<div id="bg"></div>
+
+<main id="home" class="screen"></main>
+<main id="letter" class="screen" hidden></main>
+<main id="game" class="screen" hidden>
+  <header class="gbar">
+    <button class="ibtn" id="g-back" aria-label="رجوع">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
+    <div class="gtitle"><span id="g-title"></span></div>
+    <div class="dots" id="g-dots"></div>
+    <button class="ibtn" id="g-replay" aria-label="أعد السؤال">
+      <svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" class="wave"/></svg>
+    </button>
+  </header>
+  <div class="tag" id="g-tag"></div>
+  <section id="stage"></section>
+</main>
+
+<div id="teacher" hidden>
+  <div class="bubble" id="t-bubble"></div>
+  <img id="t-img" src="img/t/hello.webp" alt="أستاذ أحمد" draggable="false">
+</div>
+
+<div id="fx"></div>
+<div id="splash" class="overlay"></div>
+<div id="endcard" class="overlay" hidden></div>
+
+<script src="js/data.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
+</body>
+</html>
