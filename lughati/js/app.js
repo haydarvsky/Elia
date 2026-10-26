@@ -1,6 +1,6 @@
 'use strict';
 /* لغتي مع أستاذ أحمد — المحرّك. البيانات في data.js (LETTERS, WORDS, TXT) مولَّدة من _build/lughati/build_data.py */
-const V = 1;
+const V = 2;   // يُرفع عند تغيير ملفات الصوت لكسر الكاش
 const TEST = location.hash.includes('test') || location.search.includes('test');
 
 // ------------------------------------------------------------ أدوات
