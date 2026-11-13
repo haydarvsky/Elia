@@ -51,14 +51,18 @@ a{color:inherit}
 .chip:empty{display:none}
 
 .logo{position:relative;z-index:3;margin:12px 0 14px;font-family:"Sakkal Poster","Sakkal Saad";font-weight:900;font-size:clamp(68px,17.5vw,150px);line-height:1.08;transform:skewX(-8deg) rotate(-2deg);animation:slam .9s cubic-bezier(.2,1.5,.4,1) backwards}
-.logo span{position:relative;display:inline-block;isolation:isolate}
-/* مساحة أمانٍ حول الحروف: لون الكلمة يُرسم داخل صندوقها فقط، فالحشوة تحت الحروف تُبقي نقاط الياء والهمزة ملوّنةً ظاهرة
-   (وطبقة الإطار الداكن خلفها بالحشوة نفسها حتى تنطبق عليها تماماً) */
-.logo span::before{content:attr(data-t);position:absolute;inset:0;z-index:-1;padding:.1em .05em .34em;color:var(--ink);-webkit-text-stroke:16px var(--ink);text-shadow:0 10px 0 var(--ink),0 0 70px var(--glow)}
-.logo b{display:inline-block;padding:.1em .05em .34em;font-weight:900;color:transparent;-webkit-background-clip:text;background-clip:text;background-size:260% 100%;animation:shimmer 4.5s linear infinite;
-  background-image:linear-gradient(100deg,var(--t1) 0%,var(--t1) 36%,#fff 47%,var(--t1) 58%,var(--glow) 100%)}
-.logo .l2 b{background-image:linear-gradient(100deg,#fff 0%,#fff 36%,var(--glow) 47%,#fff 58%,#e9edff 100%);animation-delay:-.6s}
-@keyframes shimmer{from{background-position:100% 0}to{background-position:-160% 0}}
+/* الشعار ثلاث طبقات من النص نفسه وبالحشوة نفسها (مساحة أمانٍ تحت نقاط الياء والهمزة):
+   خلفه إطارٌ داكن عريض، ثم الحروف بلونٍ صريحٍ فاتح — «إيليا» درجةٌ فاتحة جداً من لون النُّدرة و«فسكي» أبيض —
+   ثم بريقٌ أبيض يمرّ فوقها بقناع. لا background-clip:text: سفاري الآيفون لا يرسمه داخل العناصر المتحرّكة فتختفي الحروف */
+.logo span{position:relative;display:inline-block;isolation:isolate;--lc:#fff}
+.logo .l1{--lc:color-mix(in srgb,var(--t1) 40%,#fff)}
+.logo span::before,.logo span::after{content:attr(data-t);position:absolute;inset:0;padding:.1em .05em .34em;pointer-events:none}
+.logo span::before{z-index:-1;color:var(--ink);-webkit-text-stroke:18px var(--ink);text-shadow:0 10px 0 var(--ink),0 0 60px color-mix(in srgb,var(--t1) 70%,transparent)}
+.logo b{display:inline-block;padding:.1em .05em .34em;font-weight:900;color:var(--lc);text-shadow:0 0 20px color-mix(in srgb,var(--t1) 55%,transparent)}
+.logo span::after{color:#fff;-webkit-mask-image:linear-gradient(100deg,transparent 44%,#000 50%,transparent 56%);mask-image:linear-gradient(100deg,transparent 44%,#000 50%,transparent 56%);
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0;animation:sweep 5s ease-in-out infinite}
+.logo .l2::after{animation-delay:.3s}
+@keyframes sweep{0%,55%{-webkit-mask-position:0 0;mask-position:0 0}100%{-webkit-mask-position:100% 0;mask-position:100% 0}}
 .lb-sub{position:relative;z-index:3;margin:2px 0 0;font-size:clamp(17px,3.6vw,24px);color:var(--glow)}
 .season{display:inline-block;margin-inline-end:8px;padding:1px 12px 6px;font-style:normal;color:var(--ink);background:linear-gradient(var(--glow),var(--t1));border:3px solid var(--ink);border-radius:10px;transform:rotate(-4deg);box-shadow:3px 3px 0 var(--ink)}
 
