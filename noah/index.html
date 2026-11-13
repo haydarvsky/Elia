@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-tier="0">
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
@@ -8,51 +8,100 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="تحدي النجوم">
-<meta name="theme-color" content="#04150e">
-<title>تحدّي النجوم — نوح</title>
+<meta name="theme-color" content="#03140a">
+<title>تحدّي النجوم — الكابتن نوح</title>
 <link rel="icon" href="img/icon.png">
 <link rel="apple-touch-icon" href="img/icon.png">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="preload" as="image" href="img/dance.webp">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
-<div class="cosmos pitch" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="backdrop" aria-hidden="true"></div>
+<canvas class="fx" id="fx" aria-hidden="true"></canvas>
+<div class="demo-ribbon" id="demo" hidden>👀 وَضْعُ الْمُعايَنَةِ — لا يُحْفَظُ شَيْءٌ</div>
 
-<!-- ===== الغلاف ===== -->
-<header class="hero">
-  <div class="hero-frame"><img class="hero-img" src="img/cover.webp" alt=""><div class="hero-shade"></div></div>
-  <div class="hero-txt">
-    <span class="kicker">مُهِمَّةٌ سِرِّيَّةٌ · لِلْكابْتِن نوح فَقَطْ</span>
-    <h1 class="title">تَحَدِّي النُّجومِ</h1>
-    <p class="sub">شَهْرٌ واحِدٌ · سِتُّ مُهِمّاتٍ · سِتُّ جَوائِزَ · هَدِيَّةٌ كُبْرى</p>
-    <div class="chips"><span class="chip" id="c-day"></span><span class="chip" id="c-left"></span><span class="chip hot" id="c-streak"></span></div>
+<!-- ===== الردهة: نوح على منصّةٍ بلون رتبته ===== -->
+<header class="lobby">
+  <div class="rays" aria-hidden="true"></div>
+  <div class="chips"><span class="chip" id="c-day"></span><span class="chip" id="c-left"></span><span class="chip hot" id="c-streak"></span></div>
+  <h1 class="logo" aria-label="الكابتن نوح"><span class="l1" data-t="الْكابْتِن"><b>الْكابْتِن</b></span> <span class="l2" data-t="نوح"><b>نوح</b></span></h1>
+  <p class="lb-sub"><em class="season">الْمَوْسِمُ ٢</em>تَحَدّي النُّجومِ ⚽</p>
+  <div class="stage">
+    <div class="spot" aria-hidden="true"></div>
+    <div class="pedestal" aria-hidden="true"><i class="pd-ring r2"></i><i class="pd-top"></i><i class="pd-ring"></i></div>
+    <button class="char" id="char" aria-label="نوح يحتفل"><img src="img/dance.webp" alt="نوح"></button>
+    <div class="rar" id="rar"></div>
+    <img class="lb-ball" src="img/ball.webp" alt="" aria-hidden="true">
   </div>
+  <div class="hud">
+    <div class="lvl"><svg viewBox="0 0 92 92"><circle class="rt" cx="46" cy="46" r="36"/><circle class="rf" id="xp-ring" cx="46" cy="46" r="36"/></svg><b id="lvl">١</b><small>الْمُسْتَوى</small></div>
+    <div class="pts"><small>نِقاطُ الْمَوْسِمِ</small><b id="total">٠</b><span id="goal-line"></span></div>
+  </div>
+  <div class="xp"><i id="xp-bar"></i><span id="xp-txt"></span></div>
+  <a class="play" href="#quests"><span>◀</span> اِلْعَبْ مُهِمّاتِ الْيَوْمِ</a>
 </header>
 
 <main>
-  <!-- ===== لوحة النقاط ===== -->
-  <section class="board panel">
-    <div class="board-top">
-      <div class="score">
-        <small>مَجْموعُ نِقاطِ الْكابْتِن</small>
-        <b id="total">٠</b>
-        <span id="goal-line"></span>
-      </div>
-      <div class="today">
-        <small>نِقاطُ الْيَوْمِ</small>
-        <b id="today">٠</b>
-        <span id="today-bonus"></span>
-      </div>
+  <!-- ===== ممرّ الرُّتب ===== -->
+  <section class="pass reveal">
+    <h2 class="sec-h"><span>طَريقُ النُّجومِ</span></h2>
+    <div class="track" id="track"></div>
+    <div class="tbar" id="tbar-box"><i id="tbar"></i></div>
+    <p class="tnext" id="tnext"></p>
+  </section>
+
+  <!-- ===== اليوم ===== -->
+  <section class="today panel reveal">
+    <div class="td-top"><div><small>نِقاطُ الْيَوْمِ</small><b id="today">٠</b></div><div class="six" id="six"></div></div>
+    <div class="vitals">
+      <div class="vit hp"><span class="vi">💚</span><div class="vb"><i id="hp-bar"></i></div><b id="hp-num">٠</b></div>
+      <div class="vit sh"><span class="vi">⚡</span><div class="vb"><i id="sh-bar"></i></div><b id="sh-num">٠</b></div>
     </div>
-    <div class="beam"><i id="beam-fill"></i><div class="beam-marks" id="marks"></div></div>
-    <div class="stones" id="stones"></div>
+    <p class="td-note" id="today-bonus"></p>
   </section>
 
   <!-- ===== المهمات ===== -->
-  <h2 class="banner"><span>اخْتَرْ مُهِمَّتَكَ يا كابْتِن</span></h2>
-  <section class="missions" id="missions"></section>
+  <h2 class="sec-h" id="quests"><span>مُهِمّاتُ الْيَوْمِ مَعَ النُّجومِ</span></h2>
+  <section class="quests" id="missions"></section>
+
+  <!-- ===== حزمة اليوم ===== -->
+  <section class="drop panel reveal" id="drop">
+    <div class="crate" id="crate">
+      <svg class="pack" viewBox="0 0 120 160"><defs><linearGradient id="pk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".35" stop-color="#ffd23f"/><stop offset=".7" stop-color="#d18f0b"/><stop offset="1" stop-color="#ffe680"/></linearGradient></defs>
+        <path d="M14 14l6-8 6 8 6-8 6 8 6-8 6 8 6-8 6 8 6-8 6 8 6-8 6 8 6-8v132l-6 8-6-8-6 8-6-8-6 8-6-8-6 8-6-8-6 8-6-8-6 8-6-8-6 8-6-8Z" fill="url(#pk)" stroke="#0b0730" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M14 30h92M14 130h92" stroke="#0b0730" stroke-width="3" opacity=".35"/>
+        <circle cx="60" cy="80" r="30" fill="#0b0730" opacity=".18"/>
+        <g transform="translate(60 80)"><circle r="24" fill="#fff" stroke="#0b0730" stroke-width="4"/><path d="M0-11l10.5 7.6-4 12.3h-13l-4-12.3Z" fill="#0b0730"/><path d="M0-11v-13M10.5-3.4l12.4-4M6.5 8.9l7.5 10.5M-6.5 8.9l-7.5 10.5M-10.5-3.4l-12.4-4" stroke="#0b0730" stroke-width="3"/></g>
+        <path d="M30 40l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1Z" fill="#fff" opacity=".85"/>
+        <path d="M34 22l52 0" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+      </svg>
+    </div>
+    <div class="drop-txt">
+      <span class="kicker">🎴 حِزْمَةُ الْيَوْمِ</span>
+      <h3 id="drop-h">حِزْمَةُ النُّجومِ!</h3>
+      <p id="drop-p"></p>
+      <button class="btn pink" id="drop-btn">افْتَحِ الْحِزْمَةَ!</button>
+    </div>
+  </section>
+
+  <!-- ===== بطاقة الخريطة ===== -->
+  <a class="mapcard reveal" href="khareeta.html"><img src="img/cover.webp" alt="" loading="lazy"><span class="mc-txt"><small>🗺️ مَلْعَبُكَ الْآنَ</small><b id="mc-world">مَلْعَبُ الْحارَةِ</b><em>افْتَحْ خَريطَةَ الْمَلاعِبِ ←</em></span></a>
+
+  <!-- ===== الجائزة ===== -->
+  <section class="prize panel reveal" id="prize">
+    <div class="prize-img"><img src="img/prize.webp" alt="" loading="lazy"><i class="coin k1">✨</i><i class="coin k2">⭐</i><i class="coin k3">✨</i><div class="lock" id="prize-lock"></div></div>
+    <div class="prize-txt">
+      <span class="kicker">نِهايَةُ الْمَوْسِمِ</span>
+      <h2>الْهَدِيَّةُ الْكُبْرى</h2>
+      <p class="cash"><img class="cash-ball" src="img/ball.webp" alt=""><span>الْكُرَةُ الذَّهَبِيَّةُ لِنِهائِيِّ كَأْسِ الْعالَمِ ٢٠٢٦</span></p>
+      <p id="prize-msg"></p>
+      <div class="pbar"><i id="prize-bar"></i></div>
+      <p class="pace" id="pace"></p>
+    </div>
+  </section>
 
   <!-- ===== ميزان بابا وماما ===== -->
-  <section class="parents panel" id="parents">
+  <section class="parents panel reveal" id="parents">
     <div class="pr-head">
       <span class="pr-ic">⚖️</span>
       <div><h3>مِيزانُ بابا وَماما</h3><p>بونَصٌ خاصٌّ عَلى تَصَرُّفٍ جَميلٍ، أَوْ خَصْمٌ عِنْدَ الْعُقوبَةِ.</p></div>
@@ -60,26 +109,12 @@
     <input class="note" id="pr-why" maxlength="60" placeholder="السَّبَبُ (اخْتِيارِيّ) — مَثَلاً: ساعَدَ أَخاهُ">
     <div class="pr-grid">
       <div class="pr-col plus"><b>🎁 بونَص</b><button class="pb" data-p="50">⁦+٥٠⁩</button><button class="pb" data-p="100">⁦+١٠٠⁩</button></div>
-      <div class="pr-col minus"><b>⚠️ خَصْم</b><button class="pb" data-p="-50">⁦−٥٠⁩</button><button class="pb" data-p="-100">⁦−١٠٠⁩</button></div>
-    </div>
-  </section>
-
-  <!-- ===== الهدية ===== -->
-  <section class="prize panel" id="prize">
-    <div class="prize-img"><img src="img/prize.webp" alt=""><div class="lock" id="prize-lock"></div></div>
-    <div class="prize-txt">
-      <span class="kicker">نِهايَةُ الشَّهْرِ</span>
-      <h2>الْهَدِيَّةُ الْكُبْرى</h2>
-      <p class="venom"><img src="img/ps5.webp" alt=""><span>بلايستيشن ٥ 🎮</span></p>
-      <p id="prize-msg"></p>
-      <div class="pbar"><i id="prize-bar"></i></div>
-      <p class="pace" id="pace"></p>
-      <a class="btn gold maplink" href="khareeta.html">🗺️ خارِطَةُ الطَّريقِ إِلى الْهَدِيَّةِ</a>
+      <div class="pr-col minus"><b>🟨 خَصْم</b><button class="pb" data-p="-50">⁦−٥٠⁩</button><button class="pb" data-p="-100">⁦−١٠٠⁩</button></div>
     </div>
   </section>
 
   <!-- ===== السجل ===== -->
-  <h2 class="banner"><span>سِجِلُّ الْأَهْدافِ</span></h2>
+  <h2 class="sec-h"><span>سِجِلُّ الْأَهْدافِ</span></h2>
   <section class="log panel" id="log"></section>
 
   <footer>
@@ -87,6 +122,8 @@
     <span class="sync" id="sync"></span>
   </footer>
 </main>
+
+<div class="feed" id="feed" aria-live="polite"></div>
 
 <!-- ===== شاشة المهمة ===== -->
 <div class="sheet" id="sheet" role="dialog" aria-modal="true">
@@ -108,7 +145,7 @@
     <p class="gq" id="gq"></p>
     <div class="gin" id="gin"></div>
     <div class="pad" id="pad"></div>
-    <button class="ghost" id="g-cancel">إِلْغاء</button>
+    <button class="ghost dark" id="g-cancel">إِلْغاء</button>
   </div>
 </div>
 
@@ -118,12 +155,13 @@
     <div class="sheet-body">
       <button class="x" id="st-x" aria-label="إغلاق">✕</button>
       <h2>⚙️ إِعْداداتُ بابا</h2>
-      <label class="field">بِدايَةُ الشَّهْرِ<input type="date" id="st-start"></label>
-      <label class="field">هَدَفُ الْهَدِيَّةِ الْكُبْرى (نُقْطَة)<input type="number" id="st-goal" min="1000" step="500" inputmode="numeric"></label>
+      <label class="field">بِدايَةُ الْمَوْسِمِ<input type="date" id="st-start"></label>
+      <label class="field">هَدَفُ الْكُرَةِ الذَّهَبِيَّةِ (نُقْطَة)<input type="number" id="st-goal" min="1000" step="500" inputmode="numeric"></label>
       <label class="field row"><input type="checkbox" id="st-gate"> سُؤالُ الضَّرْبِ قَبْلَ تَسْجيلِ النِّقاطِ</label>
+      <div class="themes"><p>🎨 مُعايَنَةُ الثّيماتِ السَّبْعِ (لا تُغَيِّرُ شَيْئاً — الثّيمَةُ تَتْبَعُ رُتْبَةَ نوح):</p><div class="th-row" id="th-row"></div></div>
       <div class="st-acts">
         <button class="btn gold" id="st-save">حِفْظ</button>
-        <button class="btn red" id="st-reset">تَصْفيرُ التَّحَدّي وَبَدْءُ شَهْرٍ جَديدٍ</button>
+        <button class="btn red" id="st-reset">تَصْفيرُ التَّحَدّي وَبَدْءُ مَوْسِمٍ جَديدٍ</button>
       </div>
       <details class="how"><summary>كَيْفَ تُحْسَبُ النِّقاطُ؟</summary><div id="how"></div></details>
     </div>
@@ -133,15 +171,18 @@
 <!-- ===== الاحتفال ===== -->
 <div class="boom" id="boom" aria-live="polite">
   <div class="boom-burst"></div>
+  <img class="dancer" id="b-dancer" src="img/dance.webp" alt="">
   <div class="boom-in">
+    <span class="lvlup" id="b-lvl"></span>
     <b class="pow" id="b-word"></b>
-    <span class="pts" id="b-pts"></span>
+    <span class="pts-pop" id="b-pts"></span>
     <p id="b-msg"></p>
     <div class="gem-big" id="b-gem"></div>
   </div>
 </div>
 
-<script src="../assets/save.js?v=8" data-player="mohammed" data-keys="noah-heroes-v1"></script>
-<script src="app.js?v=1"></script>
+<script src="../assets/save.js?v=9" data-player="mohammed" data-keys="noah-heroes-v1"></script>
+<script src="stad.js?v=1"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
