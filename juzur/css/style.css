@@ -1,0 +1,267 @@
+/* جزر الكنز — العالم الثاني. هوية مغامرة: سماء ليلية زرقاء، أزرار مائلة سميكة الحدود، وألوان النُّدرة */
+@font-face { font-family: "Sakkal"; src: url(../../assets/fonts/SakkalSaad-Extrabold.woff2) format("woff2"); font-weight: 800; font-display: block; }
+@font-face { font-family: "Sakkal"; src: url(../../assets/fonts/SakkalSaad-Bold.woff2) format("woff2"); font-weight: 700; font-display: block; }
+@font-face { font-family: "SakkalPoster"; src: url(../../assets/fonts/SakkalSaadPoster-Black.woff2) format("woff2"); font-weight: 900; font-display: block; }
+
+:root {
+  --ink: #0a0f2a; --sky1: #0d1640; --sky2: #26357e; --paper: #f7f9ff; --text: #18204a;
+  --gold: #ffc83d; --gold2: #ff9d00; --red: #ff3d5a; --green: #3ccf6b; --blue: #3aa6ff; --purple: #b65cff;
+  --r0: #a9b4c2; --r1: #57d46b; --r2: #3aa6ff; --r3: #b65cff; --r4: #ffc83d;
+  --safe-t: max(env(safe-area-inset-top, 0px), 10px); --safe-b: env(safe-area-inset-bottom, 0px);
+  --hud: 64px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overscroll-behavior: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+body { font-family: "Sakkal", system-ui, sans-serif; font-weight: 800; color: #fff; background: radial-gradient(120% 90% at 50% 0%, var(--sky2), var(--sky1) 70%) fixed; overflow: hidden; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+img { -webkit-user-drag: none; }
+a { color: inherit; text-decoration: none; }
+[hidden] { display: none !important; }
+#sky { position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(2px 2px at 12% 18%, #fff8, transparent), radial-gradient(1.5px 1.5px at 72% 12%, #fff9, transparent), radial-gradient(2px 2px at 40% 70%, #fff6, transparent), radial-gradient(1.5px 1.5px at 88% 60%, #fff7, transparent), radial-gradient(2px 2px at 25% 88%, #fff5, transparent); }
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+/* ---------- العناوين والأزرار ---------- */
+.title, .kicker, h1, h2, h3 { font-family: "SakkalPoster", "Sakkal", sans-serif; font-weight: 900; margin: 0; }
+.title { font-size: clamp(64px, 11vw, 132px); line-height: 1; color: #fff; text-shadow: 0 6px 0 var(--ink), 0 0 30px #4fb3ff88; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+.kicker { display: inline-block; font-size: 30px; padding: 2px 18px 8px; color: var(--ink); background: var(--gold); transform: skew(-8deg); border: 3px solid var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; padding: 4px 30px 10px; font-size: 32px; color: #2a1600;
+  background: linear-gradient(#ffe766, var(--gold) 55%, var(--gold2)); border: 4px solid var(--ink); border-radius: 10px; transform: skew(-6deg);
+  box-shadow: inset 0 4px 0 #fff8, inset 0 -6px 0 #0002, 0 7px 0 var(--ink); transition: transform .08s; }
+.btn > * { transform: skew(6deg); }
+.btn:active { transform: skew(-6deg) translateY(5px); box-shadow: inset 0 4px 0 #fff8, inset 0 -6px 0 #0002, 0 2px 0 var(--ink); }
+.btn.sec { color: #fff; background: linear-gradient(#5b6bd6, #3a47a8); }
+.btn.green { color: #fff; background: linear-gradient(#69e58f, #22a84f); }
+.btn.red { color: #fff; background: linear-gradient(#ff7189, #e0223f); }
+.btn:disabled { filter: grayscale(.8) brightness(.8); }
+.btn.go { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { filter: brightness(1.15); transform: skew(-6deg) scale(1.04); } }
+.ib { width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; background: #0a0f2acc; border: 3px solid #ffffff33; border-radius: 14px; }
+.ib img { width: 40px; height: 40px; object-fit: contain; }
+.ib:active { transform: scale(.92); }
+.link { display: inline-block; margin-top: 18px; font-size: 22px; opacity: .8; }
+
+/* ---------- البداية ---------- */
+#splash { align-items: center; justify-content: center; padding: var(--safe-t) 16px calc(16px + var(--safe-b)); gap: 18px 26px; flex-direction: row; flex-wrap: wrap; text-align: center; overflow-y: auto; }
+.sp-art { width: min(42vw, 520px); aspect-ratio: 4/3; border: 5px solid var(--ink); border-radius: 22px; overflow: hidden; box-shadow: 0 12px 0 var(--ink), 0 0 60px #3aa6ff55; transform: rotate(-2deg); }
+.sp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-txt { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.sp-txt .sub { margin: 0; font-size: 28px; color: #cfe0ff; }
+@media (orientation: portrait) { .sp-art { width: min(92vw, 560px); } .whocard { width: min(42vw, 250px) !important; } }
+.sp-txt .title { font-size: clamp(56px, 8.5vw, 112px); }
+
+/* ---------- الشريط العلوي ---------- */
+.hud { display: flex; align-items: center; gap: 10px; padding: var(--safe-t) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); position: relative; z-index: 5; }
+.grow { flex: 1; }
+.chips { display: flex; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 14px 4px; font-size: 26px; background: #0a0f2acc; border: 3px solid #ffffff33; border-radius: 23px; }
+.chip.gem::before { content: "💎"; font-size: 22px; } .chip.star::before { content: "⭐"; font-size: 22px; }
+.chip.bump { animation: bump .5s; } @keyframes bump { 40% { transform: scale(1.3); } }
+.isl-title { display: flex; flex-direction: column; line-height: 1.1; }
+.isl-title b { font-family: "SakkalPoster"; font-size: 32px; text-shadow: 0 3px 0 var(--ink); } .isl-title small { font-size: 20px; color: #cfe0ff; }
+
+/* ---------- الخرائط ---------- */
+.mapbox { position: relative; margin: auto; width: min(100vw, calc((100vh - var(--hud) - var(--safe-t)) * 4 / 3)); aspect-ratio: 4/3; }
+.mapimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 18px; box-shadow: 0 0 0 4px var(--ink), 0 10px 40px #0008; }
+.pin { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; animation: pin-in .5s backwards; animation-delay: calc(var(--i) * 80ms); }
+@keyframes pin-in { from { opacity: 0; transform: translate(-50%, -20%) scale(.6); } }
+.pin .plate { display: flex; align-items: center; gap: 6px; padding: 2px 14px 6px; font-size: clamp(16px, 2vw, 24px); white-space: nowrap; color: #fff; background: #0a0f2ae6; border: 3px solid var(--c, #ffffff55); border-radius: 12px; box-shadow: 0 5px 0 var(--ink); }
+.pin .ring { position: relative; width: clamp(44px, 6vw, 70px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(#fff 0 55%, transparent 56%), conic-gradient(var(--gold) calc(var(--p) * 1%), #ffffff33 0); border: 3px solid var(--ink); box-shadow: 0 5px 0 var(--ink), 0 0 24px #ffd84d88; }
+.pin .ring img { width: 70%; height: 70%; object-fit: contain; }
+.pin.open .ring { animation: glow 1.8s ease-in-out infinite; } @keyframes glow { 50% { box-shadow: 0 5px 0 var(--ink), 0 0 40px #ffd84dcc; } }
+.pin.lockd .ring img { filter: grayscale(1) brightness(.8); } .pin.lockd .ring::after { content: "🔒"; position: absolute; right: -10px; bottom: -8px; font-size: 24px; filter: drop-shadow(0 2px 0 #000); }
+.pin.soon .plate { opacity: .75; } .pin.soon .plate::after { content: "قَريبًا"; font-size: .7em; padding: 0 8px 2px; margin-inline-start: 4px; color: var(--ink); background: var(--gold); border-radius: 8px; }
+.pin.done .ring { background: radial-gradient(#fff 0 55%, transparent 56%), var(--gold); }
+.pin .stars { font-size: 15px; letter-spacing: -2px; }
+.squad { position: fixed; bottom: calc(6px + var(--safe-b)); right: 8px; display: flex; align-items: flex-end; z-index: 4; pointer-events: none; }
+.squad img { height: min(17vh, 150px); filter: drop-shadow(0 6px 0 #0006); }
+.squad img + img { margin-inline-start: -24px; height: min(15vh, 132px); }
+.squad .eqw { position: absolute; bottom: 30%; right: 22%; width: 60px; height: 60px; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(0 4px 0 #0006); }
+.spot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; animation: pin-in .45s backwards; animation-delay: calc(var(--i) * 70ms); }
+.spot .ico { width: clamp(56px, 8vw, 92px); aspect-ratio: 1; border-radius: 22px; display: grid; place-items: center; background: #ffffffee; border: 4px solid var(--ink); box-shadow: 0 6px 0 var(--ink), 0 0 26px #fff6; }
+.spot .ico img { width: 84%; height: 84%; object-fit: contain; }
+.spot.full .ico { background: linear-gradient(#fff6c2, var(--gold)); }
+.spot .plate { padding: 0 12px 5px; font-size: clamp(17px, 2vw, 24px); background: #0a0f2ae6; border: 3px solid #ffffff55; border-radius: 12px; white-space: nowrap; }
+.spot .stars { font-size: 15px; }
+.spot:active .ico { transform: scale(.92); }
+
+/* ---------- القائد ---------- */
+#cap { position: fixed; z-index: 30; bottom: calc(var(--safe-b) - 4px); left: max(6px, env(safe-area-inset-left)); display: flex; align-items: flex-end; pointer-events: none; }
+#cap-img { height: min(30vh, 250px); filter: drop-shadow(0 8px 0 #0006); pointer-events: auto; transform-origin: bottom center; }
+#cap-img.pop { animation: pop .35s; } @keyframes pop { 40% { transform: scale(1.06) rotate(-2deg); } }
+#cap .bubble { position: absolute; bottom: calc(100% - 18px); left: 40px; width: max-content; max-width: min(56vw, 520px); padding: 8px 16px 12px; font-size: clamp(20px, 2.4vw, 26px); line-height: 1.5; color: var(--text); background: #fff; border: 4px solid var(--ink); border-radius: 18px; box-shadow: 0 6px 0 var(--ink); opacity: 0; transform: translateY(10px) scale(.9); transition: .2s; }
+#cap .bubble.on { opacity: 1; transform: none; }
+#cap .bubble::after { content: ""; position: absolute; left: 24px; bottom: -16px; border: 12px solid transparent; border-top-color: var(--ink); }
+
+/* ---------- اللعب ---------- */
+.pbar { display: flex; align-items: center; gap: 10px; padding: var(--safe-t) 12px 8px; }
+.ptitle { flex: 1; font-family: "SakkalPoster"; font-size: clamp(24px, 3vw, 34px); text-shadow: 0 3px 0 var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dots { display: flex; gap: 5px; flex-wrap: wrap; max-width: 46vw; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; background: #ffffff33; border: 2px solid #0006; }
+.dots i.on { background: var(--gold); } .dots i.now { background: #fff; transform: scale(1.3); }
+#stage { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px max(16px, env(safe-area-inset-right)) calc(30vh + var(--safe-b)) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.card { width: min(980px, 100%); background: var(--paper); color: var(--text); border: 4px solid var(--ink); border-radius: 24px; box-shadow: 0 8px 0 var(--ink); padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 14px; animation: rise .35s backwards; }
+@keyframes rise { from { opacity: 0; transform: translateY(30px); } }
+.q { font-size: clamp(24px, 3vw, 32px); text-align: center; line-height: 1.5; margin: 0; }
+.big { font-size: clamp(52px, 8.5vw, 96px); line-height: 1.5; text-align: center; margin: 0; }
+.mid { font-size: clamp(36px, 5.4vw, 60px); line-height: 1.6; text-align: center; margin: 0; }
+.w { display: inline-block; padding: 0 4px; border-radius: 10px; transition: background .12s, color .12s; }
+.w.on { background: var(--gold); color: var(--ink); }
+.pic { max-width: min(300px, 70%); max-height: 34vh; object-fit: contain; filter: drop-shadow(0 6px 0 #0002); }
+.pic.wide { max-width: min(560px, 92%); border-radius: 18px; border: 4px solid var(--ink); }
+.row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: stretch; width: 100%; }
+.opt { position: relative; min-width: 120px; min-height: 96px; padding: 10px 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff; color: var(--text);
+  border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 7px 0 var(--ink); font-size: clamp(30px, 4vw, 44px); line-height: 1.4; transition: transform .08s; }
+.opt:active { transform: translateY(4px); box-shadow: 0 3px 0 var(--ink); }
+.opt img { width: clamp(110px, 16vw, 170px); height: clamp(110px, 16vw, 170px); object-fit: contain; }
+.opt.txt { font-size: clamp(24px, 3vw, 34px); max-width: 100%; }
+.opt.syl { min-width: 130px; font-size: clamp(56px, 8vw, 84px); }
+.opt.ok { background: #d9ffe3; border-color: #138a3a; box-shadow: 0 7px 0 #138a3a; }
+.opt.no { opacity: .35; pointer-events: none; }
+.opt.gray img { filter: grayscale(1) opacity(.7); transition: filter .4s; } .opt.gray.ok img { filter: none; }
+.opt .say { position: absolute; top: -14px; left: -14px; width: 42px; height: 42px; font-size: 20px; border-radius: 50%; background: var(--blue); border: 3px solid var(--ink); display: grid; place-items: center; }
+.opt.hl { outline: 6px solid var(--gold); }
+.shake { animation: shake .45s; } @keyframes shake { 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+.next { margin-top: 6px; }
+.svgic { width: clamp(100px, 14vw, 150px); height: clamp(100px, 14vw, 150px); }
+.ref { display: flex; align-items: center; gap: 12px; font-size: 30px; }
+.ref .syl { font-size: 80px; padding: 0 24px 10px; background: var(--gold); border: 4px solid var(--ink); border-radius: 18px; }
+
+/* الصح والخطأ */
+.tfrow { display: flex; gap: 22px; justify-content: center; }
+.tfrow .opt { min-width: 180px; font-size: 40px; }
+
+/* التوصيل */
+.match { position: relative; display: flex; justify-content: space-between; gap: 40px; width: min(760px, 100%); }
+.match .col { display: flex; flex-direction: column; gap: 16px; flex: 1; align-items: center; }
+.match .opt { width: 100%; max-width: 280px; }
+.match svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.match .opt { min-height: 76px; padding: 6px 10px 10px; }
+.match .opt img { width: clamp(76px, 10vw, 112px); height: clamp(76px, 10vw, 112px); }
+.match .svgic { width: clamp(64px, 9vw, 96px); height: clamp(64px, 9vw, 96px); }
+.match .opt.sel { outline: 6px solid var(--blue); }
+
+/* الترتيب */
+.slots { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; min-height: 96px; padding: 10px; border: 4px dashed #8ea0d8; border-radius: 22px; width: 100%; background: #eef2ff; }
+.slot { min-width: 110px; min-height: 84px; border-radius: 16px; border: 3px dashed #9aa8d8; display: grid; place-items: center; }
+.slot.fill { border: 0; }
+.tile { min-width: 100px; min-height: 80px; padding: 4px 18px 10px; font-size: clamp(34px, 5vw, 54px); color: var(--text); background: #fff; border: 4px solid var(--ink); border-radius: 16px; box-shadow: 0 6px 0 var(--ink); }
+.tile.ltr { font-size: clamp(44px, 7vw, 70px); }
+.tile:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+.tile.gone { visibility: hidden; }
+.outw { font-size: clamp(56px, 9vw, 100px); color: #138a3a; }
+
+/* الفراغ والحرف الناقص */
+.sent { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; font-size: clamp(44px, 7vw, 78px); line-height: 1.5; }
+.blank { display: inline-grid; place-items: center; min-width: 150px; min-height: 1.4em; padding: 0 12px; border: 4px dashed var(--blue); border-radius: 16px; color: var(--blue); }
+.blank.done { border-style: solid; border-color: #138a3a; color: #138a3a; background: #e8fff0; }
+.gap { display: inline-block; min-width: 1.1em; height: 1.2em; vertical-align: middle; border: 4px dashed var(--red); border-radius: 12px; margin: 0 2px; }
+.hlx { color: #e0223f; }
+
+/* القلم */
+.pad { position: relative; border: 4px solid var(--ink); border-radius: 18px; background: #fff; overflow: hidden; touch-action: none; }
+.pad canvas { display: block; touch-action: none; }
+.padtools { display: flex; gap: 12px; justify-content: center; }
+.model { font-size: clamp(34px, 5vw, 54px); margin: 0; color: var(--text); }
+.score { font-size: 28px; color: #138a3a; }
+
+/* المايك */
+.mic { width: 120px; height: 120px; border-radius: 50%; font-size: 52px; color: #fff; background: radial-gradient(circle at 35% 30%, #ff8aa0, var(--red) 60%, #a5102a); border: 5px solid var(--ink); box-shadow: 0 8px 0 var(--ink), 0 0 0 calc(var(--lv, 0) * 26px) #ff3d5a44; transition: box-shadow .08s; }
+.mic.rec { animation: recp 1s infinite; }
+@keyframes recp { 50% { filter: brightness(1.2); } }
+.recbar { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.pill { min-height: 58px; padding: 2px 20px 8px; font-size: 26px; border-radius: 30px; color: #fff; background: #3a47a8; border: 3px solid var(--ink); box-shadow: 0 5px 0 var(--ink); }
+.pill:active { transform: translateY(3px); }
+.heard { font-size: 26px; color: #138a3a; } .heard.mid2 { color: #6a5300; }
+.timer { font-size: 22px; color: #6b7399; }
+
+/* القصة */
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; width: min(1100px, 100%); align-items: center; }
+.story img { width: 100%; border-radius: 20px; border: 5px solid var(--ink); box-shadow: 0 8px 0 var(--ink); }
+.story .para { font-size: clamp(30px, 3.6vw, 44px); line-height: 1.9; color: var(--text); background: var(--paper); border: 4px solid var(--ink); border-radius: 22px; padding: 16px 20px; box-shadow: 0 8px 0 var(--ink); }
+.story h2 { grid-column: 1 / -1; text-align: center; font-size: clamp(34px, 5vw, 56px); text-shadow: 0 4px 0 var(--ink); }
+@media (orientation: portrait) { .story { grid-template-columns: 1fr; } .story img { max-height: 36vh; object-fit: cover; } }
+.ctrl { display: flex; gap: 12px; justify-content: center; }
+.song { display: flex; flex-direction: column; gap: 8px; }
+.song .line { font-size: clamp(34px, 5vw, 56px); padding: 4px 18px 10px; border-radius: 16px; text-align: center; }
+.song .line.on { background: var(--gold); color: var(--ink); }
+
+/* قصة الصور */
+.panels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; }
+.panel { position: relative; aspect-ratio: 1; border-radius: 16px; border: 4px dashed #8ea0d8; background: #eef2ff; display: grid; place-items: center; overflow: hidden; }
+.panel img { width: 100%; height: 100%; object-fit: cover; }
+.panel .n { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: var(--ink); border: 3px solid var(--ink); display: grid; place-items: center; font-size: 24px; }
+.pool { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.pool .thumb { width: clamp(120px, 18vw, 190px); aspect-ratio: 1; border-radius: 16px; border: 4px solid var(--ink); overflow: hidden; box-shadow: 0 6px 0 var(--ink); }
+.pool .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 700px) { .panels { grid-template-columns: repeat(2, 1fr); } }
+
+/* المؤثرات */
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+.spark { position: absolute; width: 14px; height: 14px; animation: spark .9s ease-out forwards; }
+@keyframes spark { to { transform: translate(var(--x), var(--y)) scale(.2) rotate(240deg); opacity: 0; } }
+
+/* الطبقات */
+.overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: var(--safe-t) 14px calc(14px + var(--safe-b)); background: #050820d9; }
+.panelbox { width: min(900px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--paper); color: var(--text); border: 5px solid var(--ink); border-radius: 26px; box-shadow: 0 10px 0 var(--ink); padding: 18px 20px 22px; animation: rise .3s; }
+.panelbox h2 { font-size: 40px; text-align: center; color: var(--ink); }
+.mlist { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.mitem { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #fff; border: 4px solid var(--ink); border-radius: 18px; box-shadow: 0 6px 0 var(--ink); font-size: 30px; text-align: start; }
+.mitem .st { margin-inline-start: auto; font-size: 22px; letter-spacing: -2px; }
+.mitem img { width: 54px; height: 54px; object-fit: contain; }
+.mitem:active { transform: translateY(3px); }
+.xbtn { float: left; width: 52px; height: 52px; font-size: 26px; color: #fff; background: var(--red); border: 4px solid var(--ink); border-radius: 14px; }
+
+/* شاشة التمرين: القائد في شريطٍ سفلي بجانب فقاعته، والتمرين فوقه لا يتداخلان */
+body.playing { --capH: min(20vh, 168px); }
+body.playing #cap-img { height: var(--capH); }
+body.playing #cap .bubble { bottom: 10px; left: calc(var(--capH) * 0.62 + 18px); max-width: calc(100vw - var(--capH) - 60px); }
+body.playing #cap .bubble::after { left: -22px; bottom: 16px; border: 11px solid transparent; border-right-color: var(--ink); }
+body.playing #stage { margin-bottom: calc(var(--capH) + var(--safe-b)); padding-bottom: 20px; }
+
+/* الصندوق */
+#chest { flex-direction: column; gap: 8px; text-align: center; overflow: hidden; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc, #3aa6ff) 50%, #070b26), #070b26 62%); }
+#chest .rays { position: absolute; width: 140vmax; height: 140vmax; background: repeating-conic-gradient(from 0deg, #ffffff22 0 8deg, transparent 8deg 22deg); animation: spin 14s linear infinite; pointer-events: none; opacity: 0; transition: opacity .6s; }
+#chest.open .rays { opacity: 1; } @keyframes spin { to { transform: rotate(360deg); } }
+#chest .box { position: relative; width: min(40vw, 260px, 30vh); cursor: pointer; }
+#chest .box img { width: 100%; filter: drop-shadow(0 16px 0 #0008); }
+#chest .box.wob { animation: wob .5s infinite; } @keyframes wob { 25% { transform: rotate(-4deg) scale(1.03); } 75% { transform: rotate(4deg) scale(1.03); } }
+#chest p { margin: 0; position: relative; }
+#chest .rar { font-family: "SakkalPoster"; font-size: 36px; color: var(--rc); text-shadow: 0 4px 0 var(--ink); }
+#chest .gain { font-size: 38px; } #chest .tip { font-size: 26px; color: #cfe0ff; }
+#chest .loot { position: relative; display: flex; align-items: center; gap: 14px; padding: 6px 18px; background: #0a0f2acc; border: 4px solid var(--rc); border-radius: 20px; font-size: 26px; line-height: 1.3; animation: rise .4s; }
+#chest .loot img { width: 84px; height: 84px; object-fit: contain; }
+#chest .crew { position: absolute; bottom: calc(var(--safe-b)); display: flex; justify-content: space-between; width: 100%; pointer-events: none; }
+#chest .crew img { height: min(26vh, 210px); }
+#chest .stars3 { font-size: 40px; letter-spacing: 6px; color: var(--gold); }
+#chest .btn { position: relative; }
+
+/* الخزانة ولوحة بابا */
+.lgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 14px; }
+.litem { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; background: #fff; border: 4px solid var(--rcol, #ccc); border-radius: 18px; box-shadow: 0 6px 0 var(--ink); font-size: 22px; text-align: center; }
+.litem img { width: 100px; height: 100px; object-fit: contain; }
+.litem.not img { filter: brightness(0) opacity(.25); } .litem.not { color: #8a90aa; }
+.litem.eq { background: #fff6c8; outline: 5px solid var(--gold); }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.tab { flex: 1; min-height: 50px; font-size: 22px; color: #fff; background: #3a47a8; border: 3px solid var(--ink); border-radius: 12px; }
+.tab.on { background: var(--gold); color: var(--ink); }
+.rec { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 2px solid #e2e6f5; font-size: 22px; }
+.rec .t { flex: 1; } .rec small { color: #7a82a8; display: block; font-size: 16px; }
+.rec button { min-width: 48px; height: 44px; font-size: 22px; border-radius: 10px; background: #eef2ff; border: 2px solid #c9d1f0; }
+.inkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.inkgrid figure { margin: 0; background: #fff; border: 3px solid #c9d1f0; border-radius: 14px; padding: 6px; font-size: 16px; text-align: center; }
+.inkgrid img { width: 100%; }
+.keypad { display: grid; grid-template-columns: repeat(3, 76px); gap: 10px; justify-content: center; margin-top: 14px; }
+.keypad button { height: 66px; font-size: 32px; background: #fff; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); }
+.ans { text-align: center; font-size: 44px; min-height: 60px; letter-spacing: 6px; }
+.prow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 2px solid #e2e6f5; font-size: 24px; }
+.toast { position: fixed; top: calc(var(--safe-t) + 70px); left: 50%; transform: translateX(-50%); z-index: 70; padding: 6px 22px 10px; font-size: 26px; color: var(--ink); background: var(--gold); border: 4px solid var(--ink); border-radius: 16px; box-shadow: 0 6px 0 var(--ink); animation: rise .3s; }
+
+/* اختيار اللاعب */
+.who { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.whocard { width: min(21vw, 236px); padding: 10px 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; background: linear-gradient(#2c3d93, #1a2563); border: 4px solid var(--ink); border-radius: 22px; box-shadow: 0 8px 0 var(--ink), 0 0 30px #3aa6ff44; transition: transform .08s; }
+.whocard .kid { height: min(24vh, 210px); filter: drop-shadow(0 6px 0 #0006); }
+.whocard b { font-family: "SakkalPoster"; font-size: clamp(26px, 3vw, 34px); text-shadow: 0 3px 0 var(--ink); }
+.whocard small { display: flex; align-items: center; gap: 6px; font-size: 19px; color: #cfe0ff; }
+.whocard small img { height: 48px; }
+.whocard.last { outline: 5px solid var(--gold); }
+.whocard:active { transform: translateY(5px); }

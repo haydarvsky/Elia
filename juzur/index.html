@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="جزر الكنز">
+<meta name="theme-color" content="#0d1640">
+<title>جزر الكنز — العالم الثاني</title>
+<link rel="icon" href="img/icon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+<div id="sky"></div>
+
+<!-- البداية -->
+<section id="splash" class="screen">
+  <div class="sp-art"><img src="img/cover.webp" alt=""></div>
+  <div class="sp-txt">
+    <p class="kicker">الْعالَمُ الثّاني</p>
+    <h1 class="title">جُزُرُ الْكَنْزِ</h1>
+    <p class="sub">مَنْ يَلْعَبُ الْآنَ؟</p>
+    <div class="who" id="who"></div>
+    <a class="link" href="../">⬅ ألعاب إيليا</a>
+  </div>
+</section>
+
+<!-- الخريطة -->
+<section id="map" class="screen" hidden>
+  <header class="hud">
+    <a class="ib" href="../" aria-label="ألعاب إيليا">🏠</a>
+    <div class="chips"><span class="chip gem" id="h-gems"></span><span class="chip star" id="h-stars"></span></div>
+    <span class="grow"></span>
+    <button class="ib" id="h-who" aria-label="تغيير اللاعب">👥</button>
+    <button class="ib" id="h-locker" aria-label="الخزانة"><img src="img/ic/locker.webp" alt=""></button>
+    <button class="ib" id="h-sound" aria-label="الصوت">🔊</button>
+    <button class="ib lock" id="h-parent" aria-label="لوحة بابا">🔒</button>
+  </header>
+  <div class="mapbox" id="mapbox"><img class="mapimg" src="img/map.webp" alt=""><div id="pins"></div></div>
+  <div class="squad" id="squad"><img src="img/elia/cheer.webp" alt=""><img src="img/mo/wave.webp" alt=""><span class="eqw" id="eqw"></span></div>
+</section>
+
+<!-- الجزيرة -->
+<section id="island" class="screen" hidden>
+  <header class="hud">
+    <button class="ib" id="i-back" aria-label="الخريطة">🗺️</button>
+    <div class="isl-title"><b id="i-name"></b><small id="i-sub"></small></div>
+    <span class="grow"></span>
+    <div class="chips"><span class="chip gem" id="i-gems"></span></div>
+  </header>
+  <div class="mapbox" id="islbox"><img class="mapimg" id="i-bg" src="" alt=""><div id="spots"></div></div>
+</section>
+
+<!-- اللعب -->
+<section id="play" class="screen" hidden>
+  <header class="pbar">
+    <button class="ib" id="p-exit" aria-label="خروج">✕</button>
+    <div class="ptitle"><b id="p-title"></b></div>
+    <div class="dots" id="p-dots"></div>
+    <button class="ib" id="p-replay" aria-label="أعد السؤال">🔊</button>
+  </header>
+  <section id="stage"></section>
+</section>
+
+<!-- القائد -->
+<div id="cap" hidden><div class="bubble" id="cap-b"></div><img id="cap-img" src="img/cap/hello.webp" alt="أستاذ حيدر" draggable="false"></div>
+
+<div id="fx"></div>
+<div class="overlay" id="sheet" hidden></div>
+<div class="overlay" id="chest" hidden></div>
+
+<script src="../assets/shop.js?v=3"></script>
+<script src="../assets/music.js?v=2"></script>
+<script src="js/data.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
+</body>
+</html>
