@@ -37,7 +37,7 @@ function merge(a, b) {            // a محلي، b سحابي
   const m = union(a, b);
   if (isHeroes(a) || isHeroes(b)) {               // الإعدادات من آخر من عدّلها؛ وإن لم يعدّلها أحد فمن صاحب السجل الأكبر وأقدم بداية
     const sa = a.sat || 0, sb = b.sat || 0, src = sa !== sb ? (sa > sb ? a : b) : (nLog(a) >= nLog(b) ? a : b);
-    ['goal', 'gate'].forEach(k => { if (src[k] != null) m[k] = src[k]; });
+    ['goal', 'gate', 'prize'].forEach(k => { if (src[k] != null) m[k] = src[k]; });
     m.start = sa !== sb ? src.start : [a.start, b.start].filter(Boolean).sort()[0];
     m.sat = Math.max(sa, sb);
     // بلا تصفيرٍ معتمد يبقى أكبرُ ختمٍ خام (درع السحابة ٩e12) حتى تأخذ النسخُ القديمة المفتوحة السحابةَ ولا تطمسها
